@@ -1,0 +1,28 @@
+# Something behaves differently from the Bible, a work pack or an ADR.
+name: Bug
+description: Something does not do what the FR or rule says
+title: "fix: short description"
+body:
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+      description: Quote the FR, Bible section or ADR.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce
+      description: Exact commands or clicks. Include a staging entity ID if relevant.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "Add labels: `module:*`, `layer:*`, `pri:*`, `owner:*`."

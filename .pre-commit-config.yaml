@@ -1,0 +1,60 @@
+# Local checks that run before each commit and push (ADR-001: they stand in for branch protection).
+# CI runs the same linters, so skipping a hook here only moves the failure to the PR.
+# Set up once per clone:
+#   pre-commit install   (installs all three hook types below — see .github/README.md)
+# PHP and web hooks only run on files under apps/api or apps/web, so they are silent until those exist.
+
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit] # hooks run once per commit unless they name another stage
+
+# The Bible and work packs are source documents copied in as-is; formatters never touch them.
+exclude: ^docs/(BUILD_BIBLE\.md|workpacks/)
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      - id: check-added-large-files
+        args: [--maxkb=1024] # Bible §14.3: no data files > 1 MB
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+      - id: ruff-format
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.18.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional@19"]
+
+  - repo: local
+    hooks:
+      - id: block-push-to-main
+        name: block push to main
+        entry: .githooks/pre-push
+        language: script
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+
+      - id: pint
+        name: pint (PHP style)
+        entry: bash -c 'cd apps/api && ./vendor/bin/pint --test'
+        language: system
+        files: ^apps/api/.*\.php$
+        pass_filenames: false
+
+      - id: web-lint
+        name: eslint + prettier (web)
+        entry: bash -c 'cd apps/web && npx eslint . && npx prettier --check .'
+        language: system
+        files: ^apps/web/
+        pass_filenames: false
