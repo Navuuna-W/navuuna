@@ -1,0 +1,13 @@
+#!/bin/sh
+# Blocks any push to main from this laptop.
+# Why: the GitHub Free plan can't enforce branch protection on a private repo,
+# so this hook does the job locally. Work on a branch and open a pull request instead.
+# Turn it on once per laptop:  git config core.hooksPath .githooks
+
+while read local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "Blocked: pushing to main is not allowed. Push your branch and open a pull request."
+    exit 1
+  fi
+done
+exit 0

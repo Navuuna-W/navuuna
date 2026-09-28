@@ -1,0 +1,28 @@
+# Claude Code — personal state, not shared
+.claude/state/
+.claude/settings.local.json
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies / builds
+vendor/
+node_modules/
+dist/
+__pycache__/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Data (Bible §14.3: never commit data files > 1 MB, raw documents, rasters)
+*.pmtiles
+*.tif
+*.tiff
+*.gpkg
+*.osm.pbf
+
+# macOS
+.DS_Store
