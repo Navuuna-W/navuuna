@@ -1,0 +1,39 @@
+# Who reviews what. Built from work pack A2 (review map).
+# The owner listed on each line is the REQUIRED REVIEWER, not the author.
+# Later lines win over earlier ones, so broad paths come first.
+# On the GitHub Free plan this is advisory (ADR-001): request the reviewer by hand if needed.
+
+# apps/api — Access-owned parts (Http, Resources, Tiles, Lens, Broadcasting, Observations)
+/apps/api/                         @khillon-makwana
+
+# apps/api — Core-owned parts, reviewed against the §6 rules
+/apps/api/app/Engine/              @DevJ2005
+/apps/api/app/Findings/            @DevJ2005
+/apps/api/app/Auth/                @DevJ2005
+/apps/api/app/Audit/               @DevJ2005
+/apps/api/app/Consumers/           @DevJ2005
+
+# Migrations: Khillon approves, Austine reviews
+/apps/api/database/migrations/     @khillon-makwana @Austineigunza
+
+# Web app: reviewed for PRD conformance
+/apps/web/                         @DevJ2005
+
+# Signals
+/services/signals/engine/          @DevJ2005
+/services/flows/score_*            @DevJ2005
+/services/signals/modules/         @khillon-makwana
+
+# Ingest and data (Khillon also reviews anything that writes to the database)
+/services/ingest/                  @Austineigunza @khillon-makwana
+/data/                             @Austineigunza @khillon-makwana
+/services/flows/ingest_*           @Austineigunza @khillon-makwana
+
+# Infrastructure and repository settings
+/infra/                            @Austineigunza
+/.github/                          @Austineigunza
+
+# Docs
+/docs/CONTEXT.md                   @Austineigunza
+/docs/modules/                     @Austineigunza
+/docs/adr/                         @khillon-makwana @DevJ2005 @Austineigunza
