@@ -21,15 +21,39 @@ function countFrameworkTables(): int
     )->table_count;
 }
 
+/**
+ * Count the domain schemas that currently exist.
+ */
+function countDomainSchemas(): int
+{
+    return (int) DB::selectOne(
+        "SELECT count(*) AS schema_count FROM pg_namespace
+         WHERE nspname IN ('core', 'raw', 'records', 'scores', 'flags', 'lens', 'audit')"
+    )->schema_count;
+}
+
+/**
+ * True when public.uuid_generate_v7() exists.
+ */
+function isUuidFunctionPresent(): bool
+{
+    return DB::selectOne("SELECT to_regprocedure('public.uuid_generate_v7()') AS name")->name !== null;
+}
+
 test('all migrations roll back to an empty database and run up again', function () {
     Artisan::call('migrate:fresh');
 
     $resetExitCode = Artisan::call('migrate:reset');
     $tablesAfterReset = countFrameworkTables();
+    $schemasAfterReset = countDomainSchemas();
+    $isUuidFunctionLeftAfterReset = isUuidFunctionPresent();
     $migrateExitCode = Artisan::call('migrate');
 
     expect($resetExitCode)->toBe(0);
-    expect($migrateExitCode)->toBe(0);
     expect($tablesAfterReset)->toBe(0);
-    expect(countFrameworkTables())->toBeGreaterThan(0);
+    expect($schemasAfterReset)->toBe(0);
+    expect($isUuidFunctionLeftAfterReset)->toBeFalse();
+    expect($migrateExitCode)->toBe(0);
+    expect(countDomainSchemas())->toBe(7);
+    expect(isUuidFunctionPresent())->toBeTrue();
 });
