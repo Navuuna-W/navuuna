@@ -49,14 +49,14 @@ test('capture: map with basemap and dots', async ({ page }) => {
 test('capture: panel open with the five variables (Viewer)', async ({ page }) => {
   await page.goto(`/?entity=${ENTITY_WITH_PUBLISHED}`);
   await waitForMapPainted(page);
-  await expect(page.getByRole('complementary', { name: /entity details|passport/i })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: /passport/i })).toBeVisible();
   await page.screenshot({ path: path.join(DIR, '02-panel-viewer.png'), fullPage: false });
 });
 
 test('capture: Analyst view of the held-finding entity', async ({ page }) => {
   await page.goto(`/?entity=${ENTITY_WITH_HELD}`);
   await waitForMapPainted(page);
-  await expect(page.getByRole('complementary', { name: /entity details|passport/i })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: /passport/i })).toBeVisible();
 
   await page.getByLabel(/Preview role selector/i).selectOption('analyst');
   await expect(page.getByText(/Not visible to other users until published/i)).toBeVisible();
@@ -66,7 +66,7 @@ test('capture: Analyst view of the held-finding entity', async ({ page }) => {
 test('capture: Viewer view of the same held-finding entity (no trace)', async ({ page }) => {
   await page.goto(`/?entity=${ENTITY_WITH_HELD}`);
   await waitForMapPainted(page);
-  await expect(page.getByRole('complementary', { name: /entity details|passport/i })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: /passport/i })).toBeVisible();
   await page.getByLabel(/Preview role selector/i).selectOption('viewer');
   await expect(page.getByText(/Not visible to other users/i)).not.toBeVisible();
   await page.screenshot({ path: path.join(DIR, '04-viewer-held-silent.png'), fullPage: false });

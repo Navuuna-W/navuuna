@@ -12,7 +12,7 @@ import { useSelectedEntity } from './useSelectedEntity';
 import { useEntityDetail } from './useEntityDetail';
 import { VariableRow } from './VariableRow';
 import { assertScored, ScoredFieldsMissingError } from '@/api/assertScored';
-import { ERROR } from '@/copy/labels';
+import { ERROR, PANEL_NAME } from '@/copy/labels';
 import { Suspense, lazy } from 'react';
 
 // Lazy sub-chunk: nothing in the findings/ folder is loaded until the first entity whose
@@ -39,7 +39,7 @@ export function EntityPanel() {
 
   return (
     <aside
-      aria-label="Entity details"
+      aria-label={PANEL_NAME}
       className="flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-neutral-200 bg-white shadow-lg"
     >
       <header className="flex items-start justify-between gap-2 border-b border-neutral-200 p-3">

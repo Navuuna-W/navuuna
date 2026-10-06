@@ -9,7 +9,7 @@
 import type { components } from '@/api/schema';
 import { CoverageBar, ConfidenceBar } from './Bars';
 import { CannotAssessBadge, PartlyVerifiedBadge } from './Badges';
-import { EMPTY, VARIABLE_LABELS } from '@/copy/labels';
+import { EMPTY, VARIABLE_LABELS, VARIABLE_TOOLTIPS } from '@/copy/labels';
 import { useState } from 'react';
 import { SubVariableAccordion } from './SubVariableAccordion';
 
@@ -25,13 +25,14 @@ export function VariableRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const label = VARIABLE_LABELS[variable.variable];
+  const tooltip = VARIABLE_TOOLTIPS[variable.variable];
 
   const isCannotAssess = variable.status === 'cannot_assess' || variable.score === null;
   const isPartlyVerified = variable.status === 'partly_verified';
 
   return (
     <section
-      aria-label={`Variable ${variable.variable} — ${label}`}
+      aria-label={`${variable.variable} — ${label}: ${tooltip}`}
       className="rounded border border-neutral-200 bg-white p-3"
     >
       <header className="flex items-start justify-between gap-2">
@@ -39,7 +40,9 @@ export function VariableRow({
           <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
             {variable.variable}
           </div>
-          <h3 className="text-sm font-medium">{label}</h3>
+          <h3 className="text-sm font-medium" title={tooltip}>
+            {label}
+          </h3>
         </div>
         {!isCannotAssess && (
           <div className="text-3xl font-semibold tabular-nums" aria-label="Score">

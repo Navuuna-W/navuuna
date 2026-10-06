@@ -4,6 +4,7 @@
 
 import { Suspense, lazy } from 'react';
 import { useSelectedEntity } from './useSelectedEntity';
+import { PANEL_NAME } from '@/copy/labels';
 
 const EntityPanel = lazy(() => import('./EntityPanel').then((m) => ({ default: m.EntityPanel })));
 
@@ -14,7 +15,7 @@ export function LazyEntityPanel() {
     <Suspense
       fallback={
         <aside
-          aria-label="Entity details"
+          aria-label={PANEL_NAME}
           aria-busy="true"
           className="flex h-full w-full max-w-md flex-col border-l border-neutral-200 bg-white p-3 text-sm text-neutral-600 shadow-lg"
         >

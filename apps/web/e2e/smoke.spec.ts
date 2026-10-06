@@ -59,7 +59,7 @@ test('smoke: banner, panel scores, published finding, zero console errors', asyn
   // Open the panel by URL (click simulation on a map canvas is fragile headless).
   await page.goto(`/?entity=${ENTITY_WITH_PUBLISHED}`);
 
-  const panel = page.getByRole('complementary', { name: /entity details/i });
+  const panel = page.getByRole('complementary', { name: /passport/i });
   await expect(panel).toBeVisible();
 
   // The entity name appears. Our fixture names water points
