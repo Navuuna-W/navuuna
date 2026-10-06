@@ -13,6 +13,7 @@ import { useEntityDetail } from './useEntityDetail';
 import { VariableRow } from './VariableRow';
 import { assertScored, ScoredFieldsMissingError } from '@/api/assertScored';
 import { ERROR } from '@/copy/labels';
+import { FindingDetail } from '@/findings/FindingDetail';
 
 export function EntityPanel() {
   const { entityId, closeEntity } = useSelectedEntity();
@@ -100,16 +101,11 @@ function EntityBody({
       {detail.findings.length > 0 && (
         <section className="border-t border-neutral-200 p-3" aria-label="Findings">
           <h3 className="text-sm font-semibold">Findings</h3>
-          <ul className="mt-2 space-y-2">
+          <div className="mt-2 space-y-2">
             {detail.findings.map((f) => (
-              <li key={f.id} className="rounded border border-neutral-200 bg-white p-2 text-sm">
-                <div className="font-medium">{f.gap_summary}</div>
-                <div className="mt-1 text-xs text-neutral-600">
-                  {f.state} · {f.severity}
-                </div>
-              </li>
+              <FindingDetail key={f.id} finding={f} />
             ))}
-          </ul>
+          </div>
         </section>
       )}
 
