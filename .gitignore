@@ -16,6 +16,8 @@ __pycache__/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+.coverage
+*.egg-info/
 
 # Data (Bible §14.3: never commit data files > 1 MB, raw documents, rasters)
 *.pmtiles
