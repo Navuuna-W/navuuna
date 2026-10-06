@@ -11,7 +11,10 @@ const PORT = 4173;
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  // Screenshot capture needs sequential role toggles against the same preview server.
+  // Smoke is single-file; parallelism gains us nothing and loses determinism.
+  fullyParallel: false,
+  workers: 1,
   retries: 0,
   reporter: [['list']],
   use: {
