@@ -13,25 +13,6 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 /**
- * Insert a held 2.4 finding and return its id.
- *
- * @param  array<string, mixed>  $overrides
- */
-function insertFinding(array $overrides = []): string
-{
-    $row = array_merge([
-        'sub_id' => '2.4',
-        'severity' => 'high',
-        'state' => 'held',
-        'declared' => '{"status": "operational"}',
-        'observed' => '{"status": "not_working"}',
-    ], $overrides);
-    $row['entity_id'] ??= insertCoreEntity();
-
-    return (string) DB::table('flags.flags')->insertGetId($row);
-}
-
-/**
  * Insert a transition for the given finding.
  *
  * @param  array<string, mixed>  $overrides
