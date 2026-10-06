@@ -8,6 +8,14 @@ name: ci
 on:
   pull_request:
     branches: [main]
+    # `edited` covers a stacked PR moved onto main after its base merged: without it, that
+    # PR merges having never run CI (#22). It also re-checks a PR title after it is fixed.
+    types: [opened, synchronize, reopened, edited]
+
+# A new run on the same PR (a push, or editing the description) cancels the older one.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
