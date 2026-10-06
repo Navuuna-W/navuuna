@@ -6,7 +6,8 @@ the local hooks do that job instead (see `docs/adr/001-monorepo.md`).
 
 | File | What it does |
 |---|---|
-| `workflows/ci.yml` | Checks run on every PR to `main` |
+| `workflows/ci.yml` | Checks run on every PR to `main`: commitlint, web, python, php, migration-lint, modularity, secret-scan |
+| `scripts/` | Helper scripts the CI jobs run (see `scripts/README.md`) |
 | `pull_request_template.md` | The Bible §14.4 sections and checklist, filled on every PR |
 | `ISSUE_TEMPLATE/` | Task and bug forms; blank issues are off |
 | `CODEOWNERS` | The required reviewer for each path (work pack A2) |

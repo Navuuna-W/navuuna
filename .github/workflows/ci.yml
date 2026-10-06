@@ -1,5 +1,7 @@
-# CI for every pull request. K-01 starts it with the commit message check only;
-# K-05 adds the php, python, web, migration-lint, modularity and secret-scan jobs.
+# CI for every pull request to main (Bible K1.2, §14.7). One job per area of the repo:
+# commitlint, web, python, php, migration-lint, modularity and secret-scan.
+# Jobs whose code has not landed yet (php before apps/api exists) skip their steps
+# and pass, then switch on by themselves when the code arrives.
 
 name: ci
 
@@ -75,3 +77,164 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # The python job lints, type-checks and tests the signal service (engine + modules).
+  # Engine coverage must stay at 100 % (Bible §14.7).
+  python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/signals
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/signals/pyproject.toml
+
+      - name: Install
+        run: pip install -e '.[dev]'
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format
+        run: ruff format --check .
+
+      - name: Mypy (engine)
+        run: mypy --strict engine
+
+      # modules/ is Devyan's folder; it is type-checked as soon as it holds any code.
+      - name: Mypy (modules)
+        if: hashFiles('services/signals/modules/**/*.py') != ''
+        run: mypy --strict modules
+
+      - name: Pytest with 100 % engine coverage
+        run: pytest --cov=engine --cov-fail-under=100
+
+  # The php job runs Pint, PHPStan (level set in apps/api/phpstan.neon) and Pest against
+  # a real PostGIS database. Every step waits for apps/api/composer.json, which K-06a adds.
+  php:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: navuuna_test
+          POSTGRES_USER: navuuna
+          POSTGRES_PASSWORD: navuuna # throwaway CI database, not a secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U navuuna"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: navuuna_test
+      DB_USERNAME: navuuna
+      DB_PASSWORD: navuuna
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Note when the Laravel app is not there yet
+        if: hashFiles('apps/api/composer.json') == ''
+        working-directory: .
+        run: echo "::notice::apps/api does not exist yet; php steps skipped."
+
+      - uses: shivammathur/setup-php@v2
+        if: hashFiles('apps/api/composer.json') != ''
+        with:
+          php-version: "8.3" # ADR-009
+          extensions: pdo_pgsql
+          coverage: none
+
+      - name: Install
+        if: hashFiles('apps/api/composer.json') != ''
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Pint
+        if: hashFiles('apps/api/composer.json') != ''
+        run: ./vendor/bin/pint --test
+
+      - name: PHPStan
+        if: hashFiles('apps/api/composer.json') != ''
+        run: ./vendor/bin/phpstan analyse --no-progress
+
+      - name: Pest
+        if: hashFiles('apps/api/composer.json') != ''
+        run: ./vendor/bin/pest
+
+  # The migration-lint job enforces two rules no PHP linter covers (CLAUDE.md §4):
+  # every migration has a real down(), and every Schema::create names a schema.
+  migration-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test the linter itself
+        run: |
+          pip install 'pytest>=8.3,<9'
+          pytest .github/scripts/tests
+
+      - name: Lint migrations
+        run: python .github/scripts/lint_migrations.py
+
+  # The modularity job proves a module can be deleted and the build still passes
+  # (NFR-07, Bible §14.7). roads is the module the Bible names for this test.
+  modularity:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/signals
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/signals/pyproject.toml
+
+      - name: Delete the roads module
+        run: rm -rf modules/roads
+
+      - name: Install
+        run: pip install -e '.[dev]'
+
+      - name: Tests pass without roads
+        run: pytest
+
+  # The secret-scan job runs gitleaks over the commits in this PR. It uses the release
+  # binary, not gitleaks-action, because the action needs a paid licence for org repos.
+  secret-scan:
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks reads every commit on the branch
+
+      - name: Install gitleaks
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+
+      - name: Scan the PR's commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: ./gitleaks git --log-opts="${BASE_SHA}..${HEAD_SHA}" --redact --verbose
