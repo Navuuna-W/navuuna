@@ -62,6 +62,27 @@ is a pointer for the next session.
 
 When Devyan's branch merges, swap `src/copy/labels.ts` in one PR (one-file change by design).
 
+### Open questions for Devyan
+
+Two decisions block closing out the V2 story. Flagged here so the next sync has a specific
+agenda item.
+
+- **(a) V2 reading direction on screen.** `origin/feat/signals-county-planner-lens`'s
+  `county_planner.json` sets V2 to `lower_is_better` — a higher discrepancy score means a
+  bigger gap, which is bad under the lens. The fixture now honours this
+  (`fixtures/lensApply.ts` flips the effective score before weighting). But the on-screen
+  **variable label** is still "Does the record match?" (CLAUDE.md) / "Record vs reality"
+  (`docs/CONTEXT.md`). With `lower_is_better`, a V2 raw score of 85 means "big
+  discrepancy" — i.e. the record does **not** match — yet the panel shows a high number
+  next to a question that reads as if a high number is good. Needed: either the panel
+  shows `100 − score` for V2, or the label flips to the question for which a high number
+  **is** good (e.g. "How big is the gap?"). Decision owner: Devyan.
+- **(b) Badge wording — "Partly verified" (PRD §19.1) vs "Provisional" (`docs/CONTEXT.md`).**
+  CLAUDE.md and this frontend ship **"Partly verified"** on the badge; the CONTEXT.md
+  on `origin/docs/docs-context-glossary` ships **"Provisional"** as the status label.
+  Fixture keeps "Partly verified" for the badge until decided — one word, one place
+  (`src/copy/labels.ts`). Decision owner: Devyan (vocabulary owner, DEC-20).
+
 ## Install
 
 ```sh
