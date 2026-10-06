@@ -22,9 +22,15 @@ import { fixtures, type EntityDetail, type FixtureEntity } from '../fixtures';
 import {
   applyLens,
   COUNTY_PLANNER_LENS,
+  DEMO_ACCESS_LENS,
   type ColourClass,
   type LensConfig,
 } from '../fixtures/lensApply';
+
+function lensById(id: string): LensConfig {
+  if (id === DEMO_ACCESS_LENS.id) return DEMO_ACCESS_LENS;
+  return COUNTY_PLANNER_LENS;
+}
 
 interface MockFeature {
   type: 'Feature';
@@ -100,7 +106,7 @@ function getTileIndex(lensId: string): GeoJSONVT {
   const cached = tileIndexCache.get(lensId);
   if (cached) return cached;
 
-  const lens = lensId === COUNTY_PLANNER_LENS.id ? COUNTY_PLANNER_LENS : COUNTY_PLANNER_LENS;
+  const lens = lensById(lensId);
   const { entities } = fixtures();
   const fc = buildFeatureCollection(entities, lens);
   const index = new GeoJSONVT(fc as never, {

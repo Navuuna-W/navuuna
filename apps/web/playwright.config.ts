@@ -25,7 +25,21 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Headless Chromium ships without hardware WebGL. Force SwiftShader so MapLibre's
+        // GL layer actually renders the entity dots and lines — otherwise the map canvas
+        // stays blank and screenshots end up at the empty-canvas file size.
+        launchOptions: {
+          args: [
+            '--enable-unsafe-swiftshader',
+            '--use-gl=swiftshader',
+            '--use-angle=swiftshader',
+            '--enable-webgl',
+            '--ignore-gpu-blocklist',
+          ],
+        },
+      },
     },
   ],
   webServer: {

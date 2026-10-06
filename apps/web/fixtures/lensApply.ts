@@ -45,6 +45,22 @@ export const COUNTY_PLANNER_LENS: LensConfig = {
   },
 };
 
+// Demo-only alternative lens. Exists so the lens-switch Playwright screenshot shows a
+// visibly different recolour. Not a product lens — remove it (and the mock's lensById
+// branch) once a second real lens JSON lands from Devyan.
+export const DEMO_ACCESS_LENS: LensConfig = {
+  id: 'demo_access',
+  name: 'Demo access',
+  weights: { V1: 0.1, V2: 0.0, V3: 0.0, V4: 0.3, V5: 0.6 },
+  direction: {
+    V1: 'higher_is_better',
+    V2: 'higher_is_better',
+    V3: 'higher_is_better',
+    V4: 'higher_is_better',
+    V5: 'higher_is_better',
+  },
+};
+
 const BAND_HIGH = 80;
 const BAND_MEDIUM = 60;
 const BAND_LOW = 40;

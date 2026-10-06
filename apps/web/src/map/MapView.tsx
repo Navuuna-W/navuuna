@@ -44,6 +44,21 @@ export function MapView({ lens = 'county_planner' }: { lens?: string }) {
     });
     mapRef.current = map;
 
+    // Fixture-mode-only test hook: installed BEFORE 'load' so Playwright can see 'idle'
+    // events even when the basemap style fails to load (e.g. fresh clone without
+    // `npm run basemap`). Never exposed in api mode.
+    if (import.meta.env.VITE_DATA_SOURCE === 'fixture' || !import.meta.env.VITE_DATA_SOURCE) {
+      map.on('idle', () => {
+        const feats = map.queryRenderedFeatures(undefined, {
+          layers: CLICKABLE_LAYER_IDS.filter((id) => map.getLayer(id)),
+        });
+        (window as unknown as Record<string, unknown>).__NAVUUNA_TEST__ = {
+          featureCount: feats.length,
+          lastIdle: Date.now(),
+        };
+      });
+    }
+
     map.on('load', () => {
       map.addSource(ENTITIES_SOURCE_ID, {
         type: 'vector',
