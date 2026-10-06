@@ -19,6 +19,8 @@ import { useSelectedEntity } from '@/panel/useSelectedEntity';
 
 const ENTITIES_SOURCE_ID = 'entities-src';
 const WATER_POINTS_LAYER_ID = 'water-points';
+const ROAD_SEGMENTS_LAYER_ID = 'road-segments';
+const CLICKABLE_LAYER_IDS = [WATER_POINTS_LAYER_ID, ROAD_SEGMENTS_LAYER_ID];
 
 // Nairobi centre; the user can pan anywhere.
 const INITIAL_CENTER: [number, number] = [36.82, -1.29];
@@ -51,6 +53,21 @@ export function MapView({ lens = 'county_planner' }: { lens?: string }) {
         promoteId: 'id',
       });
 
+      // Road segments go first so points sit on top of lines.
+      map.addLayer({
+        id: ROAD_SEGMENTS_LAYER_ID,
+        type: 'line',
+        source: ENTITIES_SOURCE_ID,
+        'source-layer': 'entities',
+        filter: ['==', ['get', 'entity_type'], 'road_segment'],
+        paint: {
+          'line-color': circleColorExpression(),
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 14, 4, 18, 7],
+          'line-opacity': 0.9,
+        },
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+      });
+
       map.addLayer({
         id: WATER_POINTS_LAYER_ID,
         type: 'circle',
@@ -66,23 +83,25 @@ export function MapView({ lens = 'county_planner' }: { lens?: string }) {
         },
       });
 
-      map.on('click', WATER_POINTS_LAYER_ID, (e) => {
-        const feature = e.features?.[0];
-        if (!feature) return;
-        const id = feature.id ?? feature.properties?.id;
-        if (typeof id === 'string') openEntity(id);
-      });
-      map.on('mouseenter', WATER_POINTS_LAYER_ID, () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', WATER_POINTS_LAYER_ID, () => {
-        map.getCanvas().style.cursor = '';
-      });
+      for (const layerId of CLICKABLE_LAYER_IDS) {
+        map.on('click', layerId, (e) => {
+          const feature = e.features?.[0];
+          if (!feature) return;
+          const id = feature.id ?? feature.properties?.id;
+          if (typeof id === 'string') openEntity(id);
+        });
+        map.on('mouseenter', layerId, () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', layerId, () => {
+          map.getCanvas().style.cursor = '';
+        });
+      }
 
       // Clicking the map background closes the panel.
       map.on('click', (e) => {
         const hits = map.queryRenderedFeatures(e.point, {
-          layers: [WATER_POINTS_LAYER_ID],
+          layers: CLICKABLE_LAYER_IDS,
         });
         if (hits.length === 0) closeEntity();
       });
