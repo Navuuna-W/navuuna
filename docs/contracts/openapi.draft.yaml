@@ -12,6 +12,12 @@
 # - A finding visible to a Viewer is 'published'. 'held' and 'explanation_checked' are
 #   analyst-only; the API filters them out server-side by role (DEC-08). The schema
 #   describes the fields; the API applies the filter.
+#
+# Role handling (A-19, K-11): the client NEVER sends a `role` query parameter. The server
+# trusts the signed-in session's role and strips held + explanation_checked findings for
+# non-analysts before the response leaves the service. Any client-chosen role would be a
+# hole in that invariant and is a review-blocker. The fixture-mode dev mock accepts an
+# explicit `?role=` only because it has no session; production servers must ignore it.
 
 openapi: 3.0.3
 
