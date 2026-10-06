@@ -8,9 +8,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
+import { mockServer } from './vite-plugins/mockServer';
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), mockServer()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -29,6 +30,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'fixtures/**/*.test.ts'],
   },
 });
