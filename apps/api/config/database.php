@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
@@ -17,7 +19,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -95,7 +97,10 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            // The seven domain schemas, then `public` for PostGIS and the framework tables.
+            // `raw` is included even though Bible §14.12 lists six (ADR-012 §1). Models still
+            // name their schema in full; this path is only a fallback for raw SQL.
+            'search_path' => 'core,raw,records,scores,flags,lens,audit,public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
@@ -128,7 +133,8 @@ return [
     */
 
     'migrations' => [
-        'table' => 'migrations',
+        // Framework table, so it lives in `public` (ADR-004a §1).
+        'table' => 'public.migrations',
         'update_date_on_publish' => true,
     ],
 

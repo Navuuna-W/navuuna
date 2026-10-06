@@ -1,0 +1,12 @@
+# PHPStan with Larastan at level 6 (CLAUDE.md §4). The `php` CI job runs this file.
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - app
+        - config
+        - database
+        - routes
+        - tests
