@@ -1,0 +1,32 @@
+{
+  "name": "county_planner",
+  "label": "County planner",
+  "customer_type": "county",
+  "version": 1,
+  "description": "A county planner's view: is public infrastructure working, does the record match reality, can people reach it. Momentum is shown in the Passport but not weighted (PRD US-302).",
+  "variable_weights": {
+    "V1": 0.40,
+    "V2": 0.30,
+    "V3": 0.00,
+    "V4": 0.10,
+    "V5": 0.20
+  },
+  "direction": {
+    "V1": "higher_is_better",
+    "V2": "lower_is_better",
+    "V3": "higher_is_better",
+    "V4": "higher_is_better",
+    "V5": "higher_is_better"
+  },
+  "thresholds": {
+    "bands_note": "Pick the first band whose min is at or below the lens score.",
+    "bands": [
+      { "colour_class": "b1", "min": 80, "label": "Good" },
+      { "colour_class": "b2", "min": 60, "label": "Fair" },
+      { "colour_class": "b3", "min": 40, "label": "Poor" },
+      { "colour_class": "b4", "min": 0, "label": "Critical" }
+    ],
+    "provisional_suffix": "p",
+    "cannot_assess_class": "ca"
+  }
+}
