@@ -30,7 +30,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
-    include: ['src/**/*.test.{ts,tsx}', 'fixtures/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}', 'fixtures/**/*.test.ts', 'vite-plugins/**/*.test.ts'],
     exclude: ['e2e/**', 'node_modules/**'],
   },
 });
