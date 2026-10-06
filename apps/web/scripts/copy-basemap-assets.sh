@@ -15,14 +15,13 @@ OUT_DIR="$WEB_ROOT/public/basemap"
 
 mkdir -p "$TOOLS_DIR" "$OUT_DIR"
 
-if [ ! -d "$ASSETS_SRC/.git" ]; then
-  echo "Cloning protomaps/basemaps-assets (shallow)..."
-  rm -rf "$ASSETS_SRC"
-  git clone --depth 1 https://github.com/protomaps/basemaps-assets.git "$ASSETS_SRC"
-else
-  echo "Updating protomaps/basemaps-assets..."
-  (cd "$ASSETS_SRC" && git fetch --depth 1 origin && git reset --hard origin/HEAD)
-fi
+# Always clone fresh. The previous "update" branch used `cd && git reset --hard` which
+# on Windows Git Bash with a missing .git/ inside the clone directory left the reset
+# running against the parent repo (wrecking the current branch). The clone is small
+# (fonts + sprites, ~tens of MB) so a fresh download is fine.
+echo "Cloning protomaps/basemaps-assets (shallow, fresh)..."
+rm -rf "$ASSETS_SRC"
+git clone --depth 1 https://github.com/protomaps/basemaps-assets.git "$ASSETS_SRC"
 
 # Fonts: /basemap/fonts/{fontstack}/{range}.pbf  (MapLibre glyphs URL template)
 if [ -d "$ASSETS_SRC/fonts" ]; then
