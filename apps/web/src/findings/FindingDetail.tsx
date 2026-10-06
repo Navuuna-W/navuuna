@@ -1,9 +1,11 @@
 // Finding detail (S3). One card per finding showing the four story lines from PRD §9.3:
 // what the record says, what we observe, the gap, the sources + dates, and the contest
 // line. Held findings only appear here when the caller is an Analyst, and they wear a
-// 'Not visible to other users until published' banner (A-19, DEC-08).
+// 'Not visible to other users until published' banner (A-19, DEC-08). Contested findings
+// are visible to everyone and wear the CONTEXT.md contest banner.
 
 import type { components } from '@/api/schema';
+import { FINDING_HOVER, FINDING_STATUS } from '@/copy/labels';
 
 type FindingSummary = components['schemas']['FindingSummary'];
 
@@ -11,14 +13,18 @@ const CONTEST_EMAIL = 'contact@navuuna.example';
 
 export function FindingDetail({ finding }: { finding: FindingSummary }) {
   const isHeld = finding.state === 'held' || finding.state === 'explanation_checked';
+  const isContested = finding.state === 'contested';
+
+  const borderClass = isHeld
+    ? 'border-amber-500 bg-amber-50'
+    : isContested
+      ? 'border-sky-500 bg-sky-50'
+      : 'border-neutral-200 bg-white';
 
   return (
     <article
       aria-label={`Finding ${finding.id}`}
-      className={
-        'rounded border p-3 text-sm ' +
-        (isHeld ? 'border-amber-500 bg-amber-50' : 'border-neutral-200 bg-white')
-      }
+      className={'rounded border p-3 text-sm ' + borderClass}
     >
       {isHeld && (
         <div
@@ -28,10 +34,19 @@ export function FindingDetail({ finding }: { finding: FindingSummary }) {
           Not visible to other users until published
         </div>
       )}
+      {isContested && (
+        <div
+          role="status"
+          className="mb-2 rounded bg-sky-100 px-2 py-1 text-xs font-medium text-sky-900"
+        >
+          {FINDING_HOVER.contested}
+        </div>
+      )}
 
       <header className="mb-2">
         <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-          Sub-variable {finding.sub_variable} · {finding.severity} severity
+          {FINDING_STATUS[finding.state]} · sub-variable {finding.sub_variable} · {finding.severity}{' '}
+          severity
         </div>
         <h4 className="text-sm font-semibold">{finding.gap_summary}</h4>
       </header>

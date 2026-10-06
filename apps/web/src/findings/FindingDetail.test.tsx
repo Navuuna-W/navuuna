@@ -57,4 +57,10 @@ describe('FindingDetail', () => {
     const link = screen.getByRole('link');
     expect(link.getAttribute('href')).toMatch(/^mailto:/);
   });
+
+  it('renders the contested banner for a contested finding (CONTEXT.md § 4)', () => {
+    render(<FindingDetail finding={{ ...base, state: 'contested' }} />);
+    expect(screen.getByText(/Someone has challenged this finding/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Not visible to other users/i)).not.toBeInTheDocument();
+  });
 });

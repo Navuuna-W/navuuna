@@ -270,7 +270,13 @@ components:
           description: Which sub-variable raised the finding (2.1, 2.2, 2.4).
         state:
           type: string
-          enum: [held, explanation_checked, published, dismissed, resolved]
+          enum: [held, explanation_checked, published, contested, dismissed, resolved]
+          description: >
+            Lifecycle per Bible §6.5 and CONTEXT.md § 4. `contested` means a published
+            finding has been challenged by someone (the subject, a reviewer, or an
+            analyst). Still visible to viewers; the UI shows the challenge copy.
+            `held` and `explanation_checked` and `dismissed` are analyst-only; the API
+            filters them out server-side by the session's role (A-19, DEC-08).
         severity:
           type: string
           enum: [low, medium, high]
