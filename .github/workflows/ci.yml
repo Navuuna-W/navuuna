@@ -161,6 +161,12 @@ jobs:
         if: hashFiles('apps/api/composer.json') != ''
         run: composer install --no-interaction --no-progress --prefer-dist
 
+      # Laravel reads .env on boot; without one, every test logs a file-not-found warning.
+      # The DB_* values above and phpunit.xml still win over what .env.example says.
+      - name: Create .env from the example
+        if: hashFiles('apps/api/composer.json') != ''
+        run: cp .env.example .env
+
       - name: Pint
         if: hashFiles('apps/api/composer.json') != ''
         run: ./vendor/bin/pint --test
