@@ -66,10 +66,71 @@ The `.pmtiles` file is `> 1 MB` so it is `.gitignored`; every clone rebuilds it 
 In production, nginx serves `/basemap/nairobi.pmtiles` with HTTP range requests enabled so
 the browser only pulls the tiles it needs (K-07).
 
-## Running locally with no internet
+## How to run locally and offline
 
-Everything the app needs at runtime (basemap tiles, glyphs, sprites, synthetic data) is
-served from this repo. The "How to run locally and offline" section lands with Step 10.
+The app is clickable without any backend. All data is deterministic synthetic fixtures
+(`apps/web/fixtures/`), served by a Vite plugin that attaches to both the dev server AND
+`vite preview` (`vite-plugins/mockServer.ts`). A persistent **"Prototype — illustrative
+data, not real measurements"** banner is non-dismissable while `VITE_DATA_SOURCE` is
+unset or set to `fixture`.
+
+### One-time setup (needs internet)
+
+```sh
+cd apps/web
+npm install        # install dependencies
+npm run basemap    # fetch the pmtiles CLI and the Protomaps daily build, extract Nairobi
+```
+
+`npm run basemap` is the only step that needs internet; it writes
+`public/basemap/nairobi.pmtiles` plus `public/basemap/fonts/` and `public/basemap/sprites/`
+into the gitignored `public/basemap/` folder.
+
+### Everyday use
+
+```sh
+npm run dev        # hot-reload dev server on http://localhost:5173
+npm run build      # production bundle in dist/
+npm run preview    # serve dist/ on http://localhost:4173 (mock attached)
+```
+
+After `npm run basemap` once, the three commands above work with **no internet**: the
+basemap, glyphs, sprites, fixtures and mock all live in this repo or in `public/basemap/`.
+
+### Role switcher and lens
+
+- The header has a **Role** dropdown (Viewer / Analyst). Default Viewer — the mock strips
+  held findings from `/api/v1/entities/{id}?role=viewer`, so Viewer sees no trace of them.
+  Switch to Analyst to see the "Not visible to other users until published" banner on
+  held findings.
+- The header has a **Lens** dropdown. Only `County planner` ships in v1. Switching the
+  lens recolours the map (new tile URL) but never changes the panel's variable scores
+  (A-15, US-301 P0 check, enforced by `EntityPanel.lensInvariance.test.tsx`).
+
+### Playwright smoke test
+
+```sh
+npm run test:e2e
+```
+
+Builds the app, serves it with `vite preview`, and runs `e2e/smoke.spec.ts`: banner is
+present, panel for `wp-002` shows coverage + confidence, published finding is visible,
+zero in-app console errors. Missing `/basemap/*` 404s are tolerated so a fresh clone
+without `npm run basemap` still passes.
+
+### Pointing the frontend at the real Laravel API
+
+When A-06 lands, set:
+
+```sh
+VITE_API_BASE_URL=https://api.staging.navuuna.example/api/v1
+VITE_OPENAPI_URL=https://api.staging.navuuna.example/api/v1/openapi.json
+VITE_DATA_SOURCE=api
+```
+
+Then `npm run gen:api` regenerates `src/api/schema.d.ts` from the live spec, the mock
+becomes dead code at build time (its plugin lives in `vite-plugins/`, outside the client
+bundle), and the illustrative-data banner disappears.
 
 ## Where the real API hooks in
 

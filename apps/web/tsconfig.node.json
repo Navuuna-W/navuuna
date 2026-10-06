@@ -24,6 +24,6 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts", "vite-plugins", "fixtures"],
+  "include": ["vite.config.ts", "vite-plugins", "fixtures", "playwright.config.ts", "e2e"],
   "exclude": ["fixtures/**/*.test.ts"]
 }

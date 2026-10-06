@@ -2,6 +2,11 @@
 dist/
 coverage/
 
+# Playwright
+test-results/
+playwright-report/
+.playwright-cache/
+
 # Generated at script time (A-04, A-06)
 public/basemap/
 src/api/schema.d.ts
