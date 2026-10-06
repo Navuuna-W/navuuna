@@ -8,9 +8,13 @@ playwright-report/
 .playwright-cache/
 e2e-screenshots/
 
-# Generated at script time (A-04, A-06)
+# Generated at script time (A-04)
 public/basemap/
-src/api/schema.d.ts
+
+# NB: src/api/schema.d.ts is generated from docs/contracts/openapi.draft.yaml by
+# `npm run gen:api`, but it IS committed. CI regenerates it and fails if the committed
+# copy drifts from the source YAML. See .gitattributes for the linguist-generated hint
+# and .github/workflows/ci.yml for the CI step.
 
 # Local tools (pmtiles binary, basemaps-assets clone)
 tools/

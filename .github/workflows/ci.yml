@@ -55,6 +55,15 @@ jobs:
       - name: Install
         run: npm ci
 
+      # Regenerate the OpenAPI client types from the committed draft and fail if the
+      # committed copy drifts (A-06 / NFR-02). schema.d.ts is marked
+      # linguist-generated=true in .gitattributes; it must still be committed because
+      # typecheck depends on it.
+      - name: Check generated API types are fresh
+        run: |
+          npm run gen:api
+          git diff --exit-code -- src/api/schema.d.ts
+
       - name: Typecheck
         run: npm run typecheck
 
