@@ -2,7 +2,7 @@
 
 - **Number:** 004a (amends ADR-004, Bible §10.1)
 - **Date:** 29 Sep 2026
-- **Status:** Proposed — becomes Accepted when Devyan signs (approves this PR)
+- **Status:** Accepted — signed by Devyan (Signal), 6 Oct 2026
 - **Decider:** Khillon (Core — owns migrations, the signal runner and the rollup engine)
 - **Signs:** Devyan (Signal — owns the Python ingest that writes most of `raw`, `records` and `core`)
 
