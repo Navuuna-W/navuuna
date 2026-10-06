@@ -1,0 +1,11 @@
+# Normalise line endings for text files so Windows / Linux / macOS clones agree.
+* text=auto eol=lf
+
+# Shell scripts: always LF, regardless of the OS clone.
+*.sh text eol=lf
+.githooks/* text eol=lf
+
+# Generated files — hidden from GitHub diff views and language stats so a 7 kB regen
+# doesn't drown the signal of the hand-written code around it (A-06, NFR-02).
+apps/web/src/api/schema.d.ts linguist-generated=true
+apps/web/package-lock.json linguist-generated=true
