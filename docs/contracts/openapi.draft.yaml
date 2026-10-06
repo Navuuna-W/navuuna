@@ -1,0 +1,297 @@
+# Draft OpenAPI spec for the Navuuna JSON API.
+#
+# This is the frontend's working contract until Laravel generates the real spec (A-06).
+# Covers only the endpoints the fixtures and mock serve today:
+#   GET /api/v1/entities/{id}
+# Later endpoints (listing, flags, lenses, telemetry, observations) are added as the
+# frontend starts using them. The generator never reads anything outside paths/components.
+#
+# Shape rules locked by NFR-02 and PRD §9/§10:
+# - Every variable score carries coverage and confidence beside it (never bare).
+# - A sub-variable with status != 'measured' uses `score: null` and a `null_reason`.
+# - A finding visible to a Viewer is 'published'. 'held' and 'explanation_checked' are
+#   analyst-only; the API filters them out server-side by role (DEC-08). The schema
+#   describes the fields; the API applies the filter.
+#
+# Role handling (A-19, K-11): the client NEVER sends a `role` query parameter. The server
+# trusts the signed-in session's role and strips held + explanation_checked findings for
+# non-analysts before the response leaves the service. Any client-chosen role would be a
+# hole in that invariant and is a review-blocker. The fixture-mode dev mock accepts an
+# explicit `?role=` only because it has no session; production servers must ignore it.
+
+openapi: 3.0.3
+
+info:
+  title: Navuuna API — draft
+  description: >
+    Minimum draft used by apps/web until the Laravel API generates the real OpenAPI spec.
+    Replaced by `/api/v1/openapi.json` as soon as A-06 ships.
+  version: 0.0.1-draft
+
+servers:
+  - url: /api/v1
+    description: Same-origin API
+
+paths:
+  /entities/{id}:
+    get:
+      operationId: getEntityById
+      summary: Return the full scored entity for the panel (S2).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Entity ID (UUIDv7 in production; readable slug in fixtures).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The entity, its variable scores and its sub-variable rows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityDetail'
+        '404':
+          description: No entity with that ID, or the entity is retired and the caller is a Viewer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+components:
+  schemas:
+    Problem:
+      type: object
+      required: [title, status]
+      properties:
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+
+    EntityDetail:
+      type: object
+      required:
+        - id
+        - entity_type
+        - module
+        - name
+        - ward
+        - gate_status
+        - last_observed_at
+        - last_computed_at
+        - variables
+        - sub_variables
+        - findings
+        - attribution
+      properties:
+        id:
+          type: string
+        entity_type:
+          type: string
+          enum: [water_point, road_segment, ward]
+        module:
+          type: string
+          enum: [water, roads, land]
+        name:
+          type: string
+        ward:
+          type: string
+        gate_status:
+          type: string
+          enum: [measured, provisional, cannot_assess]
+          description: >
+            From the V1 1.1 unmeasured gate (Bible §6.3). `provisional` means the entity's
+            activity gate could not be measured; variable scores are kept but confidence is
+            halved (Bible §6.1 A6). `cannot_assess` means no variable score is reportable.
+        last_observed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Most recent observation across all sub-variables.
+        last_computed_at:
+          type: string
+          format: date-time
+          description: When the rollup last ran for this entity.
+        variables:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/VariableScore'
+          description: Always the five variables, in fixed order V1…V5.
+        sub_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubVariableScore'
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/FindingSummary'
+          description: >
+            Published findings only when returned to a Viewer. Analysts see held and
+            explanation_checked findings here too; the API applies the role filter
+            (DEC-08, A-19).
+        attribution:
+          type: string
+          description: Static attribution block for NFR-09.
+
+    VariableScore:
+      type: object
+      required:
+        - variable
+        - name
+        - score
+        - coverage
+        - confidence
+        - status
+        - gate_status
+        - measured_count
+        - total_count
+        - computed_at
+      properties:
+        variable:
+          type: string
+          enum: [V1, V2, V3, V4, V5]
+        name:
+          type: string
+          description: Display name from docs/CONTEXT.md (DEC-20).
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Null when status is 'cannot_assess'.
+        coverage:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Measured contributors / total contributors for this variable.
+        confidence:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Rollup confidence after any provisional downweighting.
+        status:
+          type: string
+          enum: [measured, partly_verified, cannot_assess]
+        gate_status:
+          type: string
+          enum: [measured, provisional, cannot_assess]
+        measured_count:
+          type: integer
+          minimum: 0
+        total_count:
+          type: integer
+          minimum: 1
+        computed_at:
+          type: string
+          format: date-time
+
+    SubVariableScore:
+      type: object
+      required:
+        - sub_variable
+        - variable
+        - label
+        - value
+        - unit
+        - score
+        - confidence
+        - status
+        - observed_at
+        - sources
+      properties:
+        sub_variable:
+          type: string
+          description: Internal ID like '1.1', '2.4'. Shown only to analysts/admins on hover.
+        variable:
+          type: string
+          enum: [V1, V2, V3, V4, V5]
+        label:
+          type: string
+          description: Plain-language label from CONTEXT.md.
+        value:
+          type: number
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Null when the sub-variable was not measured.
+        confidence:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          nullable: true
+        status:
+          type: string
+          enum: [measured, null_not_measured, null_area_only, null_not_applicable]
+        null_reason:
+          type: string
+          nullable: true
+          description: Present (and required) whenever status starts with 'null_'.
+        observed_at:
+          type: string
+          format: date-time
+          nullable: true
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Source'
+
+    Source:
+      type: object
+      required: [name, kind, date]
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [register, observation, satellite, open_data, community]
+        date:
+          type: string
+          format: date
+
+    FindingSummary:
+      type: object
+      required: [id, sub_variable, state, severity, detected_at, record_says, we_observe, gap_summary, published_at]
+      properties:
+        id:
+          type: string
+        sub_variable:
+          type: string
+          description: Which sub-variable raised the finding (2.1, 2.2, 2.4).
+        state:
+          type: string
+          enum: [held, explanation_checked, published, contested, dismissed, resolved]
+          description: >
+            Lifecycle per Bible §6.5 and CONTEXT.md § 4. `contested` means a published
+            finding has been challenged by someone (the subject, a reviewer, or an
+            analyst). Still visible to viewers; the UI shows the challenge copy.
+            `held` and `explanation_checked` and `dismissed` are analyst-only; the API
+            filters them out server-side by the session's role (A-19, DEC-08).
+        severity:
+          type: string
+          enum: [low, medium, high]
+        detected_at:
+          type: string
+          format: date-time
+        record_says:
+          type: string
+        we_observe:
+          type: string
+        gap_summary:
+          type: string
+          description: >
+            One line, describing the gap. Never a cause, intent or person (PRD §10).
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
