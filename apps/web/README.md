@@ -41,11 +41,35 @@ src/
   ui/           shared, dumb UI components
 ```
 
+## Basemap (self-hosted, offline)
+
+The map tiles and labels ship with the app — no third-party host is contacted at runtime.
+
+```sh
+npm run basemap
+```
+
+This runs two scripts in `scripts/`:
+
+- **`build-basemap.sh`** downloads the pinned `pmtiles` CLI into `tools/` (if missing), then
+  probes `https://build.protomaps.com/YYYYMMDD.pmtiles` for the most recent available
+  daily build (up to 14 days back). The URL used is printed and recorded in
+  `public/basemap/BUILD_INFO.txt`. Override with `PMTILES_BUILD_URL=<url>` to pin a build.
+  It extracts the Nairobi County bbox (36.60,-1.50 → 37.15,-1.10) at zoom ≤ 15 into
+  `public/basemap/nairobi.pmtiles`.
+- **`copy-basemap-assets.sh`** shallow-clones `protomaps/basemaps-assets` into `tools/` and
+  copies `fonts/` (glyphs) and `sprites/` into `public/basemap/`. Without glyphs, labels do
+  not render.
+
+The `.pmtiles` file is `> 1 MB` so it is `.gitignored`; every clone rebuilds it on demand.
+
+In production, nginx serves `/basemap/nairobi.pmtiles` with HTTP range requests enabled so
+the browser only pulls the tiles it needs (K-07).
+
 ## Running locally with no internet
 
 Everything the app needs at runtime (basemap tiles, glyphs, sprites, synthetic data) is
-served from this repo. See the "How to run locally and offline" section at the bottom of
-this file (added by Step 10).
+served from this repo. The "How to run locally and offline" section lands with Step 10.
 
 ## Where the real API hooks in
 
