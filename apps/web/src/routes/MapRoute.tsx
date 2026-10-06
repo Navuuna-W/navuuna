@@ -3,7 +3,7 @@
 // composable; the real header + rail land in later steps.
 
 import { MapView } from '@/map/MapView';
-import { EntityPanel } from '@/panel/EntityPanel';
+import { LazyEntityPanel } from '@/panel/LazyEntityPanel';
 import { AttributionFooter } from '@/ui/AttributionFooter';
 import { useLens } from '@/map/useLens';
 
@@ -25,7 +25,7 @@ export function MapRoute() {
           <MapView lens={lensId} />
         </div>
 
-        <EntityPanel />
+        <LazyEntityPanel />
       </div>
 
       <AttributionFooter />

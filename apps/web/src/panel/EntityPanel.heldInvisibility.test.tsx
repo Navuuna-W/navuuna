@@ -108,9 +108,12 @@ describe('EntityPanel — held-finding invisibility (A-19)', () => {
 
     await waitFor(() => expect(screen.getByText('Test water point')).toBeInTheDocument());
 
-    expect(screen.getByText(/Not visible to other users until published/i)).toBeInTheDocument();
+    // FindingDetail is a lazy chunk; use findBy to wait for its Suspense resolution.
     expect(
-      screen.getByText(/Observed status differs from the recorded status/i)
+      await screen.findByText(/Not visible to other users until published/i)
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Observed status differs from the recorded status/i)
     ).toBeInTheDocument();
   });
 });

@@ -13,7 +13,13 @@ import { useEntityDetail } from './useEntityDetail';
 import { VariableRow } from './VariableRow';
 import { assertScored, ScoredFieldsMissingError } from '@/api/assertScored';
 import { ERROR } from '@/copy/labels';
-import { FindingDetail } from '@/findings/FindingDetail';
+import { Suspense, lazy } from 'react';
+
+// Lazy sub-chunk: nothing in the findings/ folder is loaded until the first entity whose
+// payload contains published findings reaches the UI. Keeps the panel chunk itself small.
+const FindingDetail = lazy(() =>
+  import('@/findings/FindingDetail').then((m) => ({ default: m.FindingDetail }))
+);
 
 export function EntityPanel() {
   const { entityId, closeEntity } = useSelectedEntity();
@@ -101,11 +107,15 @@ function EntityBody({
       {detail.findings.length > 0 && (
         <section className="border-t border-neutral-200 p-3" aria-label="Findings">
           <h3 className="text-sm font-semibold">Findings</h3>
-          <div className="mt-2 space-y-2">
-            {detail.findings.map((f) => (
-              <FindingDetail key={f.id} finding={f} />
-            ))}
-          </div>
+          <Suspense
+            fallback={<div className="mt-2 text-xs text-neutral-500">Loading findings…</div>}
+          >
+            <div className="mt-2 space-y-2">
+              {detail.findings.map((f) => (
+                <FindingDetail key={f.id} finding={f} />
+              ))}
+            </div>
+          </Suspense>
         </section>
       )}
 

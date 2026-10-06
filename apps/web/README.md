@@ -11,35 +11,35 @@ that only works against the fixture mock is marked **built (fixtures)** — not 
 mergeable until the real API endpoint ships, and the UI is one env flag away from pointing
 at it (`VITE_DATA_SOURCE=api`).
 
-| Feature | State | Needs for "done" |
-|---|---|---|
-| Scaffold, ESLint 9 flat, Vitest, Playwright, `web` CI job | **done (local)** | PR merge + first green run on `main` |
-| ADR-002 React stack decision | **drafted** | PR merge |
-| Self-hosted Protomaps basemap pipeline (`npm run basemap`) | **built (fixtures)** | K-07 nginx range-request config on Box A |
-| Tile contract `docs/contracts/tiles.md` | **drafted** | Match the Laravel tile endpoint when A-09 ships |
-| OpenAPI draft `docs/contracts/openapi.draft.yaml` | **drafted** | Replaced by Laravel-generated spec at A-06 |
-| MVT + `/api/v1/entities/{id}` served by dev mock | **built (fixtures)** | A-05/A-08/A-09 real endpoints behind K-11 auth |
-| Illustrative-data banner (gated on `VITE_DATA_SOURCE`) | **built (fixtures)** | Hidden automatically when `VITE_DATA_SOURCE=api` |
-| Entity panel S2 with coverage + confidence + accordion | **built (fixtures)** | Live payload from the Laravel API |
-| `assertScored` NFR-02 guard | **built (fixtures)** | Serverside guard A-07 lands in parallel |
-| Finding detail S3 | **built (fixtures)** | Published findings from K-13 real findings engine |
-| Viewer / Analyst role switch | **built (fixtures)** | Role comes from Sanctum session (K-11); switch is fixture-only by construction |
-| County planner lens (weights, direction, bands) | **built (fixtures)** | Loaded from Laravel `LensApplier` (A-11) using Devyan's `county_planner.json` |
-| Road segment line layer | **built (fixtures)** | A real road + V5 scoring from Devyan |
-| Playwright smoke (preview + mock) | **built (fixtures)** | Second smoke against staging after A-06 |
+| Feature                                                    | State                | Needs for "done"                                                               |
+| ---------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| Scaffold, ESLint 9 flat, Vitest, Playwright, `web` CI job  | **done (local)**     | PR merge + first green run on `main`                                           |
+| ADR-002 React stack decision                               | **drafted**          | PR merge                                                                       |
+| Self-hosted Protomaps basemap pipeline (`npm run basemap`) | **built (fixtures)** | K-07 nginx range-request config on Box A                                       |
+| Tile contract `docs/contracts/tiles.md`                    | **drafted**          | Match the Laravel tile endpoint when A-09 ships                                |
+| OpenAPI draft `docs/contracts/openapi.draft.yaml`          | **drafted**          | Replaced by Laravel-generated spec at A-06                                     |
+| MVT + `/api/v1/entities/{id}` served by dev mock           | **built (fixtures)** | A-05/A-08/A-09 real endpoints behind K-11 auth                                 |
+| Illustrative-data banner (gated on `VITE_DATA_SOURCE`)     | **built (fixtures)** | Hidden automatically when `VITE_DATA_SOURCE=api`                               |
+| Entity panel S2 with coverage + confidence + accordion     | **built (fixtures)** | Live payload from the Laravel API                                              |
+| `assertScored` NFR-02 guard                                | **built (fixtures)** | Serverside guard A-07 lands in parallel                                        |
+| Finding detail S3                                          | **built (fixtures)** | Published findings from K-13 real findings engine                              |
+| Viewer / Analyst role switch                               | **built (fixtures)** | Role comes from Sanctum session (K-11); switch is fixture-only by construction |
+| County planner lens (weights, direction, bands)            | **built (fixtures)** | Loaded from Laravel `LensApplier` (A-11) using Devyan's `county_planner.json`  |
+| Road segment line layer                                    | **built (fixtures)** | A real road + V5 scoring from Devyan                                           |
+| Playwright smoke (preview + mock)                          | **built (fixtures)** | Second smoke against staging after A-06                                        |
 
 ### Blocked on
 
-| Dep | Owner | What |
-|---|---|---|
-| K-01 CI base | Khillon | Already merged. |
-| K-06 Laravel scaffold + migrations | Khillon | So we can wire the real `/entities/{id}` |
-| K-07 nginx on Box A (range requests for `.pmtiles`) | Khillon | Staging deploy of the basemap |
-| K-11 Sanctum SPA auth + `/me` | Khillon | Real role comes from session; our client sends none in api mode |
-| A-06 Laravel OpenAPI generation | me | Replaces `openapi.draft.yaml` |
-| ADR-008 three-lane split | me | Not this session; cites ADR-011 + ADR-004a when written |
-| `docs/CONTEXT.md` wording merge | Devyan | Final sub-variable + variable labels (see "Pending label alignment" below) |
-| `lenses/county_planner.json` merge | Devyan | Reconciled by `fe82cb4` (fixture now matches direction axis) |
+| Dep                                                 | Owner   | What                                                                       |
+| --------------------------------------------------- | ------- | -------------------------------------------------------------------------- |
+| K-01 CI base                                        | Khillon | Already merged.                                                            |
+| K-06 Laravel scaffold + migrations                  | Khillon | So we can wire the real `/entities/{id}`                                   |
+| K-07 nginx on Box A (range requests for `.pmtiles`) | Khillon | Staging deploy of the basemap                                              |
+| K-11 Sanctum SPA auth + `/me`                       | Khillon | Real role comes from session; our client sends none in api mode            |
+| A-06 Laravel OpenAPI generation                     | me      | Replaces `openapi.draft.yaml`                                              |
+| ADR-008 three-lane split                            | me      | Not this session; cites ADR-011 + ADR-004a when written                    |
+| `docs/CONTEXT.md` wording merge                     | Devyan  | Final sub-variable + variable labels (see "Pending label alignment" below) |
+| `lenses/county_planner.json` merge                  | Devyan  | Reconciled by `fe82cb4` (fixture now matches direction axis)               |
 
 ### Pending label alignment (Devyan's `origin/docs/docs-context-glossary`, read-only compare)
 
@@ -47,18 +47,18 @@ The CONTEXT.md on Devyan's branch uses noun-phrase labels; our fixture uses the 
 wording from CLAUDE.md. The labels in `src/copy/labels.ts` are **not changed yet** — this
 is a pointer for the next session.
 
-| Scope | Where we are | Where Devyan's CONTEXT.md is |
-|---|---|---|
-| V1 label | "Is it working?" | "Activity" (question becomes a tooltip) |
-| V2 label | "Does the record match?" | "Record vs reality" |
-| V3 label | "Which way is it going?" | "Momentum" |
-| V4 label | "Will its inputs hold?" | "Resource security" |
-| V5 label | "Can people reach it?" | "Access" |
-| Sub-variable labels | 11 ad-hoc rows in `fixtures/generate.ts` (e.g. "Does water come out?") | 28 frozen rows (e.g. 1.1 "Present", 1.2 "Working now"); gates/guards marked explicitly |
-| Variable status word for `provisional` | "Partly verified" (badge) | "Provisional" |
-| Panel name | "Entity details" (aria-label) | "Passport" (DEC-20) |
-| Held finding label | shown with amber banner "Not visible to other users until published" | adds "Under review (analysts only)" status word |
-| Finding "contested" state | not modelled | `contested` state with "Someone has challenged this finding." |
+| Scope                                  | Where we are                                                           | Where Devyan's CONTEXT.md is                                                           |
+| -------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| V1 label                               | "Is it working?"                                                       | "Activity" (question becomes a tooltip)                                                |
+| V2 label                               | "Does the record match?"                                               | "Record vs reality"                                                                    |
+| V3 label                               | "Which way is it going?"                                               | "Momentum"                                                                             |
+| V4 label                               | "Will its inputs hold?"                                                | "Resource security"                                                                    |
+| V5 label                               | "Can people reach it?"                                                 | "Access"                                                                               |
+| Sub-variable labels                    | 11 ad-hoc rows in `fixtures/generate.ts` (e.g. "Does water come out?") | 28 frozen rows (e.g. 1.1 "Present", 1.2 "Working now"); gates/guards marked explicitly |
+| Variable status word for `provisional` | "Partly verified" (badge)                                              | "Provisional"                                                                          |
+| Panel name                             | "Entity details" (aria-label)                                          | "Passport" (DEC-20)                                                                    |
+| Held finding label                     | shown with amber banner "Not visible to other users until published"   | adds "Under review (analysts only)" status word                                        |
+| Finding "contested" state              | not modelled                                                           | `contested` state with "Someone has challenged this finding."                          |
 
 When Devyan's branch merges, swap `src/copy/labels.ts` in one PR (one-file change by design).
 
