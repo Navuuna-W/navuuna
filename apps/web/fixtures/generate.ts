@@ -5,6 +5,11 @@
 // flavour the frontend must render: fully measured, provisional with halved confidence,
 // cannot_assess, sub-variables null_not_measured with a reason, 3 published findings and 1
 // held finding (DEC-08, A-19).
+//
+// Every entity carries all 28 canonical sub-variables from CONTEXT.md (SUB_VARIABLES).
+// Water entities measure only the eight listed in WATER_MODULE_MEASURED; every other row
+// is 'Not measured — not part of the water module yet' so the panel never implies signal
+// we don't have.
 
 import { makeRng, pick, range, int } from './rand';
 import {
@@ -20,6 +25,13 @@ import {
   type Variable,
   type VariableScore,
 } from './types';
+import {
+  NOT_PART_OF_WATER_YET,
+  SUB_VARIABLES,
+  WATER_MODULE_MEASURED,
+  weightedContributorCount,
+  type SubVariableSpec,
+} from './subVariables';
 
 const SEED = '20261006';
 
@@ -45,135 +57,42 @@ const WARD_NAMES = [
   'Ruaraka',
 ] as const;
 
+// Human names per variable live in src/copy/labels.ts for the UI. The generator stores
+// them on the serialised VariableScore so the mock payload is self-describing.
 const VARIABLE_NAMES: Record<Variable, string> = {
-  V1: 'Is it working?',
-  V2: 'Does the record match?',
-  V3: 'Which way is it going?',
-  V4: 'Will its inputs hold?',
-  V5: 'Can people reach it?',
+  V1: 'Activity',
+  V2: 'Record vs reality',
+  V3: 'Momentum',
+  V4: 'Resource security',
+  V5: 'Access',
 };
 
-// Contributor counts from Bible §6.7 / weights.yml.
-const VARIABLE_CONTRIBUTORS: Record<Variable, number> = {
-  V1: 4,
-  V2: 4,
-  V3: 6,
-  V4: 6,
-  V5: 6,
-};
-
-// Sub-variables we actually model in the fixture — a subset covering every variable, so
-// the panel's accordion has real rows under each one.
-interface SubVarSpec {
-  id: string;
-  variable: Variable;
-  label: string;
+// Per-sub-variable sampling range for the measured water rows. Keys match
+// WATER_MODULE_MEASURED; everything else is null-measured.
+interface SamplingRange {
   unit: string | null;
-  valueMin: number;
-  valueMax: number;
+  min: number;
+  max: number;
 }
-const SUBVAR_SPECS: readonly SubVarSpec[] = [
-  {
-    id: '1.1',
-    variable: 'V1',
-    label: 'Does water come out?',
-    unit: null,
-    valueMin: 0,
-    valueMax: 1,
-  },
-  {
-    id: '1.2',
-    variable: 'V1',
-    label: 'How often is it on?',
-    unit: 'hours/day',
-    valueMin: 0,
-    valueMax: 24,
-  },
-  {
-    id: '2.1',
-    variable: 'V2',
-    label: 'Is the record present?',
-    unit: null,
-    valueMin: 0,
-    valueMax: 1,
-  },
-  {
-    id: '2.2',
-    variable: 'V2',
-    label: 'Does the recorded capacity match?',
-    unit: 'm³/day',
-    valueMin: 0,
-    valueMax: 500,
-  },
-  {
-    id: '2.4',
-    variable: 'V2',
-    label: 'Does the status match?',
-    unit: null,
-    valueMin: 0,
-    valueMax: 1,
-  },
-  {
-    id: '2.5',
-    variable: 'V2',
-    label: 'How old is the record?',
-    unit: 'months',
-    valueMin: 0,
-    valueMax: 60,
-  },
-  {
-    id: '3.1',
-    variable: 'V3',
-    label: 'How does uptime trend over 12 months?',
-    unit: '%',
-    valueMin: 0,
-    valueMax: 100,
-  },
-  {
-    id: '4.1',
-    variable: 'V4',
-    label: 'Does rainfall support the catchment?',
-    unit: 'mm/year',
-    valueMin: 100,
-    valueMax: 1200,
-  },
-  {
-    id: '4.4',
-    variable: 'V4',
-    label: 'Is the grid stable here?',
-    unit: '%',
-    valueMin: 0,
-    valueMax: 100,
-  },
-  {
-    id: '5.1',
-    variable: 'V5',
-    label: 'How many minutes to walk here?',
-    unit: 'minutes',
-    valueMin: 2,
-    valueMax: 60,
-  },
-  {
-    id: '5.2',
-    variable: 'V5',
-    label: 'How wide is the catchment?',
-    unit: 'people',
-    valueMin: 50,
-    valueMax: 5000,
-  },
-];
+const WATER_SAMPLING: Record<string, SamplingRange> = {
+  '1.1': { unit: null, min: 0, max: 1 },
+  '1.2': { unit: 'hours/day', min: 0, max: 24 },
+  '2.1': { unit: null, min: 0, max: 1 },
+  '2.2': { unit: 'm³/day', min: 0, max: 500 },
+  '2.4': { unit: null, min: 0, max: 1 },
+  '2.5': { unit: 'months', min: 0, max: 60 },
+  '4.4': { unit: '%', min: 0, max: 100 },
+  '5.2': { unit: 'people', min: 50, max: 5000 },
+};
 
-const SOURCE_POOLS: Record<SubVarSpec['id'], readonly Source[]> = {
+const SOURCE_POOLS: Record<string, readonly Source[]> = {
   '1.1': [{ name: 'Community observation (synthetic)', kind: 'community', date: '2026-09-15' }],
   '1.2': [{ name: 'Operator log (synthetic)', kind: 'register', date: '2026-09-14' }],
   '2.1': [{ name: 'WASREB scheme register', kind: 'register', date: '2026-03-12' }],
   '2.2': [{ name: 'WASREB scheme register', kind: 'register', date: '2026-03-12' }],
   '2.4': [{ name: 'WASREB scheme register', kind: 'register', date: '2026-03-12' }],
   '2.5': [{ name: 'WASREB scheme register', kind: 'register', date: '2026-03-12' }],
-  '3.1': [{ name: 'Operator log (synthetic)', kind: 'register', date: '2026-09-01' }],
-  '4.1': [{ name: 'CHIRPS 2.0', kind: 'satellite', date: '2026-08-31' }],
   '4.4': [{ name: 'KPLC public data (illustrative)', kind: 'open_data', date: '2026-06-30' }],
-  '5.1': [{ name: 'OpenStreetMap routing', kind: 'open_data', date: '2026-09-10' }],
   '5.2': [{ name: 'GRID3 population raster', kind: 'satellite', date: '2026-07-01' }],
 };
 
@@ -182,7 +101,6 @@ const NULL_REASON_POOL = [
   'satellite tile unavailable for this cell',
   'register row has no reading for this field',
   'ward-level only — not measured at this location',
-  'walking-time network ends outside the service area',
 ] as const;
 
 // --- generator ---
@@ -196,7 +114,6 @@ export function generateFixtures(): GenResult {
   const rng = makeRng(SEED);
 
   // Decide which indices get which gate_status.
-  // We pre-pick cannot_assess ids and provisional ids by index so the mix is exact.
   const gateByIndex = new Array<'cannot_assess' | 'provisional' | 'measured'>(WATER_POINT_COUNT);
   for (let i = 0; i < WATER_POINT_COUNT; i++) gateByIndex[i] = 'measured';
   const chosen = new Set<number>();
@@ -229,14 +146,16 @@ export function generateFixtures(): GenResult {
     .filter((e) => e.detail.gate_status === 'measured' && e.detail.entity_type === 'water_point')
     .slice(0, 10)
     .map((e) => e.detail.id);
-  const [m0, m1, m2, m3] = measuredEntityIds;
-  if (!m0 || !m1 || !m2 || !m3) {
+  const [m0, m1, m2, m3, m4] = measuredEntityIds;
+  if (!m0 || !m1 || !m2 || !m3 || !m4) {
     throw new Error('Not enough measured water points to seed findings');
   }
   attachFinding(entities, m0, 'published', 'high', '2.4');
   attachFinding(entities, m1, 'published', 'medium', '2.2');
   attachFinding(entities, m2, 'published', 'low', '2.2');
   attachFinding(entities, m3, 'held', 'medium', '2.4');
+  // Fix #5: one contested example so the UI exercises the status.
+  attachFinding(entities, m4, 'contested', 'medium', '2.2');
 
   const byId = new Map<string, FixtureEntity>();
   for (const e of entities) byId.set(e.detail.id, e);
@@ -264,7 +183,6 @@ function makeWaterPoint(
 
 function makeRoadSegment(rng: () => number): FixtureEntity {
   const id = 'rd-001';
-  // A short illustrative line across Nairobi.
   const coords: [number, number][] = [
     [36.82, -1.3],
     [36.835, -1.295],
@@ -296,9 +214,8 @@ function makeEntityDetail(
 ): EntityDetail {
   const confidenceFactor = gate === 'provisional' ? PROVISIONAL_CONFIDENCE_FACTOR : 1.0;
 
-  // Generate sub-variables first; variables roll up from them.
-  const sub_variables = SUBVAR_SPECS.map((spec) =>
-    makeSubVariable(rng, spec, gate, confidenceFactor)
+  const sub_variables = SUB_VARIABLES.map((spec) =>
+    makeSubVariable(rng, spec, module, gate, confidenceFactor)
   );
 
   const variables: VariableScore[] = (['V1', 'V2', 'V3', 'V4', 'V5'] as const).map((v) =>
@@ -306,7 +223,6 @@ function makeEntityDetail(
   );
 
   const last_observed_at = gate === 'cannot_assess' ? null : isoRecent(rng, 60);
-  const last_computed_at = BASE_COMPUTED_AT;
 
   return {
     id,
@@ -316,7 +232,7 @@ function makeEntityDetail(
     ward,
     gate_status: gate,
     last_observed_at,
-    last_computed_at,
+    last_computed_at: BASE_COMPUTED_AT,
     variables,
     sub_variables,
     findings: [],
@@ -326,40 +242,44 @@ function makeEntityDetail(
 
 function makeSubVariable(
   rng: () => number,
-  spec: SubVarSpec,
+  spec: SubVariableSpec,
+  module: 'water' | 'roads' | 'land',
   gate: 'measured' | 'provisional' | 'cannot_assess',
   confidenceFactor: number
 ): SubVariableScore {
-  // When the entity failed its V1 gate, no sub-variable is measured.
-  // Otherwise ~25% of sub-variables are null_not_measured with a reason.
-  const isMeasured = gate !== 'cannot_assess' && rng() > 0.25;
-
   const sources: Source[] = (SOURCE_POOLS[spec.id] ?? []).map((s) => ({ ...s }));
+  const isWater = module === 'water';
+  const inWaterSet = WATER_MODULE_MEASURED.has(spec.id);
 
-  if (!isMeasured) {
-    const reason =
-      gate === 'cannot_assess'
-        ? 'the activity gate (1.1) could not be measured for this entity'
-        : (pick(rng, NULL_REASON_POOL) as string);
+  // Rule 1: a sub-variable the water module does not model is honestly reported as
+  // 'not part of the water module yet'. Applies to every entity in the water module,
+  // regardless of its gate status.
+  if (isWater && !inWaterSet) {
+    return nullSubVariable(spec, 'null_not_measured', NOT_PART_OF_WATER_YET, sources);
+  }
+
+  // Rule 2: a cannot_assess entity has no measurements at all — the activity gate failed.
+  if (gate === 'cannot_assess') {
+    return nullSubVariable(
+      spec,
+      'null_not_measured',
+      'the activity gate (1.1) could not be measured for this entity',
+      sources
+    );
+  }
+
+  // Rule 3: non-water modules (the illustrative road) measure every row for now.
+  // Rule 4: inside the water-measured set, ~25% are null_not_measured with a reason.
+  if (isWater && rng() < 0.25) {
+    const reason = pick(rng, NULL_REASON_POOL) as string;
     const status: SubVariableStatus = reason.startsWith('ward-level')
       ? 'null_area_only'
       : 'null_not_measured';
-    return {
-      sub_variable: spec.id,
-      variable: spec.variable,
-      label: spec.label,
-      value: null,
-      unit: spec.unit,
-      score: null,
-      confidence: null,
-      status,
-      null_reason: reason,
-      observed_at: null,
-      sources,
-    };
+    return nullSubVariable(spec, status, reason, sources);
   }
 
-  const value = round(range(rng, spec.valueMin, spec.valueMax), 2);
+  const sampling: SamplingRange = WATER_SAMPLING[spec.id] ?? { unit: null, min: 0, max: 100 };
+  const value = round(range(rng, sampling.min, sampling.max), 2);
   const score = int(rng, 20, 95);
   const confidence = round(range(rng, 0.5, 0.95) * confidenceFactor, 2);
 
@@ -368,12 +288,33 @@ function makeSubVariable(
     variable: spec.variable,
     label: spec.label,
     value,
-    unit: spec.unit,
+    unit: sampling.unit,
     score,
     confidence,
     status: 'measured',
     null_reason: null,
     observed_at: isoRecent(rng, 30),
+    sources,
+  };
+}
+
+function nullSubVariable(
+  spec: SubVariableSpec,
+  status: SubVariableStatus,
+  reason: string,
+  sources: Source[]
+): SubVariableScore {
+  return {
+    sub_variable: spec.id,
+    variable: spec.variable,
+    label: spec.label,
+    value: null,
+    unit: WATER_SAMPLING[spec.id]?.unit ?? null,
+    score: null,
+    confidence: null,
+    status,
+    null_reason: reason,
+    observed_at: null,
     sources,
   };
 }
@@ -384,9 +325,15 @@ function rollUpVariable(
   gate: 'measured' | 'provisional' | 'cannot_assess',
   confidenceFactor: number
 ): VariableScore {
-  const relevant = subVariables.filter((s) => s.variable === variable);
+  // DEC-11: X-of-Y counts weighted contributors only — gates and the guard are excluded.
+  const contributorIds = new Set(
+    SUB_VARIABLES.filter((s) => s.variable === variable && s.role === 'contributor').map(
+      (s) => s.id
+    )
+  );
+  const relevant = subVariables.filter((s) => contributorIds.has(s.sub_variable));
   const measured = relevant.filter((s) => s.status === 'measured' && s.score !== null);
-  const total_count = VARIABLE_CONTRIBUTORS[variable];
+  const total_count = weightedContributorCount(variable);
   const measured_count = Math.min(measured.length, total_count);
   const coverage = round(measured_count / total_count, 2);
 
@@ -460,7 +407,8 @@ function attachFinding(
   const story = stories[subVariable];
   if (!story) throw new Error(`attachFinding: no story for sub-variable ${subVariable}`);
   const detected_at = '2026-10-04T09:00:00Z';
-  const published_at = state === 'published' ? '2026-10-04T15:00:00Z' : null;
+  const published_at =
+    state === 'published' || state === 'contested' ? '2026-10-04T15:00:00Z' : null;
 
   entity.detail.findings.push({
     id: `${entityId}-finding-${entity.detail.findings.length + 1}`,

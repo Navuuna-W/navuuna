@@ -3,10 +3,14 @@
 // in place of the value — never 0, never "—" (CLAUDE.md product rule 2).
 
 import type { components } from '@/api/schema';
-import { EMPTY } from '@/copy/labels';
-import { confidenceWord } from '@/copy/labels';
+import { EMPTY, confidenceWord } from '@/copy/labels';
+import { roleOf, SUB_VARIABLES } from '@/copy/subVariables';
 
 type SubVariableScore = components['schemas']['SubVariableScore'];
+
+function tooltipFor(id: string): string | undefined {
+  return SUB_VARIABLES.find((s) => s.id === id)?.tooltip;
+}
 
 export function SubVariableAccordion({ items }: { items: SubVariableScore[] }) {
   if (items.length === 0) return null;
@@ -23,13 +27,23 @@ export function SubVariableAccordion({ items }: { items: SubVariableScore[] }) {
 
 function SubVariableRow({ item }: { item: SubVariableScore }) {
   const isMeasured = item.status === 'measured' && item.score !== null;
+  const role = roleOf(item.sub_variable);
+  const tooltip = tooltipFor(item.sub_variable);
+  const roleLabel = role === 'gate' ? 'gate' : role === 'guard' ? 'guard' : null;
 
   return (
     <div>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-sm font-medium">{item.label}</div>
-          <div className="text-[11px] text-neutral-500" title={item.sub_variable}>
+          <div className="flex items-center gap-1 text-sm font-medium">
+            <span title={tooltip}>{item.label}</span>
+            {roleLabel && (
+              <span className="rounded border border-neutral-300 bg-white px-1 py-0.5 text-[9px] uppercase tracking-wide text-neutral-600">
+                {roleLabel}
+              </span>
+            )}
+          </div>
+          <div className="text-[11px] text-neutral-500" title={tooltip ?? item.sub_variable}>
             {item.sub_variable}
           </div>
         </div>

@@ -32,13 +32,47 @@ describe('fixtures', () => {
     expect(anyNull?.score).toBeNull();
   });
 
-  it('has exactly 3 published findings and exactly 1 held finding', () => {
+  it('has exactly 3 published, 1 held and 1 contested finding', () => {
     const { entities } = fixtures();
     const findings = entities.flatMap((e) => e.detail.findings);
     const published = findings.filter((f) => f.state === 'published');
     const held = findings.filter((f) => f.state === 'held');
+    const contested = findings.filter((f) => f.state === 'contested');
     expect(published).toHaveLength(3);
     expect(held).toHaveLength(1);
+    expect(contested).toHaveLength(1);
+  });
+
+  it('carries all 29 canonical sub-variables on every entity', () => {
+    const { entities } = fixtures();
+    for (const e of entities) {
+      expect(e.detail.sub_variables).toHaveLength(29);
+    }
+  });
+
+  it('a water_point entity measures only the eight canonical water sub-variables', () => {
+    const { entities } = fixtures();
+    const wp = entities.find(
+      (e) => e.detail.entity_type === 'water_point' && e.detail.gate_status === 'measured'
+    );
+    if (!wp) throw new Error('no measured water point');
+    const notPartOfWater = wp.detail.sub_variables.filter(
+      (s) => s.null_reason === 'not part of the water module yet'
+    );
+    // 29 total - 8 measured by the water module = 21 unmodelled rows per water entity.
+    expect(notPartOfWater).toHaveLength(21);
+  });
+
+  it('X-of-Y rolls up only weighted contributors — gates and the guard are excluded', () => {
+    const { entities } = fixtures();
+    const measured = entities.find(
+      (e) => e.detail.entity_type === 'water_point' && e.detail.gate_status === 'measured'
+    );
+    if (!measured) throw new Error('no measured water point');
+    const expected = { V1: 4, V2: 4, V3: 6, V4: 6, V5: 6 } as const;
+    for (const v of measured.detail.variables) {
+      expect(v.total_count, `${v.variable} total_count`).toBe(expected[v.variable]);
+    }
   });
 
   it('is deterministic — two calls return the same identities and gate statuses', () => {
