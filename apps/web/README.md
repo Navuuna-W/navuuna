@@ -64,8 +64,8 @@ When Devyan's branch merges, swap `src/copy/labels.ts` in one PR (one-file chang
 
 ### Open questions for Devyan
 
-Two decisions block closing out the V2 story. Flagged here so the next sync has a specific
-agenda item.
+Three decisions block closing out the V2 story and the next round of apps/web work.
+Flagged here so the next sync has a specific agenda item.
 
 - **(a) V2 reading direction on screen.** `origin/feat/signals-county-planner-lens`'s
   `county_planner.json` sets V2 to `lower_is_better` — a higher discrepancy score means a
@@ -82,6 +82,18 @@ agenda item.
   on `origin/docs/docs-context-glossary` ships **"Provisional"** as the status label.
   Fixture keeps "Partly verified" for the badge until decided — one word, one place
   (`src/copy/labels.ts`). Decision owner: Devyan (vocabulary owner, DEC-20).
+- **(c) 28 or 29 sub-variables?** Bible §6.8 is titled **"The 28 sub-variables (frozen)"**
+  but its tables and `docs/CONTEXT.md` enumerate **29 IDs** across V1–V5: V1 has 5
+  (1.1–1.5) and V2–V5 have 6 each (×.1–×.6) → **26 contributors + 2 gates (1.1, 2.1) + 1
+  guard (2.6) = 29**. The fixture catalogue currently carries all 29 rows and treats the
+  "28" as 26 scored contributors + 2 gates (so the guard is the "extra" row). This
+  decision affects:
+  - the "X of Y" denominator (DEC-11 — currently V1 4, V2 4, V3 6, V4 6, V5 6 = 26,
+    which already assumes gates and the guard are excluded);
+  - the "no new sub-variables" rule in CLAUDE.md §4 and PR descriptions — do we police
+    "no 29th row" or "no 30th row"?
+  - whether rows like 2.6 should be hidden from Viewer tooltips in the panel accordion.
+    Decision owner: Devyan (Bible §6.8 editor).
 
 ## Install
 
