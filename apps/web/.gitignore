@@ -1,0 +1,29 @@
+# Generated at build time
+dist/
+coverage/
+
+# Generated at script time (A-04, A-06)
+public/basemap/
+src/api/schema.d.ts
+
+# Local tools (pmtiles binary, basemaps-assets clone)
+tools/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+*.tsbuildinfo
+.vite/
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
