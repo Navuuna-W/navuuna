@@ -173,6 +173,32 @@ more). Null: no buildings mapped within 1 km → "No homes mapped nearby".
 **1.3 Utilisation ratio.** `reported_production ÷ rated_yield` from the register. Null without
 both figures, same reason strings as 2.2.
 
+## Community observation payload v1 (DEC-14)
+
+What the observation form (FR-17, Austine) sends for a water entity, stored in
+`core.observations` with source kind `community`, and which adapters read it. Refs: D-21,
+DEC-14, E11. No PII in the payload: contributor identity stays in the consent record.
+
+| Field | Type | Required | Read by |
+|---|---|---|---|
+| `entity_id` | uuid | yes | — |
+| `observed_at` | timestamptz (when seen, not when sent) | yes | all, for recency |
+| `existence` | `exists` \| `does_not_exist_here` | yes | 1.1 |
+| `operating_state` | `working` \| `intermittent` \| `not_working` \| `not_sure` | when `exists` | 1.2 (`working`→yes, `intermittent`→intermittent, `not_working`→no; `not_sure` is ignored) |
+| `price_per_20_litres_kes` | number ≥ 0 | no | 5.4 (after 7 Oct) |
+| `note` | text ≤ 500 chars | no | evidence pack only, never a score |
+| `photo_ids` | uuid[] | no | evidence pack only |
+| `consent_version` | text | yes | — (NFR-06) |
+
+Rules:
+- `does_not_exist_here` lowers 1.1 confidence (× 0.6); two different contributors within 90
+  days make 1.1 `absent` (see 1.1).
+- E11: when an observation contradicts satellite or register input, keep both in
+  `source_ids`, use the newer, multiply confidence by `CONTRADICTION_CONFIDENCE_FACTOR`.
+- A withdrawn observation (`POST /observations/{id}/withdraw`, DEC-13) is excluded from the
+  next adapter run; scores that used it are recomputed.
+- A new observation triggers an adapter re-run for that entity (FR-17).
+
 ## Tests each adapter ships with (§14.7)
 
 Known input → known output for every score row above, plus one test per null reason string.
