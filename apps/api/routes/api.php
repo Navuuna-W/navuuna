@@ -8,7 +8,8 @@ declare(strict_types=1);
 use App\Http\Controllers\Auth\SessionController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [SessionController::class, 'store']);
+// Its own limiter, so password guessing can't use up the API or tile buckets (work pack K-11).
+Route::post('/login', [SessionController::class, 'store'])->middleware('throttle:login');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy']);
