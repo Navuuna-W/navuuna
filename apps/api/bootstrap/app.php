@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Auth\MissingApiKeyResponse;
 use App\Http\Middleware\RequireRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -28,7 +27,4 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
-
-        // Machines get a 401 that names the X-Api-Key header (work pack K-11).
-        $exceptions->render(new MissingApiKeyResponse);
     })->create();

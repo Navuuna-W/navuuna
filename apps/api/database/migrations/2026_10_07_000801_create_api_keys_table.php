@@ -1,7 +1,7 @@
 <?php
 
 // API keys for machines that call the JSON API with X-Api-Key (work pack K-11, NFR-05).
-// Framework table in `public` (ADR-004a §1); `keys:issue` writes it and the api_key guard reads it.
+// Framework table in `public` (ADR-004a §1); `keys:issue` writes it; the X-Api-Key guard reads it.
 
 declare(strict_types=1);
 
