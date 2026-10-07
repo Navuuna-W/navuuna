@@ -43,3 +43,13 @@ Needs Python 3.12 or newer.
     .venv/bin/pytest --cov=engine --cov-fail-under=100   # Bible §14.7: 100 % of engine/
     .venv/bin/mypy --strict engine
     .venv/bin/ruff check . && .venv/bin/ruff format --check .
+
+Database tests are skipped unless `NV_TEST_DATABASE_URL` points at a PostgreSQL that has the
+Laravel migrations applied (`cd apps/api && php artisan migrate`). Each test is rolled back.
+CI always sets it, so skipped database tests show up there as missing coverage.
+
+    NV_TEST_DATABASE_URL=postgresql://navuuna:navuuna@127.0.0.1:5432/navuuna_test .venv/bin/pytest
+
+## Configuration
+
+- `NV_SIGNALS_DATABASE_URL` — the service's database login, a member of `nv_signals` (ADR-004a).
