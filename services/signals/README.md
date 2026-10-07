@@ -8,8 +8,11 @@ score; the engine runs them and rolls the scores up into the five variables.
   (`weights.yml`). Knows nothing about water or roads.
   Adapter contract (ADR-003): every adapter carries an `AdapterSpec` (`adapter_spec.py`,
   inputs from `input_kind.py`) and returns a `ScoreResult` (`score_result.py`).
+  The registry (`registry.py`) finds every adapter, skips modules switched off in
+  `MODULES_ENABLED` (`module_flags.py`) and returns them in dependency order.
 - `modules/` — per-module adapters, e.g. `modules/water/adapters/` (Signal lane, arrives with D-18).
-- `tests/` — pytest; `tests/engine/` mirrors `engine/`.
+- `tests/` — pytest; `tests/engine/` mirrors `engine/`; `tests/fixtures/modules/` holds fake
+  adapters for engine tests.
 
 ## Writing an adapter
 
@@ -23,7 +26,7 @@ Files starting with `_` are helpers and are not loaded as adapters. Each adapter
 
 `inputs` (`engine/adapter_inputs.py`) holds `as_of` and only the input kinds listed in
 `requires` (others are `None`); rows are plain JSON dicts. `inputs.sub_variable_results` holds
-the results of `depends_on_sub_ids`.
+the results of `depends_on_sub_ids`. See `tests/fixtures/modules/fake/adapters/` for examples.
 
 `MODULES_ENABLED=water,roads` limits which modules run; unset means every module runs.
 
