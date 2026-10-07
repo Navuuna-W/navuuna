@@ -1,12 +1,13 @@
 <?php
 
-// A person who signs in: analyst, reviewer, admin or contributor (roles arrive in K-11a).
+// A person or machine with an account: admin, analyst, viewer or api_client (FR-20).
 // Framework table in `public` (ADR-004a §1); only Laravel writes it.
 
 declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Auth\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,10 +17,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * A signed-in user. IDs are UUIDv7: HasUuids makes them in PHP so Laravel knows the ID before
- * the insert, and public.uuid_generate_v7() is the database default for any other writer.
+ * A user with exactly one Role (app/Auth/Role.php). IDs are UUIDv7: HasUuids makes them in PHP
+ * so Laravel knows the ID before the insert, and public.uuid_generate_v7() is the database default
+ * for any other writer.
+ *
+ * @property Role $role
  */
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -39,6 +43,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => Role::class,
         ];
     }
 }
