@@ -11,10 +11,15 @@ use Illuminate\Http\Request;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The web app is served from the same origin, so it signs in with a session cookie
+        // instead of a token (work pack K-11, Sanctum SPA).
+        $middleware->statefulApi();
+
         // `role:analyst,admin` on a route answers 403 to every other role (FR-20).
         $middleware->alias(['role' => RequireRole::class]);
     })
