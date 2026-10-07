@@ -25,6 +25,16 @@ enum Role: string
     case ApiClient = 'api_client';
 
     /**
+     * True for the roles allowed to see findings that are not public yet (held, contested, ...).
+     *
+     * Implements CLAUDE.md §4: no held finding in front of a non-analyst, in any form.
+     */
+    public function canSeeUnpublishedFindings(): bool
+    {
+        return $this === self::Admin || $this === self::Analyst;
+    }
+
+    /**
      * The stored values, for validation rules such as Rule::in().
      *
      * @return list<string>
