@@ -53,6 +53,17 @@ CI always sets it, so skipped database tests show up there as missing coverage.
 
     NV_TEST_DATABASE_URL=postgresql://navuuna:navuuna@127.0.0.1:5432/navuuna_test .venv/bin/pytest
 
+## Running
+
+    NV_SIGNALS_DATABASE_URL=... NV_REDIS_URL=... .venv/bin/python -m engine run --all
+    .venv/bin/python -m engine run --module water        # repeat --module for several
+
+A run finds the adapters, records them in `core.adapters`, scores every active entity of each
+module in chunks of 500 (one committed transaction each) and announces each chunk on
+`signals.batch_written`. `--modules-root` points at another modules folder (e.g.
+`tests/fixtures/modules`). Exit code 0 on success, 1 on a missing setting, unknown module or
+broken adapter. Prefect (K-12) runs this command.
+
 ## Configuration
 
 - `NV_SIGNALS_DATABASE_URL` — the service's database login, a member of `nv_signals` (ADR-004a).
