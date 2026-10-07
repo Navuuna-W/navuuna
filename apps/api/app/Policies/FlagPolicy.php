@@ -29,14 +29,16 @@ class FlagPolicy
     /**
      * May the user see this one finding? Published and resolved findings are public;
      * every other state is for analysts and admins only.
+     *
+     * Denied as 404, not 403: a 403 would tell a viewer the finding exists (CLAUDE.md §4).
      */
-    public function view(User $user, Flag $flag): bool
+    public function view(User $user, Flag $flag): Response
     {
-        if ($flag->state->isPublic()) {
-            return true;
+        if ($flag->state->isPublic() || $user->role->canSeeUnpublishedFindings()) {
+            return Response::allow();
         }
 
-        return $user->role->canSeeUnpublishedFindings();
+        return Response::denyAsNotFound();
     }
 
     /**

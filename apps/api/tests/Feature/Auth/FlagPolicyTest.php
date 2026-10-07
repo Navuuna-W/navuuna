@@ -41,7 +41,7 @@ dataset('non-reviewer roles', [Role::Viewer, Role::ApiClient]);
 test('every role can see a public finding', function (Role $role, string $state) {
     $policy = new FlagPolicy;
 
-    $canView = $policy->view(makeUserWithRole($role), makeFlagInState($state));
+    $canView = $policy->view(makeUserWithRole($role), makeFlagInState($state))->allowed();
 
     expect($canView)->toBeTrue();
 })->with('every role')->with('public states');
@@ -49,7 +49,7 @@ test('every role can see a public finding', function (Role $role, string $state)
 test('admins and analysts can see an unpublished finding', function (Role $role, string $state) {
     $policy = new FlagPolicy;
 
-    $canView = $policy->view(makeUserWithRole($role), makeFlagInState($state));
+    $canView = $policy->view(makeUserWithRole($role), makeFlagInState($state))->allowed();
 
     expect($canView)->toBeTrue();
 })->with('reviewer roles')->with('unpublished states');
@@ -57,7 +57,7 @@ test('admins and analysts can see an unpublished finding', function (Role $role,
 test('viewers and api clients cannot see an unpublished finding', function (Role $role, string $state) {
     $policy = new FlagPolicy;
 
-    $canView = $policy->view(makeUserWithRole($role), makeFlagInState($state));
+    $canView = $policy->view(makeUserWithRole($role), makeFlagInState($state))->allowed();
 
     expect($canView)->toBeFalse();
 })->with('non-reviewer roles')->with('unpublished states');

@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\Findings\FlagController;
 use App\Http\Controllers\Findings\FlagTransitionController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,5 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // The JSON API (Bible §11): the web app signs in with its session, machines with X-Api-Key;
 // both share the 60/min limiter (NFR-05).
 Route::prefix('v1')->middleware(['auth:sanctum,api_key', 'throttle:api'])->group(function () {
+    Route::get('/flags', [FlagController::class, 'index']);
+    Route::get('/flags/{flag}', [FlagController::class, 'show'])->whereUuid('flag');
     Route::post('/flags/{flag}/transition', FlagTransitionController::class)->whereUuid('flag');
 });

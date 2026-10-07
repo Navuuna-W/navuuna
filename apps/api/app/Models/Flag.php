@@ -10,6 +10,8 @@ namespace App\Models;
 use App\Findings\FlagState;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 /**
  * One finding (Bible §10, flags.flags). A held finding must never reach a non-analyst
@@ -19,6 +21,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $id
  * @property string $entity_id
  * @property FlagState $state
+ * @property Carbon $detected_at
+ * @property Carbon $state_changed_at
  */
 class Flag extends Model
 {
@@ -51,5 +55,15 @@ class Flag extends Model
             'detected_at' => 'datetime',
             'state_changed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The evidence behind this finding (one pack per finding; K-13 writes it).
+     *
+     * @return HasOne<EvidencePack, $this>
+     */
+    public function evidencePack(): HasOne
+    {
+        return $this->hasOne(EvidencePack::class);
     }
 }
