@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * One audit event (Bible §10, audit.events). A null user_id means the system acted.
  * HasUuids makes the UUIDv7 in PHP so Laravel knows the ID before the insert (ADR-012 §2).
+ *
+ * @property array<string, mixed>|null $before
+ * @property array<string, mixed>|null $after
  */
 class AuditEvent extends Model
 {

@@ -31,7 +31,7 @@ class FlagPolicy
      */
     public function view(User $user, Flag $flag): bool
     {
-        if (in_array($flag->state, Flag::PUBLIC_STATES, true)) {
+        if ($flag->state->isPublic()) {
             return true;
         }
 

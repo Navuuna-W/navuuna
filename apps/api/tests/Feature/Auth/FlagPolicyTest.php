@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 use App\Auth\Role;
+use App\Findings\FlagState;
 use App\Models\Flag;
 use App\Models\User;
 use App\Policies\FlagPolicy;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Gate;
 function makeFlagInState(string $state): Flag
 {
     $flag = new Flag;
-    $flag->state = $state;
+    $flag->state = FlagState::from($state);
 
     return $flag;
 }
