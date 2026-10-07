@@ -44,6 +44,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Machines send X-Api-Key; see App\Auth\FindUserByApiKey (work pack K-11).
+        'api_key' => [
+            'driver' => 'api-key',
+            'provider' => 'users',
+        ],
     ],
 
     /*
