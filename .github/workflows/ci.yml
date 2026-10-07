@@ -87,14 +87,50 @@ jobs:
         run: npm run build
 
   # The python job lints, type-checks and tests the signal service (engine + modules).
-  # Engine coverage must stay at 100 % (Bible §14.7).
+  # Engine coverage must stay at 100 % (Bible §14.7). Database tests need the real schema,
+  # and Laravel owns every migration (ADR-004a), so this job runs `artisan migrate` first.
   python:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: services/signals
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: navuuna_test
+          POSTGRES_USER: navuuna
+          POSTGRES_PASSWORD: navuuna # throwaway CI database, not a secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U navuuna"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: navuuna_test
+      DB_USERNAME: navuuna
+      DB_PASSWORD: navuuna
+      NV_TEST_DATABASE_URL: postgresql://navuuna:navuuna@127.0.0.1:5432/navuuna_test
     steps:
       - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3" # ADR-009
+          extensions: pdo_pgsql
+          coverage: none
+
+      - name: Build the database schema with the Laravel migrations
+        working-directory: apps/api
+        run: |
+          composer install --no-interaction --no-progress --prefer-dist
+          cp .env.example .env
+          php artisan migrate --force --no-interaction
 
       - uses: actions/setup-python@v5
         with:
