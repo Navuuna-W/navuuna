@@ -15,6 +15,18 @@ def test_a_missing_database_url_is_reported() -> None:
         connect_to_database(environment)
 
 
+def test_the_connection_commits_each_transaction_block() -> None:
+    database_url = os.environ.get(TEST_DATABASE_URL_VARIABLE, "")
+    if not database_url:
+        pytest.skip(f"{TEST_DATABASE_URL_VARIABLE} is not set")
+    environment = {"NV_SIGNALS_DATABASE_URL": database_url}
+
+    with connect_to_database(environment) as connection:
+        is_autocommit = connection.autocommit
+
+    assert is_autocommit
+
+
 def test_rows_come_back_as_dicts() -> None:
     database_url = os.environ.get(TEST_DATABASE_URL_VARIABLE, "")
     if not database_url:
