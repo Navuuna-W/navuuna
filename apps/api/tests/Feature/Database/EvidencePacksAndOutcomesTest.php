@@ -35,7 +35,7 @@ function insertEvidencePack(string $flagId, array $overrides = []): void
 function insertFlagOutcome(string $flagId, array $overrides = []): void
 {
     $analystEmail = 'analyst-'.uniqid().'@example.test';
-    DB::table('public.users')->insert(['name' => 'Test Analyst', 'email' => $analystEmail, 'password' => 'x']);
+    DB::table('public.users')->insert(['name' => 'Test Analyst', 'email' => $analystEmail, 'password' => 'x', 'role' => 'analyst']);
 
     DB::table('flags.outcomes')->insert(array_merge([
         'flag_id' => $flagId,

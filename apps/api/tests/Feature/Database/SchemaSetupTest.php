@@ -50,7 +50,7 @@ test('the uuid default generates version 7 ids with the current time', function 
 });
 
 test('a user inserted without an id gets a version 7 id from the database', function () {
-    DB::table('public.users')->insert(['name' => 'Test Analyst', 'email' => 'analyst@example.test', 'password' => 'x']);
+    DB::table('public.users')->insert(['name' => 'Test Analyst', 'email' => 'analyst@example.test', 'password' => 'x', 'role' => 'analyst']);
 
     $storedId = DB::table('public.users')->where('email', 'analyst@example.test')->value('id');
 
@@ -77,7 +77,7 @@ test('the python ingest role cannot read the users table', function () {
 test('the laravel role can read and write the users table', function () {
     DB::statement('SET LOCAL ROLE nv_app');
 
-    DB::table('public.users')->insert(['name' => 'Test Reviewer', 'email' => 'reviewer@example.test', 'password' => 'x']);
+    DB::table('public.users')->insert(['name' => 'Test Reviewer', 'email' => 'reviewer@example.test', 'password' => 'x', 'role' => 'analyst']);
 
     expect(DB::table('public.users')->count())->toBe(1);
 });
