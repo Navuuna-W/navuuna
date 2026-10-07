@@ -20,6 +20,7 @@ def existence_gap_spec_fields(**overrides: Any) -> dict[str, Any]:
         "version": "1.0.0",
         "requires": [InputKind.ENTITY, InputKind.RECORDS],
         "depends_on_sub_ids": ["1.1"],
+        "signal_description": "Whether a matched official record has no observed counterpart.",
     }
     fields.update(overrides)
     return fields
@@ -87,3 +88,9 @@ def test_a_version_that_is_not_major_minor_patch_is_rejected(version: str) -> No
 def test_a_module_name_that_cannot_be_a_folder_name_is_rejected(module: str) -> None:
     with pytest.raises(ValidationError):
         AdapterSpec(**existence_gap_spec_fields(module=module))
+
+
+@pytest.mark.parametrize("signal_description", ["", "   "])
+def test_a_blank_signal_description_is_rejected(signal_description: str) -> None:
+    with pytest.raises(ValidationError):
+        AdapterSpec(**existence_gap_spec_fields(signal_description=signal_description))

@@ -14,17 +14,22 @@ from engine.sub_variables import SUB_VARIABLE_IDS, is_known_sub_variable
 MODULE_NAME_PATTERN = r"^[a-z][a-z_]*$"
 # Semantic version "major.minor.patch", stored as adapter_version on every score row.
 VERSION_PATTERN = r"^\d+\.\d+\.\d+$"
+# At least one character that is not a space: core.adapters.signal_description is NOT NULL
+# and is shown to analysts, so a blank description is as bad as none.
+NOT_BLANK_PATTERN = r"\S"
 
 ModuleName = Annotated[str, Field(pattern=MODULE_NAME_PATTERN)]
 AdapterVersion = Annotated[str, Field(pattern=VERSION_PATTERN)]
+SignalDescription = Annotated[str, Field(pattern=NOT_BLANK_PATTERN)]
 
 
 class AdapterSpec(BaseModel):
     """Describes one adapter so the engine can register and run it without knowing its module.
 
     Fields: module ("water"), sub_id (one of the frozen IDs, "1.2"), entity_types it can score,
-    version (semver), requires (at least one InputKind) and depends_on_sub_ids — other
-    sub-variables of the same entity whose results it reads (e.g. 2.1 reads 1.1).
+    version (semver), requires (at least one InputKind), depends_on_sub_ids — other
+    sub-variables of the same entity whose results it reads (e.g. 2.1 reads 1.1) — and
+    signal_description, one sentence on what it measures, stored in core.adapters.
     Implements ADR-003 and Bible §6.8 — no adapter can invent a sub-variable.
     """
 
@@ -38,6 +43,7 @@ class AdapterSpec(BaseModel):
     version: AdapterVersion
     requires: frozenset[InputKind] = Field(min_length=1)
     depends_on_sub_ids: frozenset[str] = frozenset()
+    signal_description: SignalDescription
 
     @field_validator("sub_id")
     @classmethod
