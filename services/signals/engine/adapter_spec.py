@@ -21,6 +21,11 @@ NOT_BLANK_PATTERN = r"\S"
 ModuleName = Annotated[str, Field(pattern=MODULE_NAME_PATTERN)]
 AdapterVersion = Annotated[str, Field(pattern=VERSION_PATTERN)]
 SignalDescription = Annotated[str, Field(pattern=NOT_BLANK_PATTERN)]
+# The biggest search radius an adapter may ask for, so a typo cannot load half of Nairobi.
+MAX_NEARBY_RADIUS_M = 5000
+NearbyRadius = Annotated[float, Field(gt=0, le=MAX_NEARBY_RADIUS_M)]
+# The input kinds that search around the entity and so need nearby_radius_m.
+NEARBY_INPUT_KINDS = frozenset({InputKind.NEARBY_ENTITIES, InputKind.NEARBY_WAYS})
 
 
 class AdapterSpec(BaseModel):
@@ -28,8 +33,9 @@ class AdapterSpec(BaseModel):
 
     Fields: module ("water"), sub_id (one of the frozen IDs, "1.2"), entity_types it can score,
     version (semver), requires (at least one InputKind), depends_on_sub_ids — other
-    sub-variables of the same entity whose results it reads (e.g. 2.1 reads 1.1) — and
-    signal_description, one sentence on what it measures, stored in core.adapters.
+    sub-variables of the same entity whose results it reads (e.g. 2.1 reads 1.1) —
+    signal_description, one sentence on what it measures, stored in core.adapters, and
+    nearby_radius_m, the search radius in metres, set exactly when requires has a nearby kind.
     Implements ADR-003 and Bible §6.8 — no adapter can invent a sub-variable.
     """
 
@@ -44,6 +50,7 @@ class AdapterSpec(BaseModel):
     requires: frozenset[InputKind] = Field(min_length=1)
     depends_on_sub_ids: frozenset[str] = frozenset()
     signal_description: SignalDescription
+    nearby_radius_m: NearbyRadius | None = None
 
     @field_validator("sub_id")
     @classmethod
@@ -65,4 +72,14 @@ class AdapterSpec(BaseModel):
         # The runner orders adapters by their dependencies; a self-dependency would never run.
         if self.sub_id in self.depends_on_sub_ids:
             raise ValueError(f"adapter for {self.sub_id} cannot depend on its own result")
+        return self
+
+    @model_validator(mode="after")
+    def check_radius_matches_nearby_inputs(self) -> Self:
+        # The runner can only search around the entity if it knows how far.
+        is_nearby_input_required = bool(self.requires & NEARBY_INPUT_KINDS)
+        if is_nearby_input_required and self.nearby_radius_m is None:
+            raise ValueError("an adapter that requires nearby inputs needs nearby_radius_m")
+        if not is_nearby_input_required and self.nearby_radius_m is not None:
+            raise ValueError("nearby_radius_m is only for adapters that require nearby inputs")
         return self

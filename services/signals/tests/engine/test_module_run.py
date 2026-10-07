@@ -18,7 +18,7 @@ from tests.database_helpers import act_as_signal_service
 from tests.database_rows import create_point_entity
 
 FIXTURE_MODULES_ROOT = Path(__file__).parent.parent / "fixtures" / "modules"
-# The fake module only; the "other" module needs nearby_ways, which K-09b-2d adds.
+# The fake module only, so the expected rows and versions stay short.
 FAKE_MODULE_ONLY = {"MODULES_ENABLED": "fake"}
 AS_OF = datetime(2026, 10, 7, 12, 0, tzinfo=UTC)
 

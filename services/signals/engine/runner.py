@@ -57,7 +57,12 @@ def run_entity(
     if entity is None:
         return False
     fitting_adapters = select_adapters_for_entity(adapters, entity)
-    loaded_rows = load_input_rows(connection, entity_id, declared_kinds(fitting_adapters))
+    loaded_rows = load_input_rows(
+        connection,
+        entity_id,
+        declared_kinds(fitting_adapters),
+        largest_nearby_radius(fitting_adapters),
+    )
 
     results_so_far: dict[str, ScoreResult] = {}
     for adapter in fitting_adapters:
@@ -87,6 +92,17 @@ def declared_kinds(adapters: list[RegisteredAdapter]) -> frozenset[InputKind]:
     for adapter in adapters:
         kinds.update(adapter.spec.requires)
     return frozenset(kinds)
+
+
+def largest_nearby_radius(adapters: list[RegisteredAdapter]) -> float | None:
+    """The biggest nearby_radius_m among these adapters, or None if none searches nearby.
+
+    Nearby rows are loaded once within this radius; build_adapter_inputs then trims them to
+    each adapter's own radius.
+    """
+    radii = [adapter.spec.nearby_radius_m for adapter in adapters]
+    set_radii = [radius_m for radius_m in radii if radius_m is not None]
+    return max(set_radii, default=None)
 
 
 def call_adapter(

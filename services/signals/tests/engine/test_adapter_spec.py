@@ -94,3 +94,21 @@ def test_a_module_name_that_cannot_be_a_folder_name_is_rejected(module: str) -> 
 def test_a_blank_signal_description_is_rejected(signal_description: str) -> None:
     with pytest.raises(ValidationError):
         AdapterSpec(**existence_gap_spec_fields(signal_description=signal_description))
+
+
+def test_a_nearby_input_needs_a_radius() -> None:
+    with pytest.raises(ValidationError, match="needs nearby_radius_m"):
+        AdapterSpec(**existence_gap_spec_fields(requires=["nearby_ways"]))
+
+
+def test_a_radius_without_a_nearby_input_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="only for adapters that require nearby inputs"):
+        AdapterSpec(**existence_gap_spec_fields(nearby_radius_m=200))
+
+
+@pytest.mark.parametrize("nearby_radius_m", [0, -1, 5001])
+def test_a_radius_outside_0_to_5000_metres_is_rejected(nearby_radius_m: float) -> None:
+    with pytest.raises(ValidationError):
+        AdapterSpec(
+            **existence_gap_spec_fields(requires=["nearby_ways"], nearby_radius_m=nearby_radius_m)
+        )

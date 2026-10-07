@@ -28,7 +28,8 @@ Files starting with `_` are helpers and are not loaded as adapters. Each adapter
 
 `inputs` (`engine/adapter_inputs.py`) holds `as_of` and only the input kinds listed in
 `requires` (others are `None`); rows are plain JSON dicts. `inputs.sub_variable_results` holds
-the results of `depends_on_sub_ids`. See `tests/fixtures/modules/fake/adapters/` for examples.
+the results of `depends_on_sub_ids`. An adapter that requires `nearby_entities` or `nearby_ways` sets
+`nearby_radius_m` (≤ 5000); those rows carry `distance_m`, nearest first. See `tests/fixtures/modules/fake/adapters/` for examples.
 
 `MODULES_ENABLED=water,roads` limits which modules run; unset means every module runs.
 

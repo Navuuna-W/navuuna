@@ -28,6 +28,49 @@ LOAD_OBSERVATIONS_SQL = """
     ORDER BY observation.observed_at DESC
 """
 
+LOAD_EO_STATS_SQL = """
+    SELECT to_jsonb(eo_stat) AS row
+    FROM raw.eo_stats AS eo_stat
+    WHERE eo_stat.entity_id = %(entity_id)s
+    ORDER BY eo_stat.acquired_at DESC
+"""
+
+# Same ward and same module only: a ward can hold thousands of buildings, and no adapter needs
+# counts across modules yet. No parent area or no module (shared areas) → no rows.
+LOAD_SAME_AREA_ENTITIES_SQL = """
+    SELECT to_jsonb(other) - 'geom' AS row
+    FROM core.entities AS entity
+    JOIN core.entities AS other
+      ON other.parent_area_id = entity.parent_area_id AND other.module = entity.module
+    WHERE entity.id = %(entity_id)s AND other.id <> entity.id AND other.retired_at IS NULL
+    ORDER BY other.id
+"""
+
+# Rows for both nearby kinds: other active entities within the radius, nearest first, each with
+# its distance in metres (geography). {entity_type_filter} picks the kind's entity types.
+# geography distances skip the GIST index on geom; fine at today's size (see K-18).
+NEARBY_SQL_TEMPLATE = """
+    SELECT (to_jsonb(other) - 'geom') || jsonb_build_object('distance_m', distance.metres) AS row
+    FROM core.entities AS entity
+    JOIN core.entities AS other ON other.id <> entity.id AND other.retired_at IS NULL
+    CROSS JOIN LATERAL (
+        SELECT ST_Distance(entity.geom::geography, other.geom::geography) AS metres
+    ) AS distance
+    WHERE entity.id = %(entity_id)s
+      AND {entity_type_filter}
+      AND ST_DWithin(entity.geom::geography, other.geom::geography, %(radius_m)s)
+    ORDER BY distance.metres, other.id
+"""
+# OSM ways are loaded as segment entities (D-05).
+LOAD_NEARBY_WAYS_SQL = NEARBY_SQL_TEMPLATE.format(
+    entity_type_filter="other.entity_type = 'segment'"
+)
+# Areas are left out: a ward around the entity would always be "0 m away". Wards come
+# through same_area_entities instead.
+LOAD_NEARBY_ENTITIES_SQL = NEARBY_SQL_TEMPLATE.format(
+    entity_type_filter="other.entity_type <> 'area'"
+)
+
 # Every records table matched to entities has an entity_id column; the review queue has none.
 FIND_RECORDS_TABLES_SQL = """
     SELECT table_name
@@ -45,8 +88,20 @@ LOAD_RECORDS_SQL = """
 """
 
 
-class UnsupportedInputError(Exception):
-    """An adapter asked for an input kind the loader cannot load yet."""
+# Kinds loaded with one query on the entity id. RECORDS and the nearby kinds need more.
+ENTITY_QUERIES = {
+    InputKind.OBSERVATIONS: LOAD_OBSERVATIONS_SQL,
+    InputKind.EO_STATS: LOAD_EO_STATS_SQL,
+    InputKind.SAME_AREA_ENTITIES: LOAD_SAME_AREA_ENTITIES_SQL,
+}
+NEARBY_QUERIES = {
+    InputKind.NEARBY_WAYS: LOAD_NEARBY_WAYS_SQL,
+    InputKind.NEARBY_ENTITIES: LOAD_NEARBY_ENTITIES_SQL,
+}
+
+
+class MissingRadiusError(Exception):
+    """Nearby rows were asked for without a radius; AdapterSpec should have prevented it."""
 
 
 def load_entity(connection: DatabaseConnection, entity_id: UUID) -> InputRow | None:
@@ -63,30 +118,49 @@ def load_entity(connection: DatabaseConnection, entity_id: UUID) -> InputRow | N
 
 
 def load_input_rows(
-    connection: DatabaseConnection, entity_id: UUID, kinds: frozenset[InputKind]
+    connection: DatabaseConnection,
+    entity_id: UUID,
+    kinds: frozenset[InputKind],
+    nearby_radius_m: float | None = None,
 ) -> dict[InputKind, InputRows]:
-    """Load the rows of each requested kind for one entity, newest first.
+    """Load the rows of each requested kind for one entity.
 
-    Inputs: an open connection, the entity id and the kinds the entity's adapters declare.
-    Output: rows by kind. ENTITY is skipped here; load_entity returns it.
-    Raises UnsupportedInputError for eo_stats and the nearby kinds, which K-09b-2d adds.
+    Inputs: an open connection, the entity id, the kinds the entity's adapters declare and,
+    for the nearby kinds, the largest radius any of them asked for. Output: rows by kind;
+    nearby rows are nearest first and carry distance_m. ENTITY is skipped; load_entity
+    returns it. Raises MissingRadiusError for a nearby kind without a radius.
     Implements ADR-003 — the runner loads exactly what `requires` declares.
     """
     loaded_rows: dict[InputKind, InputRows] = {}
     for kind in sorted(kinds - {InputKind.ENTITY}):
-        loaded_rows[kind] = load_rows_of_kind(connection, entity_id, kind)
+        loaded_rows[kind] = load_rows_of_kind(connection, entity_id, kind, nearby_radius_m)
     return loaded_rows
 
 
 def load_rows_of_kind(
-    connection: DatabaseConnection, entity_id: UUID, kind: InputKind
+    connection: DatabaseConnection,
+    entity_id: UUID,
+    kind: InputKind,
+    nearby_radius_m: float | None,
 ) -> InputRows:
     """Load one kind of input for one entity."""
-    if kind is InputKind.OBSERVATIONS:
-        return fetch_rows(connection, LOAD_OBSERVATIONS_SQL, entity_id)
     if kind is InputKind.RECORDS:
         return load_records(connection, entity_id)
-    raise UnsupportedInputError(f"the runner cannot load {kind.value!r} inputs yet")
+    if kind in NEARBY_QUERIES:
+        return load_nearby_rows(connection, entity_id, NEARBY_QUERIES[kind], nearby_radius_m)
+    return fetch_rows(connection, ENTITY_QUERIES[kind], entity_id)
+
+
+def load_nearby_rows(
+    connection: DatabaseConnection, entity_id: UUID, query: str, nearby_radius_m: float | None
+) -> InputRows:
+    """Load the rows of one nearby kind within nearby_radius_m, each with its distance_m."""
+    if nearby_radius_m is None:
+        raise MissingRadiusError("nearby inputs need a radius (AdapterSpec.nearby_radius_m)")
+    found_rows = connection.execute(
+        query, {"entity_id": entity_id, "radius_m": nearby_radius_m}
+    ).fetchall()
+    return tuple(found_row["row"] for found_row in found_rows)
 
 
 def load_records(connection: DatabaseConnection, entity_id: UUID) -> InputRows:

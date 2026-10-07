@@ -13,6 +13,7 @@ SPEC = AdapterSpec(
     entity_types=[EntityType.POINT, EntityType.SEGMENT],
     version="0.1.0",
     requires=[InputKind.NEARBY_WAYS],
+    nearby_radius_m=200,
     signal_description="Fake connection quality: never measured.",
 )
 
