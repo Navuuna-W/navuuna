@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\RequireRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // The web app is served from the same origin, so it signs in with a session cookie
         // instead of a token (work pack K-11, Sanctum SPA).
         $middleware->statefulApi();
+
+        // `role:analyst,admin` on a route answers 403 to every other role (FR-20).
+        $middleware->alias(['role' => RequireRole::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

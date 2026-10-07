@@ -12,12 +12,18 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * One finding (Bible §10, flags.flags). A held finding must never reach a non-analyst
- * (CLAUDE.md §4); the policies that enforce that come in K-11a and K-14.
+ * (CLAUDE.md §4); FlagPolicy enforces that using PUBLIC_STATES.
  * HasUuids makes the UUIDv7 in PHP so Laravel knows the ID before the insert (ADR-012 §2).
  */
 class Flag extends Model
 {
     use HasUuids;
+
+    /**
+     * The only states anyone other than an analyst or admin may see (Bible §11:
+     * GET /entities/{id}/flags lists published and resolved findings only).
+     */
+    public const PUBLIC_STATES = ['published', 'resolved'];
 
     /** Schema-qualified, never left to search_path (Bible §14.12). */
     protected $table = 'flags.flags';
