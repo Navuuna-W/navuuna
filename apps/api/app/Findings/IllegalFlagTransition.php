@@ -39,6 +39,14 @@ class IllegalFlagTransition extends RuntimeException
     }
 
     /**
+     * "Needs more evidence" keeps a finding held, so it only applies to a held one (DEC-10).
+     */
+    public static function notHeld(FlagState $state): self
+    {
+        return new self("Only a held finding can get a note without moving; this one is {$state->value}.");
+    }
+
+    /**
      * Only analysts and admins review findings (CLAUDE.md §4, FR-11).
      */
     public static function notAReviewer(): self
