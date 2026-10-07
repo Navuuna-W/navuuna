@@ -4,13 +4,15 @@
 
 import os
 from collections.abc import Iterator
+from uuid import uuid4
 
 import psycopg
 import pytest
 from psycopg.rows import dict_row
+from redis import Redis
 
 from engine.database import DatabaseConnection
-from tests.database_helpers import TEST_DATABASE_URL_VARIABLE
+from tests.database_helpers import TEST_DATABASE_URL_VARIABLE, TEST_REDIS_URL_VARIABLE
 
 
 @pytest.fixture
@@ -27,3 +29,22 @@ def database_connection() -> Iterator[DatabaseConnection]:
         connection.execute("SELECT 1")  # opens the transaction the test runs in
         yield connection
         connection.rollback()
+
+
+@pytest.fixture
+def redis_client() -> Iterator[Redis]:
+    """A Redis connection that returns strings. Skips when NV_TEST_REDIS_URL is not set."""
+    redis_url = os.environ.get(TEST_REDIS_URL_VARIABLE, "")
+    if not redis_url:
+        pytest.skip(f"{TEST_REDIS_URL_VARIABLE} is not set")
+    client = Redis.from_url(redis_url, decode_responses=True)
+    yield client
+    client.close()
+
+
+@pytest.fixture
+def test_stream(redis_client: Redis) -> Iterator[str]:
+    """A stream name used by this test only, deleted afterwards, so real streams stay clean."""
+    stream_name = f"test.batch_written.{uuid4()}"
+    yield stream_name
+    redis_client.delete(stream_name)

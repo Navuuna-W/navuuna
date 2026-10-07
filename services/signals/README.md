@@ -46,7 +46,8 @@ Needs Python 3.12 or newer.
     .venv/bin/mypy --strict engine
     .venv/bin/ruff check . && .venv/bin/ruff format --check .
 
-Database tests are skipped unless `NV_TEST_DATABASE_URL` points at a PostgreSQL that has the
+Stream tests are skipped unless `NV_TEST_REDIS_URL` points at a Redis (e.g. `redis://127.0.0.1:6379/0`);
+each test uses its own stream and deletes it. Database tests are skipped unless `NV_TEST_DATABASE_URL` points at a PostgreSQL that has the
 Laravel migrations applied (`cd apps/api && php artisan migrate`). Each test is rolled back.
 CI always sets it, so skipped database tests show up there as missing coverage.
 
@@ -55,3 +56,4 @@ CI always sets it, so skipped database tests show up there as missing coverage.
 ## Configuration
 
 - `NV_SIGNALS_DATABASE_URL` — the service's database login, a member of `nv_signals` (ADR-004a).
+- `NV_REDIS_URL` — the Box A Redis that carries `signals.batch_written` (ADR-004a §3).

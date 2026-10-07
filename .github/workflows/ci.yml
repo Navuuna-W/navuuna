@@ -89,6 +89,7 @@ jobs:
   # The python job lints, type-checks and tests the signal service (engine + modules).
   # Engine coverage must stay at 100 % (Bible §14.7). Database tests need the real schema,
   # and Laravel owns every migration (ADR-004a), so this job runs `artisan migrate` first.
+  # Stream tests need a Redis.
   python:
     runs-on: ubuntu-latest
     defaults:
@@ -108,6 +109,16 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      # Stream tests (signals.batch_written, ADR-004a §3) need a real Redis.
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1
@@ -116,6 +127,7 @@ jobs:
       DB_USERNAME: navuuna
       DB_PASSWORD: navuuna
       NV_TEST_DATABASE_URL: postgresql://navuuna:navuuna@127.0.0.1:5432/navuuna_test
+      NV_TEST_REDIS_URL: redis://127.0.0.1:6379/0
     steps:
       - uses: actions/checkout@v4
 

@@ -13,3 +13,7 @@ def act_as_signal_service(connection: DatabaseConnection) -> None:
     Create prerequisite rows as the owner first: after this, only nv_signals writes work.
     """
     connection.execute(f"SET LOCAL ROLE {SIGNAL_SERVICE_ROLE}")
+
+
+# Points at a Redis for stream tests; unset means skip them.
+TEST_REDIS_URL_VARIABLE = "NV_TEST_REDIS_URL"
