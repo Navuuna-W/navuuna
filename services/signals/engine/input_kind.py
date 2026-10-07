@@ -14,3 +14,5 @@ class InputKind(StrEnum):
     EO_STATS = "eo_stats"  # raw.eo_stats satellite statistics for the entity's footprint
     NEARBY_ENTITIES = "nearby_entities"  # other entities within a radius (e.g. 4.4 Competition)
     NEARBY_WAYS = "nearby_ways"  # OSM ways within a radius (e.g. 5.2 Connection quality)
+    # other entities of the same module in the same ward (e.g. 4.4 counts mapped water points)
+    SAME_AREA_ENTITIES = "same_area_entities"

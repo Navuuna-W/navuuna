@@ -35,6 +35,7 @@ def test_kinds_the_spec_does_not_ask_for_are_left_out() -> None:
     assert inputs.eo_stats is None
     assert inputs.nearby_entities is None
     assert inputs.nearby_ways is None
+    assert inputs.same_area_entities is None
 
 
 def test_a_declared_kind_with_no_rows_becomes_an_empty_tuple() -> None:
@@ -68,3 +69,16 @@ def test_only_results_of_declared_dependencies_are_passed() -> None:
     inputs = build_adapter_inputs(existence_gap_spec(), AS_OF, ENTITY_ROW, {}, earlier_results)
 
     assert inputs.sub_variable_results == {"1.1": NOT_MEASURED}
+
+
+def test_nearby_rows_beyond_the_adapters_own_radius_are_left_out() -> None:
+    spec = existence_gap_spec().model_copy(
+        update={"requires": frozenset({InputKind.NEARBY_WAYS}), "nearby_radius_m": 200.0}
+    )
+    near_way = {"id": "near", "distance_m": 150.0}
+    far_way = {"id": "far", "distance_m": 450.0}  # loaded for another adapter's 500 m
+    loaded_rows: dict[InputKind, InputRows] = {InputKind.NEARBY_WAYS: (near_way, far_way)}
+
+    inputs = build_adapter_inputs(spec, AS_OF, ENTITY_ROW, loaded_rows, {})
+
+    assert inputs.nearby_ways == (near_way,)

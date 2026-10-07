@@ -18,13 +18,13 @@ from engine.database import DatabaseConnection
 from engine.input_kind import InputKind
 from engine.registered_adapter import RegisteredAdapter, ScoreFunction
 from engine.registry import discover_adapters
-from engine.runner import run_entities, run_entity
+from engine.runner import largest_nearby_radius, run_entities, run_entity
 from engine.score_result import ScoreResult, ScoreStatus
 from tests.database_helpers import act_as_signal_service
 from tests.database_rows import create_observation, create_point_entity
 
 FIXTURE_MODULES_ROOT = Path(__file__).parent.parent / "fixtures" / "modules"
-# The fake module only; the "other" module needs nearby_ways, which K-09b-2d adds.
+# The fake module only, so the expected rows and versions stay short.
 FAKE_MODULE_ONLY = {"MODULES_ENABLED": "fake"}
 AS_OF = datetime(2026, 10, 7, 12, 0, tzinfo=UTC)
 OBSERVED_AT = datetime(2026, 10, 1, tzinfo=UTC)
@@ -193,12 +193,15 @@ def test_an_error_on_a_later_entity_rolls_back_the_whole_chunk(
     real_load_input_rows = engine.runner.load_input_rows
 
     def load_input_rows_failing_on_second(
-        connection: DatabaseConnection, entity_id: UUID, kinds: frozenset[InputKind]
+        connection: DatabaseConnection,
+        entity_id: UUID,
+        kinds: frozenset[InputKind],
+        nearby_radius_m: float | None,
     ) -> dict[InputKind, InputRows]:
         # Stands in for a lost connection or a bad query after the first entity was written.
         if entity_id == second_id:
             raise psycopg.OperationalError("connection lost")
-        return real_load_input_rows(connection, entity_id, kinds)
+        return real_load_input_rows(connection, entity_id, kinds, nearby_radius_m)
 
     monkeypatch.setattr(engine.runner, "load_input_rows", load_input_rows_failing_on_second)
 
@@ -206,3 +209,21 @@ def test_an_error_on_a_later_entity_rolls_back_the_whole_chunk(
         run_entities(database_connection, adapters, adapter_ids, [first_id, second_id], AS_OF)
 
     assert read_score_rows(database_connection, first_id) == []
+
+
+def test_nearby_rows_are_loaded_once_within_the_largest_radius() -> None:
+    connection_quality = make_adapter("5.2", score_not_measured)
+    competition = make_adapter("4.4", score_not_measured)
+    adapters = [
+        RegisteredAdapter(
+            spec=adapter.spec.model_copy(
+                update={"requires": frozenset({"nearby_ways"}), "nearby_radius_m": radius_m}
+            ),
+            score=adapter.score,
+            code_ref=adapter.code_ref,
+        )
+        for adapter, radius_m in [(connection_quality, 200.0), (competition, 500.0)]
+    ]
+
+    assert largest_nearby_radius(adapters) == 500.0
+    assert largest_nearby_radius([make_adapter("1.1", score_not_measured)]) is None

@@ -11,6 +11,9 @@ from engine.database import DatabaseConnection
 
 POINT_IN_NAIROBI = "SRID=4326;POINT(36.8219 -1.2921)"
 WATER_POINT_RADIUS_M = 50
+WARD_AROUND_POINT = (
+    "SRID=4326;POLYGON((36.81 -1.30, 36.83 -1.30, 36.83 -1.28, 36.81 -1.28, 36.81 -1.30))"
+)
 
 
 def insert_returning_id(
@@ -37,19 +40,48 @@ def create_point_entity(
     external_ref: str,
     retired_at: datetime | None = None,
     module: str = "water",
+    parent_area_id: UUID | None = None,
+    geom: str = POINT_IN_NAIROBI,
 ) -> UUID:
     return insert_returning_id(
         connection,
         """INSERT INTO core.entities
-               (entity_type, module, name, external_ref, geom, radius_m, retired_at)
+               (entity_type, module, name, external_ref, geom, radius_m, retired_at,
+                parent_area_id)
            VALUES ('point', %(module)s, 'Test tap', %(external_ref)s, %(geom)s, %(radius_m)s,
-                   %(retired_at)s) RETURNING id""",
+                   %(retired_at)s, %(parent_area_id)s) RETURNING id""",
         {
             "external_ref": external_ref,
-            "geom": POINT_IN_NAIROBI,
+            "geom": geom,
             "radius_m": WATER_POINT_RADIUS_M,
             "retired_at": retired_at,
             "module": module,
+            "parent_area_id": parent_area_id,
+        },
+    )
+
+
+def create_ward(connection: DatabaseConnection, external_ref: str) -> UUID:
+    """A ward: an area with no module, the parent_area_id of the entities inside it."""
+    return insert_returning_id(
+        connection,
+        """INSERT INTO core.entities (entity_type, name, external_ref, geom)
+           VALUES ('area', 'Test ward', %(external_ref)s, %(geom)s) RETURNING id""",
+        {"external_ref": external_ref, "geom": WARD_AROUND_POINT},
+    )
+
+
+def create_road_segment(connection: DatabaseConnection, external_ref: str, geom: str) -> UUID:
+    """An OSM way loaded as a segment entity (D-05), e.g. external_ref "osm:w456"."""
+    return insert_returning_id(
+        connection,
+        """INSERT INTO core.entities (entity_type, module, name, external_ref, geom, metadata)
+           VALUES ('segment', 'roads', 'Test road', %(external_ref)s, %(geom)s, %(metadata)s)
+           RETURNING id""",
+        {
+            "external_ref": external_ref,
+            "geom": geom,
+            "metadata": Jsonb({"osm": {"surface": "gravel"}}),
         },
     )
 
@@ -85,6 +117,20 @@ def create_observation(
             "observed_at": observed_at,
             "contributor_id": uuid4() if consent_id else None,
             "consent_id": consent_id,
+        },
+    )
+
+
+def create_eo_stat(connection: DatabaseConnection, entity_id: UUID, acquired_at: datetime) -> UUID:
+    return insert_returning_id(
+        connection,
+        """INSERT INTO raw.eo_stats (source_id, entity_id, product, index_name, value, acquired_at)
+           VALUES (%(source_id)s, %(entity_id)s, 'sentinel-2', 'ndvi', 0.4, %(acquired_at)s)
+           RETURNING id""",
+        {
+            "source_id": create_source(connection),
+            "entity_id": entity_id,
+            "acquired_at": acquired_at,
         },
     )
 

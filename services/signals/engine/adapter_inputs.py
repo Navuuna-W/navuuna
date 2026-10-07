@@ -35,6 +35,7 @@ class AdapterInputs(BaseModel):
     eo_stats: InputRows | None = None
     nearby_entities: InputRows | None = None
     nearby_ways: InputRows | None = None
+    same_area_entities: InputRows | None = None
     sub_variable_results: dict[str, ScoreResult] = {}
 
 
@@ -49,7 +50,8 @@ def build_adapter_inputs(
 
     Inputs: the adapter's spec, the run's as_of, the entity row, every row the runner loaded
     for this entity (by kind) and every result already computed for this entity in this run
-    (by sub_id). Output: AdapterInputs with undeclared kinds and results left out.
+    (by sub_id). Output: AdapterInputs with undeclared kinds and results left out, and
+    nearby rows beyond the adapter's own nearby_radius_m left out.
     Implements ADR-003 — the runner loads exactly what `requires` declares.
     """
     declared_results = {
@@ -63,8 +65,9 @@ def build_adapter_inputs(
         observations=select_declared_rows(spec, loaded_rows, InputKind.OBSERVATIONS),
         records=select_declared_rows(spec, loaded_rows, InputKind.RECORDS),
         eo_stats=select_declared_rows(spec, loaded_rows, InputKind.EO_STATS),
-        nearby_entities=select_declared_rows(spec, loaded_rows, InputKind.NEARBY_ENTITIES),
-        nearby_ways=select_declared_rows(spec, loaded_rows, InputKind.NEARBY_WAYS),
+        nearby_entities=select_nearby_rows(spec, loaded_rows, InputKind.NEARBY_ENTITIES),
+        nearby_ways=select_nearby_rows(spec, loaded_rows, InputKind.NEARBY_WAYS),
+        same_area_entities=select_declared_rows(spec, loaded_rows, InputKind.SAME_AREA_ENTITIES),
         sub_variable_results=declared_results,
     )
 
@@ -80,3 +83,24 @@ def select_declared_rows(
     if kind not in spec.requires:
         return None
     return loaded_rows.get(kind, ())
+
+
+def select_nearby_rows(
+    spec: AdapterSpec, loaded_rows: Mapping[InputKind, InputRows], kind: InputKind
+) -> InputRows | None:
+    """Like select_declared_rows, but keep only rows within the adapter's own radius.
+
+    The runner loads nearby rows once, within the largest radius any adapter asked for; an
+    adapter that asked for 200 m must not see the rows meant for a 500 m adapter.
+    """
+    declared_rows = select_declared_rows(spec, loaded_rows, kind)
+    if declared_rows is None or spec.nearby_radius_m is None:
+        return declared_rows
+    radius_m = spec.nearby_radius_m
+    return tuple(row for row in declared_rows if is_within_radius(row, radius_m))
+
+
+def is_within_radius(row: InputRow, radius_m: float) -> bool:
+    """True when a nearby row's distance_m (added by the loader) is at most radius_m."""
+    distance_m = row["distance_m"]
+    return isinstance(distance_m, int | float) and distance_m <= radius_m
