@@ -5,6 +5,10 @@
          colors="true"
 >
     <testsuites>
+        <!-- Pure code (the rollup engine): no database, no Laravel app. -->
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
