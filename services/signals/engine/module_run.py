@@ -56,7 +56,7 @@ def run_module(
     """
     module_adapters = [adapter for adapter in adapters if adapter.spec.module == module]
     entity_types = scored_entity_types(module_adapters)
-    adapter_versions = {adapter.spec.sub_id: adapter.spec.version for adapter in module_adapters}
+    adapter_versions = collect_adapter_versions(module_adapters)
     batch_id = create_batch_id(connection)
     scored_entity_count = 0
     last_entity_id: UUID | None = None
@@ -82,6 +82,11 @@ def scored_entity_types(adapters: list[RegisteredAdapter]) -> frozenset[EntityTy
     for adapter in adapters:
         entity_types.update(adapter.spec.entity_types)
     return frozenset(entity_types)
+
+
+def collect_adapter_versions(adapters: list[RegisteredAdapter]) -> dict[str, str]:
+    """The version of each adapter by sub_id — the adapter_versions field of batch_written."""
+    return {adapter.spec.sub_id: adapter.spec.version for adapter in adapters}
 
 
 def create_batch_id(connection: DatabaseConnection) -> UUID:
