@@ -1,15 +1,22 @@
 // The sequential, colour-blind-safe scale for entity scores. Never red-amber-green.
-//
-// Nine classes exist. The four bands (b1–b4) are the fill colours; the 'p' suffix means
-// partly verified (hatch is approximated for circles by a hollow ring); 'ca' is a neutral
-// grey, drawn as a hollow circle so a user never reads it as "zero".
-//
-// Keep this file the one place that maps colour_class → paint. If a visual rule changes,
-// the test file catches the dependents.
+// Keep this file the one place that maps colour_class → paint; the test file catches
+// dependents. (Palette review itself is PR 1b.)
 
 import type { ExpressionSpecification } from 'maplibre-gl';
 
 export type ColourClass = 'b1' | 'b2' | 'b3' | 'b4' | 'b1p' | 'b2p' | 'b3p' | 'b4p' | 'ca';
+
+export const ALL_COLOUR_CLASSES: readonly ColourClass[] = [
+  'b1',
+  'b2',
+  'b3',
+  'b4',
+  'b1p',
+  'b2p',
+  'b3p',
+  'b4p',
+  'ca',
+];
 
 // Dark → light sequential ramp.
 export const COLOUR_FOR: Record<ColourClass, string> = {
@@ -24,16 +31,22 @@ export const COLOUR_FOR: Record<ColourClass, string> = {
   ca: '#BFBFBF',
 };
 
+export const MEASURED_STROKE_COLOR = '#333333';
+export const MEASURED_STROKE_WIDTH = 0.5;
+export const PARTLY_VERIFIED_STROKE_WIDTH = 2;
+export const CA_STROKE_WIDTH = 1.5;
+
 // Hatch-like effect for partly verified: hollow fill, coloured ring.
 export function isPartlyVerified(c: ColourClass): boolean {
   return c.endsWith('p');
 }
-
 export function isCannotAssess(c: ColourClass): boolean {
   return c === 'ca';
 }
 
-// MapLibre expression: colour_class → fill colour. Includes a safe fallback.
+// Circle fill: solid for b1–b4; p + ca are hollow (ring carries the signal). The
+// fallback branch of every expression goes to the ca style — an unknown colour_class
+// must never render as a band fill (B1).
 export function circleColorExpression(): ExpressionSpecification {
   return [
     'match',
@@ -56,7 +69,7 @@ export function circleColorExpression(): ExpressionSpecification {
     'transparent',
     'ca',
     'transparent',
-    COLOUR_FOR.b4,
+    'transparent',
   ];
 }
 
@@ -64,6 +77,14 @@ export function circleStrokeColorExpression(): ExpressionSpecification {
   return [
     'match',
     ['get', 'colour_class'],
+    'b1',
+    MEASURED_STROKE_COLOR,
+    'b2',
+    MEASURED_STROKE_COLOR,
+    'b3',
+    MEASURED_STROKE_COLOR,
+    'b4',
+    MEASURED_STROKE_COLOR,
     'b1p',
     COLOUR_FOR.b1p,
     'b2p',
@@ -74,12 +95,34 @@ export function circleStrokeColorExpression(): ExpressionSpecification {
     COLOUR_FOR.b4p,
     'ca',
     COLOUR_FOR.ca,
-    '#333333',
+    COLOUR_FOR.ca,
   ];
 }
 
 export function circleStrokeWidthExpression(): ExpressionSpecification {
-  return ['match', ['get', 'colour_class'], 'b1p', 2, 'b2p', 2, 'b3p', 2, 'b4p', 2, 'ca', 1.5, 0.5];
+  return [
+    'match',
+    ['get', 'colour_class'],
+    'b1',
+    MEASURED_STROKE_WIDTH,
+    'b2',
+    MEASURED_STROKE_WIDTH,
+    'b3',
+    MEASURED_STROKE_WIDTH,
+    'b4',
+    MEASURED_STROKE_WIDTH,
+    'b1p',
+    PARTLY_VERIFIED_STROKE_WIDTH,
+    'b2p',
+    PARTLY_VERIFIED_STROKE_WIDTH,
+    'b3p',
+    PARTLY_VERIFIED_STROKE_WIDTH,
+    'b4p',
+    PARTLY_VERIFIED_STROKE_WIDTH,
+    'ca',
+    CA_STROKE_WIDTH,
+    CA_STROKE_WIDTH,
+  ];
 }
 
 export function circleRadiusExpression(): ExpressionSpecification {
