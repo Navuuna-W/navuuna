@@ -33,19 +33,23 @@ def create_source(connection: DatabaseConnection) -> UUID:
 
 
 def create_point_entity(
-    connection: DatabaseConnection, external_ref: str, retired_at: datetime | None = None
+    connection: DatabaseConnection,
+    external_ref: str,
+    retired_at: datetime | None = None,
+    module: str = "water",
 ) -> UUID:
     return insert_returning_id(
         connection,
         """INSERT INTO core.entities
                (entity_type, module, name, external_ref, geom, radius_m, retired_at)
-           VALUES ('point', 'water', 'Test tap', %(external_ref)s, %(geom)s, %(radius_m)s,
+           VALUES ('point', %(module)s, 'Test tap', %(external_ref)s, %(geom)s, %(radius_m)s,
                    %(retired_at)s) RETURNING id""",
         {
             "external_ref": external_ref,
             "geom": POINT_IN_NAIROBI,
             "radius_m": WATER_POINT_RADIUS_M,
             "retired_at": retired_at,
+            "module": module,
         },
     )
 
