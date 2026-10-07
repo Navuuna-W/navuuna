@@ -30,6 +30,22 @@ the results of `depends_on_sub_ids`. See `tests/fixtures/modules/fake/adapters/`
 
 `MODULES_ENABLED=water,roads` limits which modules run; unset means every module runs.
 
+## Writing an adapter
+
+One file per sub-variable in `modules/<module>/adapters/`, e.g. `modules/water/adapters/presence.py`.
+Files starting with `_` are helpers and are not loaded as adapters. Each adapter file defines:
+
+    SPEC = AdapterSpec(module="water", sub_id="1.1", entity_types=["point"], version="1.0.0",
+                       requires=["observations"], signal_description="...")
+
+    def score(inputs: AdapterInputs) -> ScoreResult: ...
+
+`inputs` (`engine/adapter_inputs.py`) holds `as_of` and only the input kinds listed in
+`requires` (others are `None`); rows are plain JSON dicts. `inputs.sub_variable_results` holds
+the results of `depends_on_sub_ids`.
+
+`MODULES_ENABLED=water,roads` limits which modules run; unset means every module runs.
+
 ## Set up
 
     cd services/signals
