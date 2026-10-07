@@ -72,6 +72,37 @@ class FlagWorkflow
     }
 
     /**
+     * "Needs more evidence" (ADR-010 DEC-10): the finding stays held and only an audit event
+     * `note_added` is written. No state change, so no history row and no FlagStateChanged.
+     *
+     * @throws IllegalFlagTransition when the user or note is not allowed, or the finding isn't held.
+     */
+    public function addNoteToHeldFinding(Flag $flag, User $user, string $note): void
+    {
+        if (! $user->role->canSeeUnpublishedFindings()) {
+            throw IllegalFlagTransition::notAReviewer();
+        }
+        if (trim($note) === '') {
+            throw IllegalFlagTransition::noteRequired();
+        }
+
+        $this->database->transaction(function () use ($flag, $user, $note) {
+            $lockedFlag = Flag::whereKey($flag->id)->lockForUpdate()->firstOrFail();
+            if ($lockedFlag->state !== FlagState::Held) {
+                throw IllegalFlagTransition::notHeld($lockedFlag->state);
+            }
+
+            $auditEvent = new AuditEvent;
+            $auditEvent->user_id = $user->id;
+            $auditEvent->action = 'note_added';
+            $auditEvent->target_table = 'flags.flags';
+            $auditEvent->target_id = $lockedFlag->id;
+            $auditEvent->after = ['state' => FlagState::Held->value, 'note' => $note];
+            $auditEvent->save();
+        });
+    }
+
+    /**
      * Lock the finding, check the move against its current state, and write all three rows.
      * A null $user means the system.
      */
