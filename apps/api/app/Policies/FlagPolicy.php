@@ -9,6 +9,7 @@ namespace App\Policies;
 
 use App\Models\Flag;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 /**
  * Keeps unpublished findings away from everyone but analysts and admins.
@@ -41,9 +42,15 @@ class FlagPolicy
     /**
      * May the user move this finding to another state (FR-11)? Analysts and admins only.
      * Which moves are legal is FlagWorkflow's job (K-14), not this policy's.
+     *
+     * Denied as 404, not 403: a 403 would tell a viewer the finding exists (CLAUDE.md §4).
      */
-    public function transition(User $user, Flag $flag): bool
+    public function transition(User $user, Flag $flag): Response
     {
-        return $user->role->canSeeUnpublishedFindings();
+        if ($user->role->canSeeUnpublishedFindings()) {
+            return Response::allow();
+        }
+
+        return Response::denyAsNotFound();
     }
 }
