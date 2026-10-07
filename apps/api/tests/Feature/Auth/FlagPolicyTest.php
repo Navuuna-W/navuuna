@@ -67,7 +67,7 @@ test('only admins and analysts can open the review queue or move a finding', fun
     $user = makeUserWithRole($role);
 
     $canOpenQueue = $policy->viewAny($user);
-    $canTransition = $policy->transition($user, makeFlagInState('held'));
+    $canTransition = $policy->transition($user, makeFlagInState('held'))->allowed();
 
     expect($canOpenQueue)->toBe($role->canSeeUnpublishedFindings());
     expect($canTransition)->toBe($role->canSeeUnpublishedFindings());
