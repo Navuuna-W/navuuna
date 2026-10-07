@@ -11,5 +11,6 @@ require_once __DIR__.'/Support/core_rows.php';
 require_once __DIR__.'/Support/raw_rows.php';
 require_once __DIR__.'/Support/flag_rows.php';
 require_once __DIR__.'/Support/engine_inputs.php';
+require_once __DIR__.'/Support/score_rows.php';
 
 pest()->extend(TestCase::class)->in('Feature');
