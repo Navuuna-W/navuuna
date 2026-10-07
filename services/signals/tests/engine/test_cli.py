@@ -1,16 +1,19 @@
-# Tests for the command line (`python -m engine run`). Error cases need no database; the one
-# success case commits, because the CLI commits — it uses a module with no entities, so it
-# only leaves its own core.adapters row behind (in a test database).
+# Tests for the command line (`python -m engine run` / `consume`). Error cases need no database.
+# The success cases commit, because the CLI commits: they use a module with no entities, so they
+# only leave a core.adapters row and an empty signals.recompute_requested stream in the test
+# database and Redis.
 
 import logging
 import os
 import runpy
+import signal
 import sys
 from pathlib import Path
 
 import pytest
 
-from engine.cli import FAILURE_EXIT_CODE, SUCCESS_EXIT_CODE, main
+from engine.cli import FAILURE_EXIT_CODE, SUCCESS_EXIT_CODE, main, stop_on_terminate
+from engine.recompute_consumer import RecomputeConsumer
 from engine.redis_connection import RedisSettingsError, connect_to_redis
 from tests.database_helpers import TEST_DATABASE_URL_VARIABLE, TEST_REDIS_URL_VARIABLE
 
@@ -85,18 +88,58 @@ def test_python_dash_m_engine_runs_the_cli(monkeypatch: pytest.MonkeyPatch) -> N
     assert raised.value.code == 0
 
 
-def test_all_scores_every_enabled_module(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def write_empty_module(tmp_path: Path) -> Path:
+    """A modules folder with one module that has no entities, so a run commits almost nothing."""
+    adapters_folder = tmp_path / "modules" / "cli_test" / "adapters"
+    adapters_folder.mkdir(parents=True)
+    (adapters_folder / "presence.py").write_text(EMPTY_MODULE_ADAPTER)
+    return tmp_path / "modules"
+
+
+def service_environment() -> dict[str, str]:
     database_url = os.environ.get(TEST_DATABASE_URL_VARIABLE, "")
     redis_url = os.environ.get(TEST_REDIS_URL_VARIABLE, "")
     if not database_url or not redis_url:
         pytest.skip("needs NV_TEST_DATABASE_URL and NV_TEST_REDIS_URL")
-    adapters_folder = tmp_path / "modules" / "cli_test" / "adapters"
-    adapters_folder.mkdir(parents=True)
-    (adapters_folder / "presence.py").write_text(EMPTY_MODULE_ADAPTER)
-    environment = {"NV_SIGNALS_DATABASE_URL": database_url, "NV_REDIS_URL": redis_url}
+    return {"NV_SIGNALS_DATABASE_URL": database_url, "NV_REDIS_URL": redis_url}
+
+
+def test_all_scores_every_enabled_module(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    environment = service_environment()
+    modules_root = write_empty_module(tmp_path)
     caplog.set_level(logging.INFO, logger="engine.cli")  # the summary line is INFO
 
-    exit_code = main(run_arguments("--all", modules_root=tmp_path / "modules"), environment)
+    exit_code = main(run_arguments("--all", modules_root=modules_root), environment)
 
     assert exit_code == SUCCESS_EXIT_CODE
     assert "module cli_test: 0 entities scored" in caplog.text
+
+
+def test_consume_starts_the_recompute_consumer(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    environment = service_environment()
+    modules_root = write_empty_module(tmp_path)
+    caplog.set_level(logging.INFO, logger="engine.cli")
+    started_consumers: list[str] = []
+
+    def record_instead_of_looping(self: RecomputeConsumer) -> None:
+        started_consumers.append(self.consumer_name)
+
+    monkeypatch.setattr(RecomputeConsumer, "consume_forever", record_instead_of_looping)
+    installed_handlers: dict[int, object] = {}
+    # Record the SIGTERM handler instead of installing it in the test process.
+    monkeypatch.setattr(signal, "signal", installed_handlers.__setitem__)
+    arguments = ["consume", "--consumer-name", "test-reader", "--modules-root", str(modules_root)]
+
+    exit_code = main(arguments, environment)
+
+    assert exit_code == SUCCESS_EXIT_CODE
+    assert started_consumers == ["test-reader"]
+    assert installed_handlers == {signal.SIGTERM: stop_on_terminate}
+    assert "recompute consumer test-reader started" in caplog.text
+
+
+def test_sigterm_stops_like_ctrl_c() -> None:
+    with pytest.raises(KeyboardInterrupt):
+        stop_on_terminate(15, None)

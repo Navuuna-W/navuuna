@@ -192,6 +192,29 @@ def test_creating_the_group_twice_is_fine(
     assert redis_client.xinfo_groups(request_stream)[0]["name"] == CONSUMER_GROUP
 
 
+def test_consume_forever_stops_cleanly_on_an_interrupt(
+    database_connection: DatabaseConnection,
+    redis_client: Redis,
+    request_stream: str,
+    test_stream: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    consumer = make_consumer(database_connection, redis_client, request_stream, test_stream)
+    rounds: list[int] = []
+
+    def consume_once_then_stop(self: RecomputeConsumer) -> int:
+        rounds.append(1)
+        if len(rounds) == 2:
+            raise KeyboardInterrupt
+        return 0
+
+    monkeypatch.setattr(RecomputeConsumer, "consume_once", consume_once_then_stop)
+
+    consumer.consume_forever()
+
+    assert len(rounds) == 2
+
+
 def test_an_empty_stream_gives_nothing_to_process(
     database_connection: DatabaseConnection,
     redis_client: Redis,

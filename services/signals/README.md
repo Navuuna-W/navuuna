@@ -64,6 +64,13 @@ module in chunks of 500 (one committed transaction each) and announces each chun
 `tests/fixtures/modules`). Exit code 0 on success, 1 on a missing setting, unknown module or
 broken adapter. Prefect (K-12) runs this command.
 
+    .venv/bin/python -m engine consume --consumer-name box-b-1
+
+`consume` reads `signals.recompute_requested` as consumer group `runner`: it rescores each
+requested entity, announces it on `signals.batch_written`, and only then acknowledges the
+request (ADR-004a §3). Supervisor keeps it running; SIGTERM stops it cleanly. Each running
+reader needs its own `--consumer-name` (default: the hostname).
+
 ## Configuration
 
 - `NV_SIGNALS_DATABASE_URL` — the service's database login, a member of `nv_signals` (ADR-004a).

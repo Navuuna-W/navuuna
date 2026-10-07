@@ -67,6 +67,18 @@ class RecomputeConsumer:
             if "BUSYGROUP" not in str(error):
                 raise
 
+    def consume_forever(self) -> None:
+        """Process requests until interrupted (Ctrl-C, or SIGTERM turned into an interrupt).
+
+        Any other error stops the process; Supervisor restarts it and the unacknowledged
+        message is processed again — recompute is idempotent (ADR-004a §3).
+        """
+        try:
+            while True:
+                self.consume_once()
+        except KeyboardInterrupt:
+            logger.info("recompute consumer %s stopped", self.consumer_name)
+
     def consume_once(self) -> int:
         """Take over stale messages, or else read new ones; process them; return how many."""
         messages = self.claim_stale_messages()
