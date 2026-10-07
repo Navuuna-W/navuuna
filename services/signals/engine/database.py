@@ -21,11 +21,14 @@ class DatabaseSettingsError(Exception):
 def connect_to_database(environment: Mapping[str, str]) -> DatabaseConnection:
     """Open a connection using NV_SIGNALS_DATABASE_URL from the given environment.
 
-    Input: the process environment. Output: an open connection whose rows are dicts.
+    Input: the process environment. Output: an open autocommit connection whose rows are dicts.
     Raises DatabaseSettingsError when the variable is missing or empty.
     Implements ADR-004a §2 — the signal service connects as its own nv_signals login.
     """
     database_url = environment.get(DATABASE_URL_VARIABLE, "")
     if not database_url:
         raise DatabaseSettingsError(f"set {DATABASE_URL_VARIABLE}, e.g. postgresql://user@host/db")
-    return psycopg.connect(database_url, row_factory=dict_row)
+    # autocommit: each `with connection.transaction()` block then commits as it ends. Without
+    # it, the first query opens a transaction and those blocks become savepoints, so a chunk
+    # would not be committed before its batch_written message goes out (ADR-004a §3).
+    return psycopg.connect(database_url, row_factory=dict_row, autocommit=True)
