@@ -1,9 +1,12 @@
-# The command line for the signal service: `python -m engine run --module water` or `--all`.
-# A person or Prefect (K-12) starts a scoring run here. It strings the pieces together:
-# find adapters → record them in core.adapters → score each module → announce each chunk.
+# The command line for the signal service. `python -m engine run --module water` (or `--all`)
+# starts a scoring run — a person or Prefect (K-12) calls it: find adapters → record them in
+# core.adapters → score each module → announce each chunk. `python -m engine consume` runs the
+# reader that rescores single entities when Laravel asks (Supervisor keeps it running).
 
 import argparse
 import logging
+import signal
+import socket
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -11,6 +14,7 @@ from pathlib import Path
 from engine.adapter_sync import sync_adapters
 from engine.database import DatabaseSettingsError, connect_to_database
 from engine.module_run import run_module
+from engine.recompute_consumer import RecomputeConsumer
 from engine.redis_connection import RedisSettingsError, connect_to_redis
 from engine.registered_adapter import RegisteredAdapter
 from engine.registry import AdapterRegistryError, discover_adapters
@@ -57,18 +61,37 @@ def build_argument_parser() -> argparse.ArgumentParser:
     which_modules.add_argument(
         "--all", action="store_true", dest="is_all_modules", help="score every enabled module"
     )
-    run_parser.add_argument(
-        "--modules-root", type=Path, default=DEFAULT_MODULES_ROOT, help="folder of module folders"
+    consume_parser = commands.add_parser(
+        "consume", help="rescore single entities requested on signals.recompute_requested"
     )
+    consume_parser.add_argument(
+        "--consumer-name", default=socket.gethostname(), help="unique per running reader"
+    )
+    for command_parser in (run_parser, consume_parser):
+        command_parser.add_argument(
+            "--modules-root", type=Path, default=DEFAULT_MODULES_ROOT, help="folder of modules"
+        )
     return parser
 
 
 def run_command(arguments: argparse.Namespace, environment: Mapping[str, str]) -> None:
-    """Score the chosen modules, all with one as_of, and log one summary line per module."""
+    """Find the adapters, then start the chosen command."""
     modules_root: Path = arguments.modules_root
     if not modules_root.is_dir():
         raise CommandError(f"modules folder {modules_root} does not exist")
     adapters = discover_adapters(modules_root, environment)
+    if arguments.command == "consume":
+        consume_requests(arguments, environment, adapters)
+    else:
+        score_modules(arguments, environment, adapters)
+
+
+def score_modules(
+    arguments: argparse.Namespace,
+    environment: Mapping[str, str],
+    adapters: list[RegisteredAdapter],
+) -> None:
+    """Score the chosen modules, all with one as_of, and log one summary line per module."""
     modules = choose_modules(arguments, adapters)
     as_of = datetime.now(UTC)
     with connect_to_database(environment) as connection, connect_to_redis(environment) as redis:
@@ -81,6 +104,28 @@ def run_command(arguments: argparse.Namespace, environment: Mapping[str, str]) -
                 summary.scored_entity_count,
                 summary.batch_id,
             )
+
+
+def consume_requests(
+    arguments: argparse.Namespace,
+    environment: Mapping[str, str],
+    adapters: list[RegisteredAdapter],
+) -> None:
+    """Read signals.recompute_requested until stopped, rescoring each requested entity."""
+    signal.signal(signal.SIGTERM, stop_on_terminate)
+    with connect_to_database(environment) as connection, connect_to_redis(environment) as redis:
+        adapter_ids = sync_adapters(connection, adapters)
+        consumer = RecomputeConsumer(
+            connection, redis, adapters, adapter_ids, consumer_name=arguments.consumer_name
+        )
+        consumer.ensure_consumer_group()
+        logger.info("recompute consumer %s started", arguments.consumer_name)
+        consumer.consume_forever()
+
+
+def stop_on_terminate(signal_number: int, frame: object) -> None:
+    """Turn SIGTERM (Supervisor stopping us) into the same clean stop as Ctrl-C."""
+    raise KeyboardInterrupt
 
 
 def choose_modules(arguments: argparse.Namespace, adapters: list[RegisteredAdapter]) -> list[str]:
