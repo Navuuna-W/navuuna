@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Engine\EntityScored;
 use App\Engine\RerollAfterFindingChanged;
 use App\Engine\Weights;
 use App\Findings\FlagStateChanged;
+use App\Findings\RaiseFindingsAfterEntityScored;
 use App\Findings\RaiseFindingsForEntity;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
@@ -33,5 +35,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // A finding's move re-rolls its entity, so V2 follows the review (ADR-010 DEC-08).
         $events->listen(FlagStateChanged::class, RerollAfterFindingChanged::class);
+
+        // Every rollup is followed by the findings engine for that entity (K-13).
+        $events->listen(EntityScored::class, RaiseFindingsAfterEntityScored::class);
     }
 }

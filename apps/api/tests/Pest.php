@@ -13,5 +13,6 @@ require_once __DIR__.'/Support/flag_rows.php';
 require_once __DIR__.'/Support/engine_inputs.php';
 require_once __DIR__.'/Support/score_rows.php';
 require_once __DIR__.'/Support/evidence_rows.php';
+require_once __DIR__.'/Support/finding_scenarios.php';
 
 pest()->extend(TestCase::class)->in('Feature');
