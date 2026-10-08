@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Engine\RerollAfterFindingChanged;
 use App\Engine\Weights;
 use App\Findings\FlagStateChanged;
+use App\Findings\RaiseFindingsForEntity;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
         // Read weights.yml once per process. A long-running rollup worker picks up a new file
         // when it is restarted, which every deploy does.
         $this->app->singleton(Weights::class, fn (): Weights => Weights::fromFile((string) config('engine.weights_path')));
+
+        // The findings engine reads {modules_path}/{module}/findings.yml (K-13).
+        $this->app->when(RaiseFindingsForEntity::class)->needs('$modulesPath')->giveConfig('engine.modules_path');
     }
 
     /**
