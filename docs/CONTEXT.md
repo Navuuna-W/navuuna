@@ -45,7 +45,7 @@ names are replaced by the one name per variable below.
 ## 2 · Variables — on-screen labels
 
 | ID | Code name | On-screen label | Question it answers |
-|---|---|---|---|
+|---|---|---|---|---|
 | V1 | `V1_activity` | Activity | Is this entity working, and how hard? |
 | V2 | `V2_discrepancy` | Record vs reality | Does the record match what we observe? |
 | V3 | `V3_momentum` | Momentum | Which direction, how fast, how reliably? |
@@ -55,38 +55,40 @@ names are replaced by the one name per variable below.
 ## 3 · Sub-variables — on-screen labels
 
 Type: **gate** / **guard** / contributor (blank). Labels are short; the tooltip is the question.
+**Code name** is the Bible §6.8 name used in code (`services/signals/engine/sub_variables.py`)
+and in `weights.yml` comments; the **On-screen label** is what users read.
 
-| ID | On-screen label | Type | Tooltip |
-|---|---|---|---|
-| 1.1 | Present | gate | Does it exist where the record says? |
-| 1.2 | Working now | | Is it functioning now: yes, no or on and off? |
-| 1.3 | How much it is used | | Used ÷ total capacity |
-| 1.4 | Uptime | | Time operating ÷ time expected |
-| 1.5 | Intensity | | Throughput per unit of capacity |
-| 2.1 | Missing from the ground | gate | The record says it exists; the observation says it does not |
-| 2.2 | Size gap | | (declared − observed) ÷ declared |
-| 2.3 | Type gap | | Declared type, class or use vs observed |
-| 2.4 | Status gap | | Declared completion or operation vs observed |
-| 2.5 | Record age | | How far the record date lags the latest observation |
-| 2.6 | Explanation checked | guard | Is there a legitimate known reason for the gap? |
-| 3.1 | Direction | | Is the trend up or down? |
-| 3.2 | Rate | | How fast is it changing? |
-| 3.3 | Steadiness | | How much does it vary around the trend? |
-| 3.4 | Acceleration | | Is the rate itself changing? |
-| 3.5 | Neighbourhood trend | | What is changing nearby? |
-| 3.6 | Headroom | | How far from saturation? |
-| 4.1 | Availability | | How much of the resource is there? |
-| 4.2 | Reliability | | How much does supply vary over time? |
-| 4.3 | Resource trend | | Is the resource improving or depleting? |
-| 4.4 | Competition | | Who else draws on the same resource? |
-| 4.5 | Hazard exposure | | How often and how badly is it disrupted? |
-| 4.6 | Buffer | | Storage, backup or alternative supply |
-| 5.1 | Distance | | Travel time to get there |
-| 5.2 | Route condition | | Condition and class of the link |
-| 5.3 | Reachable all year | | Share of the year it can be reached |
-| 5.4 | Cost to reach | | Transport cost per unit |
-| 5.5 | Open and staffed | | Does the service actually operate? |
-| 5.6 | Alternatives | | Independent viable routes or sources |
+| ID | Code name | On-screen label | Type | Tooltip |
+|---|---|---|---|---|
+| 1.1 | Presence | Present | gate | Does it exist where the record says? |
+| 1.2 | Operational state | Working now | | Is it functioning now: yes, no or on and off? |
+| 1.3 | Utilisation ratio | How much it is used | | Used ÷ total capacity |
+| 1.4 | Continuity | Uptime | | Time operating ÷ time expected |
+| 1.5 | Intensity | Intensity | | Throughput per unit of capacity |
+| 2.1 | Existence gap | Missing from the ground | gate | The record says it exists; the observation says it does not |
+| 2.2 | Magnitude gap | Size gap | | (declared − observed) ÷ declared |
+| 2.3 | Attribute gap | Type gap | | Declared type, class or use vs observed |
+| 2.4 | Status gap | Status gap | | Declared completion or operation vs observed |
+| 2.5 | Record staleness | Record age | | How far the record date lags the latest observation |
+| 2.6 | Explanation state | Explanation checked | guard | Is there a legitimate known reason for the gap? |
+| 3.1 | Direction | Direction | | Is the trend up or down? |
+| 3.2 | Rate | Rate | | How fast is it changing? |
+| 3.3 | Consistency | Steadiness | | How much does it vary around the trend? |
+| 3.4 | Acceleration | Acceleration | | Is the rate itself changing? |
+| 3.5 | Neighbourhood momentum | Neighbourhood trend | | What is changing nearby? |
+| 3.6 | Headroom | Headroom | | How far from saturation? |
+| 4.1 | Availability | Availability | | How much of the resource is there? |
+| 4.2 | Reliability | Reliability | | How much does supply vary over time? |
+| 4.3 | Trend | Resource trend | | Is the resource improving or depleting? |
+| 4.4 | Competition | Competition | | Who else draws on the same resource? |
+| 4.5 | Hazard exposure | Hazard exposure | | How often and how badly is it disrupted? |
+| 4.6 | Buffer | Buffer | | Storage, backup or alternative supply |
+| 5.1 | Proximity | Distance | | Travel time to get there |
+| 5.2 | Connection quality | Route condition | | Condition and class of the link |
+| 5.3 | Access reliability | Reachable all year | | Share of the year it can be reached |
+| 5.4 | Cost of access | Cost to reach | | Transport cost per unit |
+| 5.5 | Service availability | Open and staffed | | Does the service actually operate? |
+| 5.6 | Redundancy | Alternatives | | Independent viable routes or sources |
 
 ## 4 · Statuses — on-screen labels
 
@@ -94,6 +96,9 @@ Type: **gate** / **guard** / contributor (blank). Labels are short; the tooltip 
 |---|---|---|---|
 | sub-variable | `measured` | Measured | — |
 | sub-variable | `null_not_measured` | Not measured | The `null_reason`, verbatim |
+| gate | `passed` | — (internal; the variable scores normally) | |
+| gate | `failed` | — (shown as the variable's Cannot assess) | |
+| gate | `unmeasured` | — (shown as the variable's Provisional) | |
 | variable | `scored` | (the score) | Coverage and confidence |
 | variable | `provisional` | Provisional | "Presence could not be checked — confidence halved." + the gate's `null_reason` |
 | variable | `cannot_assess` | Cannot assess | "We checked and it is not there." |
