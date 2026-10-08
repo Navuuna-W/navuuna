@@ -1,7 +1,7 @@
 <?php
 
 // `php artisan findings:scan {entity}` or `findings:scan --all` — runs the findings engine by hand.
-// Normally it runs after every rollup (RaiseFindingsAfterEntityScored); this is for the Done check
+// Normally it runs after every rollup (UpdateFindingsAfterEntityScored); this is for the Done check
 // and for a re-run after Devyan's findings.yml changes.
 
 declare(strict_types=1);

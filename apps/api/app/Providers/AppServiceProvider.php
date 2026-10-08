@@ -8,8 +8,8 @@ use App\Engine\EntityScored;
 use App\Engine\RerollAfterFindingChanged;
 use App\Engine\Weights;
 use App\Findings\FlagStateChanged;
-use App\Findings\RaiseFindingsAfterEntityScored;
 use App\Findings\RaiseFindingsForEntity;
+use App\Findings\UpdateFindingsAfterEntityScored;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 
@@ -37,6 +37,6 @@ class AppServiceProvider extends ServiceProvider
         $events->listen(FlagStateChanged::class, RerollAfterFindingChanged::class);
 
         // Every rollup is followed by the findings engine for that entity (K-13).
-        $events->listen(EntityScored::class, RaiseFindingsAfterEntityScored::class);
+        $events->listen(EntityScored::class, UpdateFindingsAfterEntityScored::class);
     }
 }

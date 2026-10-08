@@ -14,7 +14,7 @@ use App\Engine\EntityScored;
 /**
  * Implements work pack K-13 (findings raised after every rollup) and FR-10.
  */
-final class RaiseFindingsAfterEntityScored
+final class UpdateFindingsAfterEntityScored
 {
     public function __construct(private readonly RaiseFindingsForEntity $raiseFindingsForEntity) {}
 
