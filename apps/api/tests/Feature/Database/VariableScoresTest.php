@@ -59,6 +59,18 @@ test('the laravel role can append each of the three gate outcomes and an ungated
     expect(DB::table('scores.variable_scores')->count())->toBe(4);
 });
 
+test('an unmeasured gate with nothing measured can be stored as cannot_assess', function () {
+    $entityId = insertCoreEntity();
+    DB::statement('SET LOCAL ROLE nv_app');
+
+    insertVariableScore([
+        'entity_id' => $entityId, 'status' => 'cannot_assess', 'gate_status' => 'unmeasured',
+        'score' => null, 'confidence' => null, 'coverage' => 0,
+    ]);
+
+    expect(DB::table('scores.variable_scores')->count())->toBe(1);
+});
+
 test('only the laravel role may insert, and no role may update or delete', function (string $roleName, bool $isWriter) {
     $privilege = fn (string $privilegeName) => DB::selectOne(
         "SELECT has_table_privilege(?, 'scores.variable_scores', ?) AS allowed", [$roleName, $privilegeName]
