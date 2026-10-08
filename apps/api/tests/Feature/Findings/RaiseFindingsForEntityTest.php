@@ -19,28 +19,6 @@ beforeEach(function () {
     config(['engine.modules_path' => base_path('tests/fixtures/modules')]);
 });
 
-/**
- * A water point both gates passed, whose register promises 500 m³/day and reports 200 m³/day:
- * a 60 % magnitude gap. Returns the entity id.
- *
- * @param  array<string, mixed>  $recordOverrides
- */
-function waterPointWithMagnitudeGap(array $recordOverrides = [], float $presenceScore = 100.0): string
-{
-    $entityId = insertCoreEntity(['module' => 'water', 'name' => 'Kibera Water Scheme']);
-    $documentId = insertRawDocument();
-    insertMatchedWaterRecord($entityId, $documentId, $recordOverrides);
-
-    addSubVariableScore($entityId, '1.1', $presenceScore);
-    addSubVariableScore($entityId, '2.1', 0.0);
-    addSubVariableScore($entityId, '2.5', 50.0);
-    $magnitudeScoreId = addSubVariableScore($entityId, '2.2', 60.0, 0.9, sourceIds: [$documentId]);
-    // The adapter's value is the fraction behind the score (water.md §2.2).
-    DB::table('scores.sub_variable_scores')->where('id', $magnitudeScoreId)->update(['value' => '0.6']);
-
-    return $entityId;
-}
-
 function raiseFindingsFor(string $entityId): int
 {
     return app(RaiseFindingsForEntity::class)->raise($entityId);
