@@ -6,6 +6,7 @@
 
 import type { components } from '@/api/schema';
 import { FINDING_HOVER, FINDING_STATUS } from '@/copy/labels';
+import { formatDate } from '@/copy/formatDate';
 
 type FindingSummary = components['schemas']['FindingSummary'];
 
@@ -57,8 +58,8 @@ export function FindingDetail({ finding }: { finding: FindingSummary }) {
       </dl>
 
       <footer className="mt-3 border-t border-neutral-200 pt-2 text-xs text-neutral-600">
-        <div>Detected {toDate(finding.detected_at)}</div>
-        {finding.published_at && <div>Published {toDate(finding.published_at)}</div>}
+        <div>Detected {formatDate(finding.detected_at)}</div>
+        {finding.published_at && <div>Published {formatDate(finding.published_at)}</div>}
         <div className="mt-1">
           If this is wrong, tell us —{' '}
           <a href={`mailto:${CONTEST_EMAIL}`} className="text-blue-800 hover:underline">
@@ -77,8 +78,4 @@ function StoryRow({ label, value }: { label: string; value: string }) {
       <dd className="text-sm text-neutral-900">{value}</dd>
     </div>
   );
-}
-
-function toDate(iso: string): string {
-  return new Date(iso).toISOString().slice(0, 10);
 }
