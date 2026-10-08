@@ -210,13 +210,23 @@ const middleware: Connect.NextHandleFunction = (req, res, next) => {
   next();
 };
 
-export function mockServer(): Plugin {
+export interface MockServerOptions {
+  // false ⇒ the plugin is a no-op; the dev proxy forwards /api, /tiles and /sanctum to
+  // the real Laravel at http://localhost:8000 (apps/web/vite.config.ts). Set via
+  // VITE_DATA_SOURCE: 'api' disables; anything else (unset, 'fixture') enables.
+  enabled?: boolean;
+}
+
+export function mockServer(opts: MockServerOptions = {}): Plugin {
+  const enabled = opts.enabled !== false;
   return {
     name: 'navuuna:mock-server',
     configureServer(server: ViteDevServer) {
+      if (!enabled) return;
       server.middlewares.use(middleware);
     },
     configurePreviewServer(server: PreviewServer) {
+      if (!enabled) return;
       server.middlewares.use(middleware);
     },
   };

@@ -98,6 +98,15 @@ test('a measured score is rejected when any of its evidence is missing', functio
     'source_ids' => ['source_ids', '{}'],
 ]);
 
+test('a source list holding a NULL is rejected, even next to a real source', function (string $sourceIds) {
+    $insertNullSource = fn () => insertSubVariableScore(['source_ids' => $sourceIds]);
+
+    expect($insertNullSource)->toThrow(QueryException::class, 'sub_variable_scores_source_ids_no_null_check');
+})->with([
+    'only NULL' => ['{NULL}'],
+    'NULL beside a real id' => ['{0192a000-0000-7000-8000-000000000001,NULL}'],
+]);
+
 test('a measured score with a null reason is rejected', function () {
     $insertMeasuredWithReason = fn () => insertSubVariableScore(['null_reason' => 'cloudy']);
 

@@ -221,7 +221,8 @@ jobs:
         with:
           php-version: "8.3" # ADR-009
           extensions: pdo_pgsql
-          coverage: none
+          # pcov records which lines the tests run, for the app/Engine coverage gate below.
+          coverage: pcov
 
       - name: Install
         if: hashFiles('apps/api/composer.json') != ''
@@ -243,7 +244,12 @@ jobs:
 
       - name: Pest
         if: hashFiles('apps/api/composer.json') != ''
-        run: ./vendor/bin/pest
+        run: ./vendor/bin/pest --coverage-clover=coverage.xml
+
+      # Work pack K-10: every line of the rollup engine is run by a test.
+      - name: app/Engine coverage is 100 %
+        if: hashFiles('apps/api/app/Engine/**') != ''
+        run: php tests/check_engine_coverage.php coverage.xml
 
   # The migration-lint job enforces two rules no PHP linter covers (CLAUDE.md §4):
   # every migration has a real down(), and every Schema::create names a schema.

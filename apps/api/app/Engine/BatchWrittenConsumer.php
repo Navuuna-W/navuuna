@@ -1,8 +1,8 @@
 <?php
 
 // Reads signals.batch_written, which the Python signal runner publishes after it commits a chunk
-// of sub-variable scores, and rolls up every entity in each message. A long-running command will
-// call it in a loop under Supervisor, so the rollup needs no manual command (K2.2).
+// of sub-variable scores, and rolls up every entity in each message. Run for ever by
+// `engine:consume-batches` under Supervisor, so the rollup needs no manual command (K2.2).
 
 declare(strict_types=1);
 
@@ -15,8 +15,8 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Implements ADR-004a §3: consumer group `rollup`, and XACK only after the database work has
- * committed.
+ * Implements ADR-004a §3: consumer group `rollup`, XACK only after the database work has
+ * committed, and XAUTOCLAIM of messages left pending for more than 5 minutes.
  */
 final class BatchWrittenConsumer
 {
@@ -25,6 +25,9 @@ final class BatchWrittenConsumer
 
     public const GROUP = 'rollup';
 
+    /** A message pending this long belongs to a reader that crashed; take it over (ADR-004a §3). */
+    public const PENDING_TAKEOVER_MILLISECONDS = 300_000;
+
     /** Messages read per round trip. Each carries at most 500 entity ids. */
     private const MESSAGES_PER_READ = 10;
 
@@ -32,6 +35,7 @@ final class BatchWrittenConsumer
         private readonly RedisFactory $redis,
         private readonly RollupEntity $rollupEntity,
         private readonly LoggerInterface $logger,
+        private readonly int $pendingTakeoverMilliseconds = self::PENDING_TAKEOVER_MILLISECONDS,
     ) {}
 
     /**
@@ -51,12 +55,15 @@ final class BatchWrittenConsumer
     }
 
     /**
-     * Handle one round: wait up to $blockMilliseconds for new messages and handle them.
-     * Returns how many messages were handled.
+     * Handle one round: first take over stale messages, otherwise wait up to $blockMilliseconds
+     * for new ones. Returns how many messages were handled.
      */
     public function processOnce(string $consumerName, int $blockMilliseconds): int
     {
-        $messages = $this->readNewMessages($consumerName, $blockMilliseconds);
+        $messages = $this->claimStaleMessages($consumerName);
+        if ($messages === []) {
+            $messages = $this->readNewMessages($consumerName, $blockMilliseconds);
+        }
 
         foreach ($messages as $messageId => $fields) {
             $this->handleMessage($messageId, $fields);
@@ -107,6 +114,26 @@ final class BatchWrittenConsumer
         }
 
         return $decoded;
+    }
+
+    /**
+     * @return array<string, array<string, string>|null> message id → fields
+     */
+    private function claimStaleMessages(string $consumerName): array
+    {
+        $reply = $this->runRedisCommand([
+            'XAUTOCLAIM', self::STREAM, self::GROUP, $consumerName,
+            (string) $this->pendingTakeoverMilliseconds, '0', 'COUNT', (string) self::MESSAGES_PER_READ,
+        ]);
+
+        // Reply (always, even when nothing is claimed): [next start id, [[id, [field, value, …]], …], [ids trimmed from the stream]].
+        $messages = $this->toMessages($reply[1]);
+        $trimmedMessageIds = $reply[2] ?? [];
+        foreach ($trimmedMessageIds as $trimmedMessageId) {
+            $messages[(string) $trimmedMessageId] = null;
+        }
+
+        return $messages;
     }
 
     /**
