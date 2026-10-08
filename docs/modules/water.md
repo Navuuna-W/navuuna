@@ -35,6 +35,18 @@ from `docs/CONTEXT.md`. Refs: D-12, FR-07, DEC-16, DEC-23, ADR-003.
 
 Shared constants: `RECENT_OBSERVATION_DAYS = 90`, `OBSERVATION_LOOKBACK_DAYS = 365`.
 
+## What the adapters read from each input row
+
+The runner passes plain database rows (`engine/input_loader.py`). Column names below are the
+real ones in the migrations; the adapters read nothing else.
+
+| Input | Fields read | Notes |
+|---|---|---|
+| entity (`core.entities`) | `external_ref`, `retired_at`, `metadata.source_id`, `metadata.observed_at` | `osm:n123` / `osm:w456` means the entity is in the OSM extract (D-05). D-05 writes `metadata.source_id` (the `core.sources` row of the extract) and `metadata.observed_at` (the extract date), because `core.entities` has no source column |
+| observation (`core.observations`) | `source_id`, `observed_at`, `contributor_id`, `payload` | A ground report is any observation whose `payload` has `existence` (payload v1 below) |
+| record (`records.water_schemes`) | `document_id`, `record_date`, `rated_yield_m3d`, `reported_production_m3d`, `status_declared`, `alignment_confidence` | `document_id` goes in `source_ids`: the score traces to the document (Bible §7.3) |
+| nearby way | `metadata.surface`, `metadata.highway`, `distance_m` | OSM ways are `segment` entities (D-05) |
+
 ---
 
 ## 1.1 Presence — gate
@@ -54,9 +66,16 @@ Rule:
 - One "does not exist here" report only → stays `present`, confidence × `0.6` (DEC-14).
 - A recent "exists" community observation → confidence `0.9`.
 
+"Different contributors" means different non-null `contributor_id`s: anonymous reports cannot
+prove they are two people. "After them" means after the newest of those absence reports. A
+`present` result with any recent "does not exist here" report has its confidence × `0.6`.
+`source_ids` hold the extract source (when in OSM) and every report used.
+
 Null: entity comes only from a register record (no OSM node, no observation) →
 **"No ground observation of this water point yet"**. The variable becomes `provisional`
-(Bible §6.3) — never a finding.
+(Bible §6.3) — never a finding. In OSM but `metadata.source_id` or `metadata.observed_at` is
+missing → **"Map source of this water point not recorded"** (an ingest bug made visible, never a
+guessed source).
 
 ## 2.1 Existence gap — gate
 
@@ -77,7 +96,7 @@ Null: no matched record → **"No official record found"** (E4) · 1.1 not measu
 | | |
 |---|---|
 | **Signal** | Declared capacity vs observed production. |
-| **Requires** | Matched register record with `rated_yield_m3_per_day` and `reported_production_m3_per_day` |
+| **Requires** | Matched register record with `rated_yield_m3d` and `reported_production_m3d` |
 | **Value** | `(declared − observed) ÷ declared`, unclipped (negative = producing more than rated) |
 | **Score** | `clamp(value, 0, 1) × 100`. **0** = delivers at least what was declared · **100** = delivers nothing of what was declared |
 | **Confidence** | `record.alignment_confidence` × freshness factor |
@@ -91,7 +110,7 @@ register"** · no production figure → **"No production figure in the register"
 | | |
 |---|---|
 | **Signal** | Declared operating status vs observed operating state. |
-| **Requires** | Matched record `declared_status` · this entity's 1.2 result |
+| **Requires** | Matched record `status_declared` · this entity's 1.2 result |
 | **Value** | pair `declared → observed`, e.g. `operational → no` |
 | **Score** | declared `operational`: observed `yes` 0 · `intermittent` 50 · `no` 100. Declared `not_operational`: observed `no` 0 · otherwise 0 (working when declared broken is not a discrepancy against the public) |
 | **Confidence** | `min(record confidence, 1.2 confidence)` × freshness factor |
@@ -117,7 +136,7 @@ the register"** · no observation yet → **"No observation to compare the recor
 | | |
 |---|---|
 | **Signal** | Is it working now? |
-| **Requires** | Community observations (DEC-14, within `OBSERVATION_LOOKBACK_DAYS`) · latest matched record `declared_status` · NDWI at outflow (`raw.eo_stats`) **only for reservoirs and treatment works** (footprint large enough for 10 m pixels) |
+| **Requires** | Community observations (DEC-14, within `OBSERVATION_LOOKBACK_DAYS`) · latest matched record `status_declared` · NDWI at outflow (`raw.eo_stats`) **only for reservoirs and treatment works** (footprint large enough for 10 m pixels) |
 | **Value** | `yes` \| `intermittent` \| `no` |
 | **Score** | yes 100 · intermittent 50 · no 0 |
 | **Confidence** | community observation within 90 days `0.8` · older community observation `0.6` · register status only `0.5` × freshness factor · NDWI only `0.4`. E11 contradiction × 0.6 |
