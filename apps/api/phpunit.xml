@@ -35,6 +35,11 @@
         <env name="DB_USERNAME" value="navuuna"/>
         <env name="DB_PASSWORD" value="navuuna"/>
         <env name="DB_URL" value=""/>
+        <!-- The rollup stream tests (K-10) talk to real Redis, like the CI service container.
+             predis needs no PHP extension; set REDIS_PORT to override. -->
+        <env name="REDIS_CLIENT" value="predis"/>
+        <env name="REDIS_HOST" value="127.0.0.1"/>
+        <env name="REDIS_PORT" value="6379"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
