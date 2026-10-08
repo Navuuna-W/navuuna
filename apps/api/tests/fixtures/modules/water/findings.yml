@@ -1,0 +1,53 @@
+# STUB — stands in for Devyan's services/signals/modules/water/findings.yml (D-20) until it lands.
+# Recorded in the stub register (.claude/state/progress-khillon.md). Narratives are copied
+# verbatim from docs/modules/findings.md; the field paths are Core's best guess for Devyan to fix.
+#
+# Each {placeholder} in a narrative is filled from the value path named under `fields`:
+#   entity.<column>            the scored entity (core.entities)
+#   record.<column>            the newest record behind the score, plus record.source_name
+#   observation.<column>       the newest community observation behind the score, plus .source_name
+#   eo_stat.<column>           the newest satellite reading behind the score, plus .source_name
+#   score.<column>             the score that raised the finding (value, unit, observed_at)
+#   score[<sub_id>].<column>   this entity's newest score of another sub-variable
+# A dot inside the column walks into jsonb, e.g. observation.payload.operational.
+# Filters: |date → "14 Sep 2026" (Africa/Nairobi) · |percent → value × 100, whole · |whole → rounded.
+# Fields named declared_* are saved in flags.flags.declared, observed_* in flags.flags.observed.
+
+sub_variables:
+  '2.1':
+    narrative: '{declared_source} lists {entity_name} at this location (record dated {declared_date}). {observed_source} found no water point here ({observed_date}).'
+    fields:
+      declared_source: record.source_name
+      entity_name: entity.name
+      declared_date: record.record_date|date
+      observed_source: observation.source_name
+      observed_date: observation.observed_at|date
+
+  '2.2':
+    narrative: '{declared_source} lists a rated yield of {declared_value} m³/day for {entity_name} (record dated {declared_date}). {observed_source} reports {observed_value} m³/day ({observed_date}) — {gap_percent}% below the rated figure.'
+    fields:
+      declared_source: record.source_name
+      declared_value: record.rated_yield_m3d|whole
+      entity_name: entity.name
+      declared_date: record.record_date|date
+      observed_source: record.source_name
+      observed_value: record.reported_production_m3d|whole
+      observed_date: record.record_date|date
+      gap_percent: score.value|percent
+
+  '2.4':
+    narrative: '{declared_source} lists {entity_name} as {declared_status} (record dated {declared_date}). {observed_source} reported it as {observed_status} on {observed_date}.'
+    fields:
+      declared_source: record.source_name
+      entity_name: entity.name
+      declared_status: record.status_declared
+      declared_date: record.record_date|date
+      observed_source: observation.source_name
+      observed_status: score[1.2].value
+      observed_date: observation.observed_at|date
+
+# Every evidence pack ends with this line (findings.md, record age). Left off when a value is missing.
+closing_line:
+  narrative: 'The official record is {record_age_days} days older than our latest observation.'
+  fields:
+    record_age_days: score[2.5].value|whole
