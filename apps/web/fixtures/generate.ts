@@ -157,6 +157,13 @@ export function generateFixtures(): GenResult {
   // Fix #5: one contested example so the UI exercises the status.
   attachFinding(entities, m4, 'contested', 'medium', '2.2');
 
+  // rd-002 (provisional) and rd-003 (cannot_assess) exist so B2's "no road is
+  // invisible" story has a `p` and a `ca` road to render. Appended AFTER every existing
+  // entity and finding so no existing ID or score moves.
+  for (const spec of EXTRA_ROADS) {
+    entities.push(makeExtraRoadSegment(rng, spec));
+  }
+
   const byId = new Map<string, FixtureEntity>();
   for (const e of entities) byId.set(e.detail.id, e);
 
@@ -199,6 +206,54 @@ function makeRoadSegment(rng: () => number): FixtureEntity {
     'Thika super highway — segment 1 (illustrative)',
     'Kasarani',
     'measured'
+  );
+  return { detail, geometry };
+}
+
+interface ExtraRoadSpec {
+  id: string;
+  name: string;
+  ward: string;
+  gate: 'provisional' | 'cannot_assess';
+  coords: [number, number][];
+}
+const EXTRA_ROADS: ExtraRoadSpec[] = [
+  {
+    id: 'rd-002',
+    name: 'Mombasa Road — segment 1 (illustrative, provisional)',
+    ward: 'Embakasi East',
+    gate: 'provisional',
+    coords: [
+      [36.78, -1.32],
+      [36.795, -1.318],
+      [36.81, -1.316],
+      [36.825, -1.313],
+    ],
+  },
+  {
+    id: 'rd-003',
+    name: 'Ngong Road — segment 1 (illustrative, cannot assess)',
+    ward: 'Dagoretti North',
+    gate: 'cannot_assess',
+    coords: [
+      [36.84, -1.36],
+      [36.855, -1.358],
+      [36.87, -1.355],
+      [36.885, -1.352],
+    ],
+  },
+];
+
+function makeExtraRoadSegment(rng: () => number, spec: ExtraRoadSpec): FixtureEntity {
+  const geometry: FixtureGeometry = { type: 'LineString', coordinates: spec.coords };
+  const detail = makeEntityDetail(
+    rng,
+    spec.id,
+    'road_segment',
+    'roads',
+    spec.name,
+    spec.ward,
+    spec.gate
   );
   return { detail, geometry };
 }

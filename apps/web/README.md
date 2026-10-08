@@ -94,6 +94,12 @@ Flagged here so the next sync has a specific agenda item.
     "no 29th row" or "no 30th row"?
   - whether rows like 2.6 should be hidden from Viewer tooltips in the panel accordion.
     Decision owner: Devyan (Bible §6.8 editor).
+- **(d) Does `coverage < 1` alone make an entity "partly verified"?** Current rule marks
+  an entity `p` whenever any variable has `coverage < 1`. The water module measures 8 of
+  29 sub-variables (CLAUDE.md §4), so every water entity has coverage < 1 and the fixture
+  class distribution is **180 `p` (90%), 20 `ca` (10%), 0 solid** — the `p` signal
+  discriminates nothing. Options: scope the rule to the entity's own module, or drop the
+  badge until module coverage is honest. Decision owner: Devyan (DEC-15 extension).
 
 ## Install
 

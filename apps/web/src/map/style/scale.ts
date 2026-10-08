@@ -128,3 +128,37 @@ export function circleStrokeWidthExpression(): ExpressionSpecification {
 export function circleRadiusExpression(): ExpressionSpecification {
   return ['interpolate', ['linear'], ['zoom'], 10, 3, 14, 6, 18, 10];
 }
+
+// Line colour expressions used by the three road layers (see layers.ts). Each is only
+// invoked by its own filter-restricted layer; the ca fallback guards unknown classes.
+export function solidLineColorExpression(): ExpressionSpecification {
+  return [
+    'match',
+    ['get', 'colour_class'],
+    'b1',
+    COLOUR_FOR.b1,
+    'b2',
+    COLOUR_FOR.b2,
+    'b3',
+    COLOUR_FOR.b3,
+    'b4',
+    COLOUR_FOR.b4,
+    COLOUR_FOR.ca,
+  ];
+}
+
+export function partlyVerifiedLineColorExpression(): ExpressionSpecification {
+  return [
+    'match',
+    ['get', 'colour_class'],
+    'b1p',
+    COLOUR_FOR.b1p,
+    'b2p',
+    COLOUR_FOR.b2p,
+    'b3p',
+    COLOUR_FOR.b3p,
+    'b4p',
+    COLOUR_FOR.b4p,
+    COLOUR_FOR.ca,
+  ];
+}
