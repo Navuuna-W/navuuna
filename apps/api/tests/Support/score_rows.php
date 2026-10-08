@@ -25,7 +25,10 @@ function findOrInsertAdapter(string $subId): string
 
 /**
  * Insert one sub-variable score and return its id. A null score writes a null_not_measured row
- * with a reason, as the runner does — never a 0 (CLAUDE.md §4).
+ * with a reason, as the runner does — never a 0 (CLAUDE.md §4). A measured score cites a fresh
+ * source unless $sourceIds names the rows it was built from.
+ *
+ * @param  list<string>|null  $sourceIds
  */
 function addSubVariableScore(
     string $entityId,
@@ -33,8 +36,10 @@ function addSubVariableScore(
     ?float $score,
     float $confidence = 0.8,
     string $computedAt = '2026-10-07 10:00:00+00',
+    ?array $sourceIds = null,
 ): string {
     $isMeasured = $score !== null;
+    $sourceIds ??= $isMeasured ? [insertCoreSource()] : [];
 
     return (string) DB::table('scores.sub_variable_scores')->insertGetId([
         'entity_id' => $entityId,
@@ -46,7 +51,7 @@ function addSubVariableScore(
         'null_reason' => $isMeasured ? null : 'test: not measured',
         'observed_at' => $isMeasured ? $computedAt : null,
         'computed_at' => $computedAt,
-        'source_ids' => $isMeasured ? '{'.insertCoreSource().'}' : '{}',
+        'source_ids' => '{'.implode(',', $sourceIds).'}',
         'adapter_id' => findOrInsertAdapter($subId),
         'adapter_version' => '1.0.0',
     ]);
