@@ -17,6 +17,13 @@ test('only 2.1, 2.2 and 2.4 raise findings', function () {
         ->and(FindingThresholds::raiseAtScore('1.2'))->toBeNull();
 });
 
+test('a gap counts as closed twenty points below its raise threshold', function () {
+    expect(FindingThresholds::autoResolveBelowScore('2.1'))->toBe(80.0)
+        ->and(FindingThresholds::autoResolveBelowScore('2.2'))->toBe(10.0)
+        ->and(FindingThresholds::autoResolveBelowScore('2.4'))->toBe(30.0)
+        ->and(FindingThresholds::autoResolveBelowScore('2.5'))->toBeNull();
+});
+
 test('an existence gap is always high', function () {
     $severity = FindingThresholds::severityFor('2.1', 100.0);
 

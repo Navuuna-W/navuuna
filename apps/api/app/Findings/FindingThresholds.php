@@ -1,7 +1,8 @@
 <?php
 
 // The numbers behind "when is a gap big enough to become a finding, and how serious is it".
-// RaiseRules reads them when it raises a finding.
+// RaiseRules reads them when it raises a finding; CloseFindingsWithClosedGaps reads them when a
+// gap closes (E8).
 // Changing one changes what gets raised, so it needs a new ADR (ADR-010 Consequences).
 
 declare(strict_types=1);
@@ -9,7 +10,7 @@ declare(strict_types=1);
 namespace App\Findings;
 
 /**
- * Implements ADR-010 Decision 1 (DEC-09). Scores are the direction-neutral 0–100
+ * Implements ADR-010 Decision 1 (DEC-09) and E8. Scores are the direction-neutral 0–100
  * sub-variable scores, where higher = bigger gap.
  */
 final class FindingThresholds
@@ -28,6 +29,12 @@ final class FindingThresholds
         '2.4' => 50.0,
     ];
 
+    /** E8 hysteresis: a gap counts as closed only this far below the raise threshold. */
+    public const AUTO_RESOLVE_MARGIN = 20.0;
+
+    /** E8: the gap must stay closed across runs at least this many days apart. */
+    public const MIN_DAYS_BETWEEN_RESOLVING_RUNS = 7;
+
     /** 2.2 Magnitude gap: scores at or above this are medium. */
     private const MAGNITUDE_GAP_MEDIUM_FROM = 50.0;
 
@@ -43,6 +50,20 @@ final class FindingThresholds
     public static function raiseAtScore(string $subId): ?float
     {
         return self::RAISE_AT_SCORE[$subId] ?? null;
+    }
+
+    /**
+     * The score a gap must fall below before it counts as closed (E8), or null when the
+     * sub-variable never raises a finding.
+     */
+    public static function autoResolveBelowScore(string $subId): ?float
+    {
+        $raiseAtScore = self::raiseAtScore($subId);
+        if ($raiseAtScore === null) {
+            return null;
+        }
+
+        return $raiseAtScore - self::AUTO_RESOLVE_MARGIN;
     }
 
     /**
