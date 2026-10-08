@@ -1,12 +1,13 @@
 <?php
 
 // Checks the rollup's stream reader against a real Redis (ADR-004a §3): a batch message rolls up
-// its entities and is acknowledged; a failed rollup leaves it pending; an unreadable one is logged
-// and acknowledged so it cannot loop.
+// its entities and is acknowledged; a failed rollup leaves it pending; a message a crashed reader
+// left behind is taken over; an unreadable one is logged and acknowledged so it cannot loop.
 
 declare(strict_types=1);
 
 use App\Engine\BatchWrittenConsumer;
+use App\Engine\RollupEntity;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -54,9 +55,9 @@ function pendingMessageCount(): int
     return is_array($summary) ? (int) $summary[0] : 0;
 }
 
-function makeConsumer(): BatchWrittenConsumer
+function makeConsumer(int $pendingTakeoverMilliseconds = BatchWrittenConsumer::PENDING_TAKEOVER_MILLISECONDS): BatchWrittenConsumer
 {
-    return app(BatchWrittenConsumer::class);
+    return new BatchWrittenConsumer(app('redis'), app(RollupEntity::class), Log::getFacadeRoot(), $pendingTakeoverMilliseconds);
 }
 
 beforeEach(function () {
@@ -86,6 +87,35 @@ test('a message whose rollup fails stays pending', function () {
     $processOnce = fn () => makeConsumer()->processOnce('worker-a', NO_WAIT_MILLISECONDS);
 
     expect($processOnce)->toThrow(QueryException::class)
+        ->and(pendingMessageCount())->toBe(1);
+});
+
+test('a message left pending by a crashed reader is taken over', function () {
+    $entityId = insertCoreEntity();
+    publishBatch(json_encode([$entityId], JSON_THROW_ON_ERROR));
+    // A reader takes the message and dies before acknowledging it.
+    rawRedis()->executeRaw([
+        'XREADGROUP', 'GROUP', BatchWrittenConsumer::GROUP, 'crashed-worker',
+        'COUNT', '1', 'STREAMS', BatchWrittenConsumer::STREAM, '>',
+    ]);
+
+    $handledCount = makeConsumer(pendingTakeoverMilliseconds: 0)->processOnce('worker-b', NO_WAIT_MILLISECONDS);
+
+    expect($handledCount)->toBe(1)
+        ->and(DB::table('scores.variable_scores')->where('entity_id', $entityId)->count())->toBe(5)
+        ->and(pendingMessageCount())->toBe(0);
+});
+
+test('a message pending for less than 5 minutes is left to its reader', function () {
+    publishBatch(json_encode([insertCoreEntity()], JSON_THROW_ON_ERROR));
+    rawRedis()->executeRaw([
+        'XREADGROUP', 'GROUP', BatchWrittenConsumer::GROUP, 'busy-worker',
+        'COUNT', '1', 'STREAMS', BatchWrittenConsumer::STREAM, '>',
+    ]);
+
+    $handledCount = makeConsumer()->processOnce('worker-b', NO_WAIT_MILLISECONDS);
+
+    expect($handledCount)->toBe(0)
         ->and(pendingMessageCount())->toBe(1);
 });
 
