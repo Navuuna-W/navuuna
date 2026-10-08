@@ -8,8 +8,10 @@ declare(strict_types=1);
 
 use App\Engine\BatchWrittenConsumer;
 use App\Engine\RollupEntity;
+use Illuminate\Contracts\Redis\Factory;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Redis\Connections\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
@@ -119,6 +121,21 @@ test('a message pending for less than 5 minutes is left to its reader', function
         ->and(pendingMessageCount())->toBe(1);
 });
 
+test('a pending message that was trimmed from the stream is just acknowledged', function () {
+    publishBatch(json_encode([insertCoreEntity()], JSON_THROW_ON_ERROR));
+    $reply = rawRedis()->executeRaw([
+        'XREADGROUP', 'GROUP', BatchWrittenConsumer::GROUP, 'crashed-worker',
+        'COUNT', '1', 'STREAMS', BatchWrittenConsumer::STREAM, '>',
+    ]);
+    rawRedis()->executeRaw(['XDEL', BatchWrittenConsumer::STREAM, $reply[0][1][0][0]]);
+
+    $handledCount = makeConsumer(pendingTakeoverMilliseconds: 0)->processOnce('worker-b', NO_WAIT_MILLISECONDS);
+
+    expect($handledCount)->toBe(1)
+        ->and(pendingMessageCount())->toBe(0)
+        ->and(DB::table('scores.variable_scores')->count())->toBe(0);
+});
+
 test('an unreadable message is logged and acknowledged', function (string $entityIdsJson) {
     $log = Log::spy();
     publishBatch($entityIdsJson);
@@ -147,6 +164,37 @@ test('creating the group again is harmless', function () {
     $createGroupAgain = fn () => makeConsumer()->createGroupIfMissing();
 
     expect($createGroupAgain)->not->toThrow(RuntimeException::class);
+});
+
+test('a Redis error other than "group exists" is not hidden', function () {
+    // The stream key holds a plain string, so XGROUP CREATE answers WRONGTYPE.
+    rawRedis()->executeRaw(['DEL', BatchWrittenConsumer::STREAM]);
+    rawRedis()->executeRaw(['SET', BatchWrittenConsumer::STREAM, 'not a stream']);
+
+    $createGroup = fn () => makeConsumer()->createGroupIfMissing();
+
+    expect($createGroup)->toThrow(RuntimeException::class, 'WRONGTYPE');
+    rawRedis()->executeRaw(['DEL', BatchWrittenConsumer::STREAM]);
+});
+
+test('a Redis client other than predis is refused with a clear message', function () {
+    $connection = Mockery::mock(Connection::class);
+    $connection->shouldReceive('client')->andReturn(new stdClass);
+    // A Redis factory whose connection hands out something that is not a predis client.
+    $redis = new class($connection) implements Factory
+    {
+        public function __construct(private readonly object $connection) {}
+
+        public function connection($name = null): object
+        {
+            return $this->connection;
+        }
+    };
+    $consumer = new BatchWrittenConsumer($redis, app(RollupEntity::class), Log::getFacadeRoot());
+
+    $createGroup = fn () => $consumer->createGroupIfMissing();
+
+    expect($createGroup)->toThrow(RuntimeException::class, 'REDIS_CLIENT=predis');
 });
 
 test('nothing to read handles nothing', function () {

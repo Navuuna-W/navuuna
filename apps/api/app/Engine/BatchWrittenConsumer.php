@@ -126,11 +126,7 @@ final class BatchWrittenConsumer
             (string) $this->pendingTakeoverMilliseconds, '0', 'COUNT', (string) self::MESSAGES_PER_READ,
         ]);
 
-        if (! is_array($reply)) {
-            return [];
-        }
-
-        // Reply: [next start id, [[id, [field, value, …]], …], [ids trimmed from the stream]].
+        // Reply (always, even when nothing is claimed): [next start id, [[id, [field, value, …]], …], [ids trimmed from the stream]].
         $messages = $this->toMessages($reply[1]);
         $trimmedMessageIds = $reply[2] ?? [];
         foreach ($trimmedMessageIds as $trimmedMessageId) {
