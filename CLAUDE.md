@@ -6,8 +6,9 @@ Key date: **Wed 7 Oct 2026**. Checkpoints on staging at 16:00: CP1 Wed 30 Sep ·
 ## 1. Source of truth — in this order
 1. Merged ADRs in `docs/adr/` (newest wins).
 2. Work packs rev 3 (27 Sep) in `docs/workpacks/` — owners, dates, task specs, scope trims.
-3. `docs/BUILD_BIBLE.md` **v1.1** — rules, data model, contracts. Two known overrides:
+3. `docs/BUILD_BIBLE.md` **v1.1** — rules, data model, contracts. Three known overrides:
    - Bible says Laravel 11 → use **Laravel 13, PHP 8.3** (ADR-009).
+   - Bible says Prefect 2.x → use **Prefect 3.x**, `prefect>=3.8,<4` (ADR-014).
    - Bible says demo 15 Oct, sprint weeks from 18 Sep → use the 7 Oct checkpoints above.
 4. PRD-001 v1.0.
 Bible v1.0 (the .docx) is superseded. Never use it. If two sources conflict and the order above doesn't settle it, STOP and ask.
