@@ -32,3 +32,6 @@ docs/design/reference/
 
 # macOS
 .DS_Store
+
+# Frozen database dumps for the offline stack (K-20): bigger than 1 MB.
+infra/offline/data/
