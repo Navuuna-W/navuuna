@@ -26,5 +26,9 @@ __pycache__/
 *.gpkg
 *.osm.pbf
 
+# Look-and-feel reference only: a third party's page mirrored so we can read its
+# tokens and capture its states. We copy the design, not the files — never redistribute.
+docs/design/reference/
+
 # macOS
 .DS_Store
