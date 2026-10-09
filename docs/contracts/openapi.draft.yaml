@@ -3,6 +3,7 @@
 # This is the frontend's working contract until Laravel generates the real spec (A-06).
 # Covers only the endpoints the fixtures and mock serve today:
 #   GET /api/v1/entities/{id}
+#   GET /api/v1/me  (live in Laravel — work pack A-10, DEC-13)
 # Later endpoints (listing, flags, lenses, telemetry, observations) are added as the
 # frontend starts using them. The generator never reads anything outside paths/components.
 #
@@ -33,6 +34,34 @@ servers:
     description: Same-origin API
 
 paths:
+  /me:
+    get:
+      operationId: getCurrentUser
+      summary: Who is signed in and which screens exist for them (S7, S1 header).
+      description: >
+        The read-back after POST /api/login. Session cookie only — a machine holding an
+        X-Api-Key gets 401, because it has no screens to choose between (work pack A-10).
+      responses:
+        '200':
+          description: The signed-in user's identity and capability.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '401':
+          description: >
+            Nobody is signed in; the sign-in screen (S7) renders on this. Laravel's body is
+            `{"message": "Unauthenticated."}`, which is not the Problem shape below — the
+            generated spec (A-06) reconciles the error contract across every endpoint.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+
   /entities/{id}:
     get:
       operationId: getEntityById
@@ -70,6 +99,31 @@ components:
           type: integer
         detail:
           type: string
+
+    CurrentUser:
+      type: object
+      required: [name, role, can_review_findings]
+      description: >
+        Identity and capability only. PII-tagged columns — the email address above all — are
+        left out (NFR-06), and nothing here reveals what is in the review queue (DEC-08, A-19).
+      properties:
+        name:
+          type: string
+          description: Greeting for the header's user affordance (S1) and the S7 sign-in confirmation.
+        role:
+          type: string
+          enum: [viewer, analyst, admin]
+          description: >
+            The role the server is treating the session as, spelled exactly as app/Auth/Role.php
+            stores it, so the client never guesses the string. `api_client` never appears here:
+            machines authenticate with X-Api-Key and this endpoint takes a session only.
+        can_review_findings:
+          type: boolean
+          description: >
+            True for analyst and admin — the same check the API applies to GET /flags. The client
+            renders the review screens only when it is true, so the role-to-capability rule lives
+            on the server (A-19). A capability, never a count: a number would tell a viewer that
+            held findings exist (DEC-08).
 
     EntityDetail:
       type: object
