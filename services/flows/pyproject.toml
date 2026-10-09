@@ -1,0 +1,37 @@
+# Python project for the Prefect flows (work pack K-12, ADR-014). Core's scoring flow lives
+# here, and Devyan's ingest flows (D-22) join it. Prefect is pinned to 3.x for every flow,
+# because a self-hosted Prefect server only accepts clients on its own major version.
+
+[project]
+name = "navuuna-flows"
+version = "0.1.0"
+description = "Navuuna Prefect flows: scheduled scoring and ingestion"
+requires-python = ">=3.12"
+dependencies = [
+    "prefect>=3.8,<4",  # ADR-014
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.3,<10",
+    "mypy>=1.13,<2",
+    "ruff>=0.7,<1",
+]
+
+[tool.setuptools]
+py-modules = ["score_all"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.mypy]
+strict = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/F: errors · I: import order · N: naming · B: likely bugs · UP: modern syntax
+select = ["E", "F", "I", "N", "B", "UP"]

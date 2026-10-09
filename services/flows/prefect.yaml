@@ -1,0 +1,23 @@
+# Prefect deployments for Navuuna (K-12, ADR-014). `prefect --no-prompt deploy --all` registers
+# them with the Prefect server; infra/docker/prefect-worker-start.sh runs that on every start.
+# The code is already in the worker image, so there is no build or push step.
+
+name: navuuna-flows
+prefect-version: 3.8.8
+
+build: null
+push: null
+pull:
+  - prefect.deployments.steps.set_working_directory:
+      directory: /srv/navuuna/services/flows
+
+deployments:
+  # A full rescore once a night, while nobody is using the map. Between runs the signal
+  # service rescores single entities on request (recompute stream, K-09b).
+  - name: score-all
+    entrypoint: score_all.py:score_all
+    work_pool:
+      name: scoring
+    schedules:
+      - cron: "0 2 * * *"
+        timezone: Africa/Nairobi

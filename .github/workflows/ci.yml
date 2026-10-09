@@ -170,6 +170,37 @@ jobs:
       - name: Pytest with 100 % engine coverage
         run: pytest --cov=engine --cov-fail-under=100
 
+  # The flows job lints, type-checks and tests the Prefect flows (K-12, ADR-014). The tests
+  # start a throwaway Prefect server, so no services are needed.
+  flows:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/flows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/flows/pyproject.toml
+
+      - name: Install
+        run: pip install -e '.[dev]'
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format
+        run: ruff format --check .
+
+      - name: Mypy
+        run: mypy --strict .
+
+      - name: Pytest
+        run: pytest
+
   # The php job runs Pint, PHPStan (level set in apps/api/phpstan.neon) and Pest against
   # a real PostGIS database. Every step waits for apps/api/composer.json, which K-06a adds.
   php:
@@ -346,6 +377,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e '.[dev]' pip-audit
+          pip-audit --skip-editable --progress-spinner off
+
+      - name: Python audit (flows)
+        working-directory: services/flows
+        run: |
+          pip install -e '.[dev]'
           pip-audit --skip-editable --progress-spinner off
 
       - uses: actions/setup-node@v4

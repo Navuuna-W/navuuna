@@ -5,8 +5,7 @@
 # Every service reads the same infra/local/.env, so MODULES_ENABLED means the same thing to
 # the Python runner and to Laravel (ADR-012 §3).
 #
-# Not here yet: Reverb (Austine adds it with broadcasting), the FastAPI /health endpoint (K-07)
-# and Prefect (K-12).
+# Not here yet: Reverb (Austine adds it with broadcasting) and the FastAPI /health endpoint (K-07).
 
 name: navuuna
 
@@ -111,6 +110,44 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Prefect server: run history and the UI on http://localhost:4200 (K-12, ADR-014).
+  # Locally it keeps its own SQLite database in a volume; Box B gets its own setup in K-12b.
+  prefect-server:
+    build:
+      context: ..
+      dockerfile: infra/docker/flows.Dockerfile
+    image: navuuna-flows
+    command: ["prefect", "server", "start", "--host", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:4200:4200"
+    volumes:
+      - prefect-data:/root/.prefect
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4200/api/health')"]
+      interval: 5s
+      retries: 30
+    restart: unless-stopped
+
+  # Prefect worker: registers the deployments in services/flows/prefect.yaml and runs their
+  # flows (score_all every night at 02:00 Nairobi time).
+  prefect-worker:
+    image: navuuna-flows
+    command: ["prefect-worker-start.sh"]
+    env_file: local/.env
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+      # STUB until Devyan's services/signals/modules/ lands (D-18), same as the signals
+      # service above. Then delete this line to use the default folder.
+      SIGNAL_MODULES_ROOT: tests/fixtures/modules
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+      postgis:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   # Austine's web app on http://localhost:5173, talking to the api service.
   web:
     image: node:22
@@ -131,3 +168,4 @@ services:
 volumes:
   postgis-data:
   minio-data:
+  prefect-data:

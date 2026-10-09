@@ -4,7 +4,8 @@ The Python side of Navuuna (Bible §14.1). Each folder is one service:
 
 - `signals/` — the signal service. `signals/engine/` is the module-agnostic runner and rollup
   (Core lane); `signals/modules/` holds the per-module adapters (Signal lane).
-- `ingest/` and `flows/` arrive with their tasks (D-07, D-22, K-12).
+- `flows/` — the Prefect flows: Core's `score_all` (K-12) and, later, Devyan's ingest flows.
+- `ingest/` arrives with its tasks (D-07, D-22).
 
 `signals/engine/weights.yml` holds the fixed sub-variable weights the rollup
 reads (Bible §6.7). Check it with:

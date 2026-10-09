@@ -1,0 +1,8 @@
+# Keeps laptop-only Python folders out of the images built from the repo root
+# (infra/docker/*.Dockerfile): virtual environments and tool caches.
+**/.venv
+**/__pycache__
+**/.mypy_cache
+**/.pytest_cache
+**/.ruff_cache
+**/.coverage
