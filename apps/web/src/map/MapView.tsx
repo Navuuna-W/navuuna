@@ -1,5 +1,6 @@
 // MapLibre map. Shows the Protomaps basemap plus one vector source for scored entities,
-// coloured by colour_class. Click a point → URL sets ?entity=<id>, which opens the panel.
+// coloured by colour_class. Click an entity → URL sets ?entity=<id>, which opens the
+// panel.
 //
 // This component owns the raw map lifecycle: it creates a Map on mount, tears it down on
 // unmount, and reconciles the entities source URL whenever the lens changes.
@@ -9,22 +10,16 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { registerPmtilesProtocol } from './registerPmtiles';
 import { buildBaseStyle } from './style/baseStyle';
-import {
-  circleColorExpression,
-  circleRadiusExpression,
-  circleStrokeColorExpression,
-  circleStrokeWidthExpression,
-} from './style/scale';
+import { CLICKABLE_LAYER_IDS, ENTITIES_SOURCE_ID, ENTITY_LAYERS } from './style/layers';
 import { useSelectedEntity } from '@/panel/useSelectedEntity';
-
-const ENTITIES_SOURCE_ID = 'entities-src';
-const WATER_POINTS_LAYER_ID = 'water-points';
-const ROAD_SEGMENTS_LAYER_ID = 'road-segments';
-const CLICKABLE_LAYER_IDS = [WATER_POINTS_LAYER_ID, ROAD_SEGMENTS_LAYER_ID];
 
 // Nairobi centre; the user can pan anywhere.
 const INITIAL_CENTER: [number, number] = [36.82, -1.29];
 const INITIAL_ZOOM = 11;
+
+function entitiesTileUrl(lens: string): string {
+  return `${window.location.origin}/tiles/{z}/{x}/{y}.mvt?lens=${encodeURIComponent(lens)}`;
+}
 
 export function MapView({ lens = 'county_planner' }: { lens?: string }) {
   const container = useRef<HTMLDivElement | null>(null);
@@ -50,7 +45,7 @@ export function MapView({ lens = 'county_planner' }: { lens?: string }) {
     if (import.meta.env.VITE_DATA_SOURCE === 'fixture' || !import.meta.env.VITE_DATA_SOURCE) {
       map.on('idle', () => {
         const feats = map.queryRenderedFeatures(undefined, {
-          layers: CLICKABLE_LAYER_IDS.filter((id) => map.getLayer(id)),
+          layers: CLICKABLE_LAYER_IDS.filter((id) => map.getLayer(id)) as string[],
         });
         (window as unknown as Record<string, unknown>).__NAVUUNA_TEST__ = {
           featureCount: feats.length,
@@ -62,41 +57,17 @@ export function MapView({ lens = 'county_planner' }: { lens?: string }) {
     map.on('load', () => {
       map.addSource(ENTITIES_SOURCE_ID, {
         type: 'vector',
-        tiles: [`${window.location.origin}/tiles/{z}/{x}/{y}.mvt?lens=${encodeURIComponent(lens)}`],
+        tiles: [entitiesTileUrl(lens)],
         minzoom: 0,
         maxzoom: 18,
         promoteId: 'id',
       });
 
-      // Road segments go first so points sit on top of lines.
-      map.addLayer({
-        id: ROAD_SEGMENTS_LAYER_ID,
-        type: 'line',
-        source: ENTITIES_SOURCE_ID,
-        'source-layer': 'entities',
-        filter: ['==', ['get', 'entity_type'], 'road_segment'],
-        paint: {
-          'line-color': circleColorExpression(),
-          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 14, 4, 18, 7],
-          'line-opacity': 0.9,
-        },
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-      });
-
-      map.addLayer({
-        id: WATER_POINTS_LAYER_ID,
-        type: 'circle',
-        source: ENTITIES_SOURCE_ID,
-        'source-layer': 'entities',
-        filter: ['==', ['get', 'entity_type'], 'water_point'],
-        paint: {
-          'circle-radius': circleRadiusExpression(),
-          'circle-color': circleColorExpression(),
-          'circle-stroke-color': circleStrokeColorExpression(),
-          'circle-stroke-width': circleStrokeWidthExpression(),
-          'circle-opacity': 0.95,
-        },
-      });
+      // Layer order: roads first (lines), points on top. Within roads: solid, then
+      // partly-verified dashed, then cannot-assess dashed.
+      for (const layer of ENTITY_LAYERS) {
+        map.addLayer(layer);
+      }
 
       for (const layerId of CLICKABLE_LAYER_IDS) {
         map.on('click', layerId, (e) => {
@@ -116,7 +87,7 @@ export function MapView({ lens = 'county_planner' }: { lens?: string }) {
       // Clicking the map background closes the panel.
       map.on('click', (e) => {
         const hits = map.queryRenderedFeatures(e.point, {
-          layers: CLICKABLE_LAYER_IDS,
+          layers: CLICKABLE_LAYER_IDS as string[],
         });
         if (hits.length === 0) closeEntity();
       });
@@ -137,10 +108,7 @@ export function MapView({ lens = 'county_planner' }: { lens?: string }) {
     if (!map || !map.isStyleLoaded()) return;
     const source = map.getSource(ENTITIES_SOURCE_ID);
     if (!source || source.type !== 'vector') return;
-    const nextTiles = [
-      `${window.location.origin}/tiles/{z}/{x}/{y}.mvt?lens=${encodeURIComponent(lens)}`,
-    ];
-    (source as maplibregl.VectorTileSource).setTiles(nextTiles);
+    (source as maplibregl.VectorTileSource).setTiles([entitiesTileUrl(lens)]);
   }, [lens]);
 
   return <div ref={container} className="h-full w-full" aria-label="Map of Nairobi" />;

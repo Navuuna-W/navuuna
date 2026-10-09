@@ -5,7 +5,6 @@ import { describe, it, expect } from 'vitest';
 import {
   createExpression,
   validateStyleMin,
-  type LayerSpecification,
   type StylePropertySpecification,
   type StyleSpecification,
 } from '@maplibre/maplibre-gl-style-spec';
@@ -14,11 +13,13 @@ import {
   CA_STROKE_WIDTH,
   COLOUR_FOR,
   MEASURED_STROKE_COLOR,
-  circleColorExpression,
   circleRadiusExpression,
   circleStrokeColorExpression,
   circleStrokeWidthExpression,
+  partlyVerifiedLineColorExpression,
+  solidLineColorExpression,
 } from './scale';
+import { ENTITIES_SOURCE_ID, ENTITY_LAYERS } from './layers';
 import { buildBaseStyle } from './baseStyle';
 
 const UNKNOWN = 'nope-does-not-exist';
@@ -90,38 +91,37 @@ describe('circles — stroke always visible, unknown class falls back to ca (B1)
   });
 });
 
+describe('lines — every road class renders a visible stroke (B2)', () => {
+  it('solid line colour is visible for b1–b4 and for unknown', () => {
+    const expr = solidLineColorExpression();
+    for (const cc of ['b1', 'b2', 'b3', 'b4', UNKNOWN]) {
+      expect(evalColor(expr, cc).a).toBeGreaterThan(0);
+    }
+  });
+
+  it('partly-verified line colour is visible for every "p" band and for unknown', () => {
+    const expr = partlyVerifiedLineColorExpression();
+    for (const cc of ['b1p', 'b2p', 'b3p', 'b4p', UNKNOWN]) {
+      expect(evalColor(expr, cc).a).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('style-spec validation', () => {
-  it('validateStyleMin accepts the base style + a circle layer using the circle expressions', () => {
+  it('validateStyleMin accepts the base style + entity layers', () => {
     const base = buildBaseStyle() as unknown as StyleSpecification;
-    // Inline water-points layer definition proves the three circle expressions pass
-    // style-spec validation against a real circle-layer paint block. PR 1a-ii extends
-    // this with the three road layers.
-    const circleLayer: LayerSpecification = {
-      id: 'test-water-points',
-      type: 'circle',
-      source: 'entities-src',
-      'source-layer': 'entities',
-      filter: ['==', ['get', 'entity_type'], 'water_point'],
-      paint: {
-        'circle-radius': circleRadiusExpression(),
-        'circle-color': circleColorExpression(),
-        'circle-stroke-color': circleStrokeColorExpression(),
-        'circle-stroke-width': circleStrokeWidthExpression(),
-        'circle-opacity': 0.95,
-      },
-    };
     const merged: StyleSpecification = {
       ...base,
       sources: {
         ...base.sources,
-        'entities-src': {
+        [ENTITIES_SOURCE_ID]: {
           type: 'vector',
           tiles: ['http://localhost/tiles/{z}/{x}/{y}.mvt'],
           minzoom: 0,
           maxzoom: 18,
         },
       },
-      layers: [...base.layers, circleLayer],
+      layers: [...base.layers, ...ENTITY_LAYERS],
     };
     const errors = validateStyleMin(merged);
     expect(errors, errors.map((e) => `  - ${e.message}`).join('\n')).toHaveLength(0);

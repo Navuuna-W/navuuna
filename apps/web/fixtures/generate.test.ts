@@ -6,12 +6,19 @@ import { fixtures } from './index';
 import { findingsVisibleTo } from '../src/findings/publicFindingStates';
 
 describe('fixtures', () => {
-  it('contains 200 water points plus 1 road segment', () => {
+  it('contains 200 water points plus 3 road segments', () => {
     const { entities } = fixtures();
     const waterPoints = entities.filter((e) => e.detail.entity_type === 'water_point');
     const roads = entities.filter((e) => e.detail.entity_type === 'road_segment');
     expect(waterPoints).toHaveLength(200);
-    expect(roads).toHaveLength(1);
+    expect(roads).toHaveLength(3);
+  });
+
+  it('roads cover measured, provisional and cannot_assess so no road layer stays empty (B2)', () => {
+    const { entities } = fixtures();
+    const roads = entities.filter((e) => e.detail.entity_type === 'road_segment');
+    const gates = new Set(roads.map((r) => r.detail.gate_status));
+    expect(gates).toEqual(new Set(['measured', 'provisional', 'cannot_assess']));
   });
 
   it('includes 20 cannot_assess entities and 30 provisional entities', () => {
