@@ -2,6 +2,7 @@
    utilities. Add project-wide custom tokens and base element styles here. */
 
 @import 'tailwindcss';
+@import './styles/tokens.css';
 
 :root {
   color-scheme: light;
