@@ -101,5 +101,6 @@ Add this line to the PR template checklist (K-01): `- [ ] A new developer could 
 ## 7. Commands
 - PHP: `cd apps/api && ./vendor/bin/pest` · `./vendor/bin/phpstan analyse` · `./vendor/bin/pint --test`
 - Python: `cd services/signals && pytest` · `mypy --strict engine modules` · `ruff check .`
+- Flows: `cd services/flows && pytest` · `mypy --strict .` · `ruff check .` (Prefect UI http://localhost:4200)
 - Stack: first time `infra/local/setup.sh`; after that `docker compose -f infra/docker-compose.yml up -d --build` (see `infra/README.md`)
 (Update this section as tooling lands.)

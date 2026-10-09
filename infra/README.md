@@ -5,10 +5,10 @@ runs the same pieces on one laptop (K-08). Owned by Khillon (Core).
 
 | Path | What it is |
 |---|---|
-| `docker-compose.yml` | The local stack: PostGIS, Redis, MinIO, the Laravel API, rollup consumer, scheduler, signal service and web app (K-08). |
+| `docker-compose.yml` | The local stack: PostGIS, Redis, MinIO, the Laravel API, rollup consumer, scheduler, signal service, Prefect and web app (K-08, K-12). |
 | `backup/` | `backup.sh` (database dump → MinIO, copy to Box B) and `restore.sh` (restore into a scratch database and check it) (K-16). |
 | `restore-log.md` | Every real restore and its result (K-16). |
-| `docker/` | The two images the local stack builds: `api.Dockerfile` (Laravel) and `signals.Dockerfile` (Python). |
+| `docker/` | The images the local stack builds: `api.Dockerfile` (Laravel), `signals.Dockerfile` (Python) and `flows.Dockerfile` (Prefect server + worker, started by `prefect-worker-start.sh`). |
 | `local/` | `setup.sh` (first start) and `.env.example` (settings every local service reads). |
 | `supervisor/rollup-consumer.conf` | Keeps `php artisan engine:consume-batches` running on Box A (K-10). |
 
@@ -30,6 +30,8 @@ loads the seed data and starts everything:
 | `rollup-consumer` | — | Turns new sub-variable scores into variable scores |
 | `scheduler` | — | Runs `engine:sweep` every 10 minutes |
 | `signals` | — | Rescores entities when a recompute request arrives |
+| `prefect-server` | http://localhost:4200 | Prefect UI: flow runs, schedules, failures (K-12) |
+| `prefect-worker` | — | Runs the flows in `services/flows/` (score_all nightly at 02:00) |
 | `postgis` | localhost:15432, user/password/database `navuuna` | Database |
 | `redis` | localhost:16379 | Streams between the services |
 | `minio` | http://localhost:9001, user `navuuna`, password `navuuna-local` | File storage (Chainguard's build of MinIO) |
@@ -42,14 +44,15 @@ the stub `tests/fixtures/local-seed.sql` (one ward, three water points).
     docker compose -f infra/docker-compose.yml up -d --build   # start, picking up code changes
     docker compose -f infra/docker-compose.yml exec api php artisan engine:rollup --all
     docker compose -f infra/docker-compose.yml logs -f signals  # follow one service
+    docker compose -f infra/docker-compose.yml exec prefect-worker prefect deployment run 'score_all/score-all' --watch
     docker compose -f infra/docker-compose.yml down             # stop (add -v to wipe the data)
 
 **Switching a module off:** set `MODULES_ENABLED` in `infra/local/.env` (see the comment
 there), then `up -d`. Every service reads the same file (ADR-012 §3).
 
 **Not in the stack yet:** Reverb (arrives with Austine's broadcasting work), the FastAPI
-`/health` endpoint (K-07) and Prefect (K-12). Until Devyan's `services/signals/modules/`
-lands, `signals` runs the engine's fake test modules, which score no water entity.
+`/health` endpoint (K-07). Until Devyan's `services/signals/modules/` lands, `signals` and
+`prefect-worker` run the engine's fake test modules, which score no water entity.
 
 ## Reading the logs
 
