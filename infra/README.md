@@ -10,6 +10,7 @@ runs the same pieces on one laptop (K-08). Owned by Khillon (Core).
 | `restore-log.md` | Every real restore and its result (K-16). |
 | `docker/` | The images the local stack builds: `api.Dockerfile` (Laravel), `signals.Dockerfile` (Python) and `flows.Dockerfile` (Prefect server + worker, started by `prefect-worker-start.sh`). |
 | `local/` | `setup.sh` (first start) and `.env.example` (settings every local service reads). |
+| `offline/` | The offline stack for when the venue network fails: `prepare.sh` (online, once) and `start.sh` (no internet) (K-20). |
 | `supervisor/rollup-consumer.conf` | Keeps `php artisan engine:consume-batches` running on Box A (K-10). |
 
 ## Running locally in under 15 minutes
