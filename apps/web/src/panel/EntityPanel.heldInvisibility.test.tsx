@@ -1,10 +1,14 @@
-// Merge-blocker test: a Viewer must never see any trace of a held finding — no row, no
-// count, no banner, no amber styling. The mock enforces this server-side by stripping
-// held + explanation_checked findings from the /entities/{id}?role=viewer payload. This
-// test proves the client renders only what it was given, and that the finding section
-// disappears when all findings have been stripped.
+// Merge-blocker test: a Viewer must never see any trace of a non-public finding — no row,
+// no count, no banner, no amber styling. The mock enforces this server-side by keeping only
+// published and resolved findings in the /entities/{id}?role=viewer payload. This test
+// proves the client renders only what it was given, and that the finding section disappears
+// when every finding has been stripped.
 //
-// The sibling test with role=analyst proves the held row DOES render with its banner.
+// The cases run over every analyst-only state rather than just `held`, because C10 was a
+// contested finding reaching a viewer through a filter that only named `held` and
+// `explanation_checked` (ADR-013, DEC-08, A-19).
+//
+// The sibling analyst cases prove the held and contested rows DO render, with their banners.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -12,23 +16,44 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { EntityPanel } from './EntityPanel';
 import { useRoleStore } from '@/ui/useRole';
+import {
+  findingsVisibleTo,
+  isPublicFindingState,
+  type FindingState,
+} from '@/findings/publicFindingStates';
 import type { components } from '@/api/schema';
 
 type EntityDetail = components['schemas']['EntityDetail'];
+type FindingSummary = EntityDetail['findings'][number];
 
-const HELD_FINDING: EntityDetail['findings'][number] = {
-  id: 'wp-999-finding-held',
-  sub_variable: '2.4',
-  state: 'held',
-  severity: 'medium',
-  detected_at: '2026-10-04T09:00:00Z',
-  record_says: 'Register says operational.',
-  we_observe: 'Observers report intermittent.',
-  gap_summary: 'Observed status differs from the recorded status.',
-  published_at: null,
-};
+const ALL_FINDING_STATES = [
+  'held',
+  'explanation_checked',
+  'published',
+  'contested',
+  'dismissed',
+  'resolved',
+] as const satisfies readonly FindingState[];
 
-function makeEntity(withHeld: boolean): EntityDetail {
+const NON_PUBLIC_STATES = ALL_FINDING_STATES.filter((state) => !isPublicFindingState(state));
+
+const GAP_SUMMARY = 'Observed status differs from the recorded status.';
+
+function makeFinding(state: FindingState): FindingSummary {
+  return {
+    id: `wp-999-finding-${state}`,
+    sub_variable: '2.4',
+    state,
+    severity: 'medium',
+    detected_at: '2026-10-04T09:00:00Z',
+    record_says: 'Register says operational.',
+    we_observe: 'Observers report intermittent.',
+    gap_summary: GAP_SUMMARY,
+    published_at: state === 'published' || state === 'contested' ? '2026-10-04T15:00:00Z' : null,
+  };
+}
+
+function makeEntity(findings: FindingSummary[]): EntityDetail {
   return {
     id: 'wp-999',
     entity_type: 'water_point',
@@ -51,19 +76,24 @@ function makeEntity(withHeld: boolean): EntityDetail {
       computed_at: '2026-10-05T16:00:00Z',
     })),
     sub_variables: [],
-    findings: withHeld ? [HELD_FINDING] : [],
+    findings,
     attribution: 'synthetic',
   };
 }
 
+// The finding state the mocked API will put on the entity before filtering. Set per test so
+// the apiClient mock stays a single definition.
+let stateUnderTest: FindingState = 'held';
+
 // Mock the apiClient directly so this test doesn't depend on jsdom's fetch availability.
-// The mock mirrors the mock-server behaviour: analyst sees held findings, viewer does not.
+// The mock calls the real findingsVisibleTo, so it cannot drift from the mock server: if the
+// filter regresses, these tests fail rather than silently passing against their own copy.
 vi.mock('@/api/client', () => ({
   apiClient: {
     GET: vi.fn(async (_path: string, options: { params?: { query?: { role?: string } } }) => {
-      const role = options.params?.query?.role;
-      const data = makeEntity(role === 'analyst');
-      return { data, error: null, response: { status: 200 } };
+      const role = options.params?.query?.role === 'analyst' ? 'analyst' : 'viewer';
+      const findings = findingsVisibleTo([makeFinding(stateUnderTest)], role);
+      return { data: makeEntity(findings), error: null, response: { status: 200 } };
     }),
   },
 }));
@@ -88,32 +118,55 @@ function freshClient(): QueryClient {
   });
 }
 
-describe('EntityPanel — held-finding invisibility (A-19)', () => {
-  it('shows no trace of a held finding when role is Viewer', async () => {
-    useRoleStore.setState({ role: 'viewer' });
-    render(<Harness queryClient={freshClient()} />);
+describe('EntityPanel — non-public finding invisibility (A-19, DEC-08)', () => {
+  it.each(NON_PUBLIC_STATES)(
+    'shows no trace of a %s finding when role is Viewer',
+    async (state) => {
+      stateUnderTest = state;
+      useRoleStore.setState({ role: 'viewer' });
 
-    await waitFor(() => expect(screen.getByText('Test water point')).toBeInTheDocument());
+      render(<Harness queryClient={freshClient()} />);
+      await waitFor(() => expect(screen.getByText('Test water point')).toBeInTheDocument());
 
-    expect(screen.queryByText(/Not visible to other users/i)).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(/Observed status differs from the recorded status/i)
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Findings/ })).not.toBeInTheDocument();
-  });
+      expect(screen.queryByText(/Not visible to other users/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/has challenged this finding/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(GAP_SUMMARY)).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /Findings/ })).not.toBeInTheDocument();
+    }
+  );
 
   it('shows the held finding with its "Not visible" banner when role is Analyst', async () => {
+    stateUnderTest = 'held';
     useRoleStore.setState({ role: 'analyst' });
-    render(<Harness queryClient={freshClient()} />);
 
+    render(<Harness queryClient={freshClient()} />);
     await waitFor(() => expect(screen.getByText('Test water point')).toBeInTheDocument());
 
     // FindingDetail is a lazy chunk; use findBy to wait for its Suspense resolution.
     expect(
       await screen.findByText(/Not visible to other users until published/i)
     ).toBeInTheDocument();
-    expect(
-      await screen.findByText(/Observed status differs from the recorded status/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(GAP_SUMMARY)).toBeInTheDocument();
+  });
+
+  it('shows the contested finding to an Analyst, who is the only audience for it', async () => {
+    stateUnderTest = 'contested';
+    useRoleStore.setState({ role: 'analyst' });
+
+    render(<Harness queryClient={freshClient()} />);
+    await waitFor(() => expect(screen.getByText('Test water point')).toBeInTheDocument());
+
+    expect(await screen.findByText(/has challenged this finding/i)).toBeInTheDocument();
+    expect(await screen.findByText(GAP_SUMMARY)).toBeInTheDocument();
+  });
+
+  it('shows a published finding to a Viewer, so the invisibility cases prove something', async () => {
+    stateUnderTest = 'published';
+    useRoleStore.setState({ role: 'viewer' });
+
+    render(<Harness queryClient={freshClient()} />);
+    await waitFor(() => expect(screen.getByText('Test water point')).toBeInTheDocument());
+
+    expect(await screen.findByText(GAP_SUMMARY)).toBeInTheDocument();
   });
 });

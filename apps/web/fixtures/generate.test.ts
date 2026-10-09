@@ -3,6 +3,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { fixtures } from './index';
+import { findingsVisibleTo } from '../src/findings/publicFindingStates';
 
 describe('fixtures', () => {
   it('contains 200 water points plus 1 road segment', () => {
@@ -41,6 +42,27 @@ describe('fixtures', () => {
     expect(published).toHaveLength(3);
     expect(held).toHaveLength(1);
     expect(contested).toHaveLength(1);
+  });
+
+  // C10: the held and contested fixtures exist for the analyst review screens. If either
+  // ever survives the viewer filter, a viewer sees a finding production would hide.
+  it('puts no analyst-only finding in front of a viewer', () => {
+    const { entities } = fixtures();
+
+    const visibleToViewer = entities.flatMap((e) => findingsVisibleTo(e.detail.findings, 'viewer'));
+
+    expect(visibleToViewer).toHaveLength(3);
+    expect(visibleToViewer.every((f) => f.state === 'published')).toBe(true);
+  });
+
+  it('keeps all five findings for an analyst', () => {
+    const { entities } = fixtures();
+
+    const visibleToAnalyst = entities.flatMap((e) =>
+      findingsVisibleTo(e.detail.findings, 'analyst')
+    );
+
+    expect(visibleToAnalyst).toHaveLength(5);
   });
 
   it('carries all 29 canonical sub-variables on every entity', () => {
