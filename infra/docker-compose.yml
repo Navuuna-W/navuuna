@@ -1,0 +1,124 @@
+# The whole Navuuna stack on one laptop (work pack K-08, Bible §14.11 "local").
+# Start it with infra/local/setup.sh the first time; after that
+# `docker compose -f infra/docker-compose.yml up -d --build` picks up code changes.
+# Every service reads the same infra/local/.env, so MODULES_ENABLED means the same thing to
+# the Python runner and to Laravel (ADR-012 §3).
+#
+# Not here yet: Reverb (Austine adds it with broadcasting), the FastAPI /health endpoint (K-07)
+# and Prefect (K-12).
+
+name: navuuna
+
+services:
+
+  postgis:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: navuuna
+      POSTGRES_USER: navuuna
+      POSTGRES_PASSWORD: navuuna
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgis-data:/var/lib/postgresql/data
+    # Checks over TCP: on first start the image runs a socket-only server to install PostGIS,
+    # then restarts, so a socket check would report "ready" too early.
+    healthcheck:
+      test: ["CMD", "pg_isready", "--host=127.0.0.1", "--username=navuuna", "--dbname=navuuna"]
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:7
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+  # S3-compatible storage for raw documents and EO outputs (Bible §8.1). Console on :9001.
+  # MinIO stopped publishing public images (minio/minio, quay.io); Chainguard's build of the
+  # same server is used instead. Its free tier only offers :latest.
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    env_file: local/.env
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  # Laravel API on http://localhost:8000.
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/api.Dockerfile
+    image: navuuna-api
+    env_file: local/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgis:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Turns new sub-variable scores into variable scores (K-10). On the servers Supervisor runs
+  # this (infra/supervisor/rollup-consumer.conf); here Docker restarts it.
+  rollup-consumer:
+    image: navuuna-api
+    command: ["php", "artisan", "engine:consume-batches"]
+    env_file: local/.env
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Runs routes/console.php's schedule, e.g. engine:sweep every 10 minutes (ADR-004a §4).
+  scheduler:
+    image: navuuna-api
+    command: ["php", "artisan", "schedule:work"]
+    env_file: local/.env
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Python signal service: waits for recompute requests and scores those entities (K-09b).
+  signals:
+    build:
+      context: ..
+      dockerfile: infra/docker/signals.Dockerfile
+    image: navuuna-signals
+    # STUB until Devyan's services/signals/modules/ lands (D-18): the engine's fake test
+    # modules, which score no water entity. Then delete this line to use the default folder.
+    command: ["python", "-m", "engine", "consume", "--modules-root", "tests/fixtures/modules"]
+    env_file: local/.env
+    depends_on:
+      postgis:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Austine's web app on http://localhost:5173, talking to the api service.
+  web:
+    image: node:22
+    working_dir: /app
+    command: ["sh", "-c", "npm ci && npm run dev -- --host 0.0.0.0"]
+    environment:
+      VITE_DATA_SOURCE: api
+      VITE_API_PROXY_TARGET: http://api:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../apps/web:/app
+      # Keeps the container's Linux node_modules apart from the laptop's own copy.
+      - /app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  postgis-data:
+  minio-data:
