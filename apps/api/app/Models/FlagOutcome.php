@@ -7,12 +7,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Findings\Outcome;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * One finding outcome (Bible §10, flags.outcomes): confirmed, refuted, partial or unknown.
  * HasUuids makes the UUIDv7 in PHP so Laravel knows the ID before the insert (ADR-012 §2).
+ *
+ * @property Outcome $outcome
  */
 class FlagOutcome extends Model
 {
@@ -32,6 +35,7 @@ class FlagOutcome extends Model
     protected function casts(): array
     {
         return [
+            'outcome' => Outcome::class,
             'at' => 'datetime',
         ];
     }
