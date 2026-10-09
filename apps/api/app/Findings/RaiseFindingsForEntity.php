@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace App\Findings;
 
+use App\Engine\ModuleFlags;
 use App\Engine\SubVariableInput;
 use Illuminate\Database\ConnectionInterface;
 use Psr\Log\LoggerInterface;
@@ -26,6 +27,7 @@ final class RaiseFindingsForEntity
         private readonly LoadEvidenceRows $loadEvidenceRows,
         private readonly SaveHeldFinding $saveHeldFinding,
         private readonly LoggerInterface $logger,
+        private readonly ModuleFlags $moduleFlags,
         private readonly string $modulesPath,
     ) {}
 
@@ -116,13 +118,14 @@ final class RaiseFindingsForEntity
     }
 
     /**
-     * The entity's module's findings.yml, or null when the module has none (e.g. shared areas).
+     * The entity's module's findings.yml, or null when the module has none (e.g. shared areas)
+     * or is switched off in MODULES_ENABLED (ADR-012 §3) — then no finding is raised for it.
      *
      * @param  array<string, mixed>  $entity
      */
     private function loadFindingsFile(array $entity): ?FindingsFile
     {
-        if ($entity['module'] === null) {
+        if ($entity['module'] === null || ! $this->moduleFlags->isModuleEnabled($entity['module'])) {
             return null;
         }
 

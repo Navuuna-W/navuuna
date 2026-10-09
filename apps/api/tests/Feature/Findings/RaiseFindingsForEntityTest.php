@@ -2,8 +2,9 @@
 
 // Checks the findings engine end to end for one entity, against the water findings.yml stub:
 // a gap becomes a held finding with its evidence pack and narrative — and nothing is raised for
-// a provisional entity, a missing value, a score without evidence, or an entity with no module
-// file. Saving itself (transaction, race) is checked in SaveHeldFindingTest.
+// a provisional entity, a missing value, a score without evidence, an entity with no module
+// file, or a module switched off in MODULES_ENABLED. Saving itself (transaction, race) is
+// checked in SaveHeldFindingTest.
 
 declare(strict_types=1);
 
@@ -112,3 +113,12 @@ test('nothing is raised for a module without a findings file, a shared area or a
     'no module' => [['module' => null]],
     'retired' => [['retired_at' => '2026-10-01 10:00:00+00']],
 ]);
+
+test('nothing is raised for an entity whose module is switched off', function () {
+    $entityId = waterPointWithMagnitudeGap();
+    config(['modules.enabled' => 'roads']);
+
+    $raisedCount = raiseFindingsFor($entityId);
+
+    expect($raisedCount)->toBe(0);
+});
