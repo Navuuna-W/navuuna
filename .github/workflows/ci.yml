@@ -1,5 +1,5 @@
 # CI for every pull request to main (Bible K1.2, §14.7). One job per area of the repo:
-# commitlint, web, python, php, migration-lint, modularity and secret-scan.
+# commitlint, web, python, php, migration-lint, modularity, secret-scan and dependency-audit.
 # Jobs whose code has not landed yet (php before apps/api exists) skip their steps
 # and pass, then switch on by themselves when the code arrives.
 
@@ -316,3 +316,43 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: ./gitleaks git --log-opts="${BASE_SHA}..${HEAD_SHA}" --redact --verbose
+
+  # Known security advisories in our dependencies (NFR-05, work pack K-19). Composer and
+  # Python fail the build. npm checks only what ships to the browser (--omit=dev) and only
+  # reports for now: maplibre-gl has a critical advisory that Austine is upgrading (#90).
+  # Remove continue-on-error once #90 is merged.
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3" # ADR-009
+          coverage: none
+
+      - name: Composer audit
+        working-directory: apps/api
+        run: composer audit --locked --no-interaction
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Audits the packages the signal service installs, dev tools included. Our own package
+      # is skipped: it is not on PyPI, so there is nothing to look up.
+      - name: Python audit
+        working-directory: services/signals
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]' pip-audit
+          pip-audit --skip-editable --progress-spinner off
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm audit (runtime packages, report only until #90)
+        working-directory: apps/web
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
