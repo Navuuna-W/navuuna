@@ -14,6 +14,7 @@ import { useEntityDetail } from './useEntityDetail';
 import { VariableRow } from './VariableRow';
 import { assertScored, ScoredFieldsMissingError } from '@/api/assertScored';
 import { ERROR, PANEL_NAME } from '@/copy/labels';
+import { formatDate } from '@/copy/formatDate';
 import { Suspense, lazy } from 'react';
 
 // Lazy sub-chunk: nothing in the findings/ folder is loaded until the first entity whose
@@ -88,11 +89,9 @@ function EntityBody({
       <div className="border-b border-neutral-200 p-3 text-xs text-neutral-600">
         <div>
           Last observed:{' '}
-          {detail.last_observed_at
-            ? new Date(detail.last_observed_at).toISOString().slice(0, 10)
-            : 'Not observed'}
+          {detail.last_observed_at ? formatDate(detail.last_observed_at) : 'Not observed'}
         </div>
-        <div>Scored: {new Date(detail.last_computed_at).toISOString().slice(0, 10)}</div>
+        <div>Scored: {formatDate(detail.last_computed_at)}</div>
       </div>
 
       <div className="space-y-2 p-3">
