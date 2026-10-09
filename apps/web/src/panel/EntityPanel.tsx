@@ -4,8 +4,9 @@
 // Rules enforced here:
 //   - NFR-02: every variable passes through assertScored. A failure replaces that row with
 //     an error state — never a bare score.
-//   - Held and explanation_checked findings must never render for a Viewer: the mock has
-//     already filtered them server-side (DEC-08), and the UI only renders what it got.
+//   - Only published and resolved findings may render for a Viewer. Held,
+//     explanation_checked, contested and dismissed findings are analyst-only (ADR-013,
+//     DEC-08). The server filters them out and the UI only renders what it got.
 
 import { useEffect } from 'react';
 import { useSelectedEntity } from './useSelectedEntity';

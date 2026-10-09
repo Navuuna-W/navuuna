@@ -29,6 +29,8 @@
     "vite-plugins",
     "fixtures",
     "src/copy/subVariables.ts",
+    "src/findings/publicFindingStates.ts",
+    "src/api/schema.d.ts",
     "playwright.config.ts",
     "e2e"
   ],

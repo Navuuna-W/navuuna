@@ -3,8 +3,9 @@
 // Produces ~200 water points inside the Nairobi County bounding box, 1 road segment, and a
 // matching EntityDetail for each. Same seed → same output on every run. Covers every status
 // flavour the frontend must render: fully measured, provisional with halved confidence,
-// cannot_assess, sub-variables null_not_measured with a reason, 3 published findings and 1
-// held finding (DEC-08, A-19).
+// cannot_assess, sub-variables null_not_measured with a reason, and five findings — 3
+// published, 1 held and 1 contested. Only the published three reach a viewer; the mock
+// strips the rest per src/findings/publicFindingStates.ts (ADR-013, DEC-08, A-19).
 //
 // Every entity carries all 28 canonical sub-variables from CONTEXT.md (SUB_VARIABLES).
 // Water entities measure only the eight listed in WATER_MODULE_MEASURED; every other row
@@ -153,8 +154,10 @@ export function generateFixtures(): GenResult {
   attachFinding(entities, m0, 'published', 'high', '2.4');
   attachFinding(entities, m1, 'published', 'medium', '2.2');
   attachFinding(entities, m2, 'published', 'low', '2.2');
+  // Two analyst-only findings, on their own entities, so the review screens have something
+  // to show and the invisibility tests have something to hide. A contest re-hides a finding
+  // that was once published, so `contested` keeps its published_at (ADR-013).
   attachFinding(entities, m3, 'held', 'medium', '2.4');
-  // Fix #5: one contested example so the UI exercises the status.
   attachFinding(entities, m4, 'contested', 'medium', '2.2');
 
   const byId = new Map<string, FixtureEntity>();

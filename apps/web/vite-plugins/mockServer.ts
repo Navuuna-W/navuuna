@@ -6,8 +6,9 @@
 //     colour_class, coverage, confidence.
 //
 //   GET /api/v1/entities/{id}?role=viewer|analyst
-//     Returns the EntityDetail JSON. For role=viewer (the default), held and
-//     explanation_checked findings are stripped (DEC-08, A-19).
+//     Returns the EntityDetail JSON. For role=viewer (the default), every finding that is
+//     not published or resolved is stripped — see src/findings/publicFindingStates.ts
+//     (ADR-013, DEC-08, A-19).
 //
 // This file lives under vite-plugins/ and is imported by vite.config.ts. Vite only loads
 // config files in Node, so the mock, the fixtures and vt-pbf never enter the client bundle
@@ -19,6 +20,7 @@ import type { ServerResponse } from 'node:http';
 import GeoJSONVT from 'geojson-vt';
 import vtpbf from 'vt-pbf';
 import { fixtures, type EntityDetail, type FixtureEntity } from '../fixtures';
+import { findingsVisibleTo, type FindingAudience } from '../src/findings/publicFindingStates';
 import {
   applyLens,
   COUNTY_PLANNER_LENS,
@@ -124,15 +126,6 @@ function getTileIndex(lensId: string): GeoJSONVT {
   return index;
 }
 
-function stripHeldFindings(detail: EntityDetail): EntityDetail {
-  return {
-    ...detail,
-    findings: detail.findings.filter(
-      (f) => f.state !== 'held' && f.state !== 'explanation_checked'
-    ),
-  };
-}
-
 function handleEntityRequest(res: ServerResponse, id: string, roleParam: string | null): void {
   const { byId } = fixtures();
   const entity = byId.get(id);
@@ -143,9 +136,13 @@ function handleEntityRequest(res: ServerResponse, id: string, roleParam: string 
     return;
   }
 
-  const role = roleParam === 'analyst' || roleParam === 'admin' ? roleParam : 'viewer';
-  const payload: EntityDetail =
-    role === 'viewer' ? stripHeldFindings(entity.detail) : entity.detail;
+  // Anything we don't recognise is treated as a viewer, so a typo cannot widen access.
+  const audience: FindingAudience =
+    roleParam === 'analyst' || roleParam === 'admin' ? roleParam : 'viewer';
+  const payload: EntityDetail = {
+    ...entity.detail,
+    findings: findingsVisibleTo(entity.detail.findings, audience),
+  };
 
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
