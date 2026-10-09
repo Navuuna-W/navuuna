@@ -51,6 +51,14 @@ services:
     volumes:
       - minio-data:/data
 
+  # MinIO client used by infra/backup/backup.sh and restore.sh (K-16). The `tools` profile
+  # keeps `up -d` from starting it; the scripts run it once per command.
+  backup:
+    image: cgr.dev/chainguard/minio-client:latest
+    profiles: ["tools"]
+    depends_on:
+      - minio
+
   # Laravel API on http://localhost:8000.
   api:
     build:

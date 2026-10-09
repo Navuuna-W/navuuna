@@ -6,6 +6,8 @@ runs the same pieces on one laptop (K-08). Owned by Khillon (Core).
 | Path | What it is |
 |---|---|
 | `docker-compose.yml` | The local stack: PostGIS, Redis, MinIO, the Laravel API, rollup consumer, scheduler, signal service and web app (K-08). |
+| `backup/` | `backup.sh` (database dump → MinIO, copy to Box B) and `restore.sh` (restore into a scratch database and check it) (K-16). |
+| `restore-log.md` | Every real restore and its result (K-16). |
 | `docker/` | The two images the local stack builds: `api.Dockerfile` (Laravel) and `signals.Dockerfile` (Python). |
 | `local/` | `setup.sh` (first start) and `.env.example` (settings every local service reads). |
 | `supervisor/rollup-consumer.conf` | Keeps `php artisan engine:consume-batches` running on Box A (K-10). |
