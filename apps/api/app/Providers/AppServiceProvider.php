@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Engine\EntityScored;
+use App\Engine\ModuleFlags;
 use App\Engine\RerollAfterFindingChanged;
 use App\Engine\Weights;
 use App\Findings\FlagStateChanged;
@@ -26,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
 
         // The findings engine reads {modules_path}/{module}/findings.yml (K-13).
         $this->app->when(RaiseFindingsForEntity::class)->needs('$modulesPath')->giveConfig('engine.modules_path');
+
+        // MODULES_ENABLED, shared with the Python runner (ADR-012 §3).
+        $this->app->when(ModuleFlags::class)->needs('$enabledModules')->giveConfig('modules.enabled');
     }
 
     /**
