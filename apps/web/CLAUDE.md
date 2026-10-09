@@ -6,10 +6,10 @@ official records disagree with observations. Institutions read the scores throug
 
 ## Sources of truth — read before deciding anything
 
-- `docs/workpacks/Navuuna_WorkPack_Austine.md` — my tasks A-01…A-33 and done-whens
+- `docs/workpacks/austine.md` — my tasks A-01…A-33 and done-whens
 - `docs/BUILD_BIBLE.md` (v1.1) — §6 engine rules, §8 stack, §11 API, §14 engineering rules
 - `docs/PRD.md` (PRD-001) — screens S1–S8, copy rules §10, edge cases E1–E15, release criteria §15
-- `docs/CONTEXT.md` — vocabulary (Devyan owns it; use its words once it exists)
+- `docs/CONTEXT.md` — vocabulary (Devyan owns it; use its words)
 
 If two sources disagree, stop and ask. Never pick silently.
 
