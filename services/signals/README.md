@@ -12,6 +12,7 @@ score; the engine runs them and rolls the scores up into the five variables.
   `MODULES_ENABLED` (`module_flags.py`) and returns them in dependency order.
   The runner (`runner.py`) loads each entity's inputs (`input_loader.py`), calls the adapters
   that fit its type and appends valid results to `scores.sub_variable_scores` (`score_writer.py`).
+  Log lines are JSON with the same fields as Laravel's (`json_logging.py`, K-15).
 - `modules/` — per-module adapters, e.g. `modules/water/adapters/` (Signal lane, arrives with D-18).
 - `tests/` — pytest; `tests/engine/` mirrors `engine/`; `tests/fixtures/modules/` holds fake
   adapters for engine tests.

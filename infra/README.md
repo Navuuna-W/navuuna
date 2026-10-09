@@ -49,6 +49,22 @@ there), then `up -d`. Every service reads the same file (ADR-012 §3).
 `/health` endpoint (K-07) and Prefect (K-12). Until Devyan's `services/signals/modules/`
 lands, `signals` runs the engine's fake test modules, which score no water entity.
 
+## Reading the logs
+
+Every log line, from Laravel and from the Python signal service, is one JSON object with the
+same fields: `datetime`, `level_name`, `channel`, `message` and `context` (plus `exception`
+from Python). `jq` filters both the same way (work pack K-15, NFR-10).
+
+| Where | Where the logs are | One view of the box |
+|---|---|---|
+| Box A (Laravel) | `apps/api/storage/logs/navuuna.json-<date>.log`, with `LOG_STACK=json`; one file a day, deleted after 14 days | `tail -f storage/logs/navuuna.json-*.log \| jq` |
+| Box B (Python) | stderr of each container, kept by Docker; Box B's compose file (K-07) sets `max-size`/`max-file` so it rotates | `docker compose logs -f --no-log-prefix \| jq -R 'fromjson? // .'` |
+| Local stack | stderr of each container | `docker compose -f infra/docker-compose.yml logs -f --no-log-prefix api signals \| jq -R 'fromjson? // .'` |
+
+Only errors: `... | jq 'select(.level_name == "ERROR")'`. One entity:
+`... | jq 'select(.context.entity_id == "<id>")'`. `fromjson? // .` keeps the few lines that
+are not JSON, such as the `php artisan serve` banner.
+
 ## Server files
 
 **How to use:** `supervisor/` files are copied onto the servers during setup (K-04, K-07); nothing here
