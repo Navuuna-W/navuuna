@@ -1,6 +1,7 @@
 # The whole Navuuna stack on one laptop (work pack K-08, Bible §14.11 "local").
 # Start it with infra/local/setup.sh the first time; after that
 # `docker compose -f infra/docker-compose.yml up -d --build` picks up code changes.
+# Ports bind to 127.0.0.1 only, so nobody on the same Wi-Fi can reach the database (K-19).
 # Every service reads the same infra/local/.env, so MODULES_ENABLED means the same thing to
 # the Python runner and to Laravel (ADR-012 §3).
 #
@@ -18,7 +19,7 @@ services:
       POSTGRES_USER: navuuna
       POSTGRES_PASSWORD: navuuna
     ports:
-      - "15432:5432"
+      - "127.0.0.1:15432:5432"
     volumes:
       - postgis-data:/var/lib/postgresql/data
     # Checks over TCP: on first start the image runs a socket-only server to install PostGIS,
@@ -31,7 +32,7 @@ services:
   redis:
     image: redis:7
     ports:
-      - "16379:6379"
+      - "127.0.0.1:16379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s
@@ -45,8 +46,8 @@ services:
     command: ["server", "/data", "--console-address", ":9001"]
     env_file: local/.env
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio-data:/data
 
