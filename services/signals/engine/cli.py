@@ -13,6 +13,7 @@ from pathlib import Path
 
 from engine.adapter_sync import sync_adapters
 from engine.database import DatabaseSettingsError, connect_to_database
+from engine.json_logging import configure_logging
 from engine.module_run import run_module
 from engine.recompute_consumer import RecomputeConsumer
 from engine.redis_connection import RedisSettingsError, connect_to_redis
@@ -39,7 +40,7 @@ def main(argv: list[str], environment: Mapping[str, str]) -> int:
     setting is missing, the modules folder or a module is not found, or an adapter is broken.
     Implements the K-09 work pack — batch runs by module.
     """
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    configure_logging()
     arguments = build_argument_parser().parse_args(argv)
     try:
         run_command(arguments, environment)

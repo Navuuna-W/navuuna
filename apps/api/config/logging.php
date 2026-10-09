@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -72,6 +73,18 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'max_files' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        // One JSON object per line, one file per day, deleted after LOG_DAILY_DAYS (14) days.
+        // Servers set LOG_STACK=json so every log line on Box A can be filtered with jq
+        // (work pack K-15, NFR-10). The field names match the Python service's logs.
+        'json' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/navuuna.json.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'max_files' => env('LOG_DAILY_DAYS', 14),
+            'formatter' => JsonFormatter::class,
             'replace_placeholders' => true,
         ],
 
