@@ -62,8 +62,7 @@
   --color-score-cannot-assess: #787774;
 
   /* ---- Type (DESIGN.md §1.4) -------------------------------------------------------- */
-  /* Both families are self-hosted woff2 Latin subsets; the @font-face rules that load them
-     arrive with the base-typography commit, and until then the fallback renders. */
+  /* Both families are self-hosted woff2 Latin subsets loaded by ./fonts.css. */
   --font-sans: 'Public Sans', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Bricolage Grotesque', 'Public Sans', system-ui, sans-serif;
 
