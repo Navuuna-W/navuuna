@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Who is signed in and which screens exist for them (S7, S1 header).
+         * @description The read-back after POST /api/login. Session cookie only — a machine holding an X-Api-Key gets 401, because it has no screens to choose between (work pack A-10).
+         */
+        get: operations["getCurrentUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/entities/{id}": {
         parameters: {
             query?: never;
@@ -29,6 +49,18 @@ export interface components {
             title: string;
             status: number;
             detail?: string;
+        };
+        /** @description Identity and capability only. PII-tagged columns — the email address above all — are left out (NFR-06), and nothing here reveals what is in the review queue (DEC-08, A-19). */
+        CurrentUser: {
+            /** @description Greeting for the header's user affordance (S1) and the S7 sign-in confirmation. */
+            name: string;
+            /**
+             * @description The role the server is treating the session as, spelled exactly as app/Auth/Role.php stores it, so the client never guesses the string. `api_client` never appears here: machines authenticate with X-Api-Key and this endpoint takes a session only.
+             * @enum {string}
+             */
+            role: "viewer" | "analyst" | "admin";
+            /** @description True for analyst and admin — the same check the API applies to GET /flags. The client renders the review screens only when it is true, so the role-to-capability rule lives on the server (A-19). A capability, never a count: a number would tell a viewer that held findings exist (DEC-08). */
+            can_review_findings: boolean;
         };
         EntityDetail: {
             id: string;
@@ -137,6 +169,37 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The signed-in user's identity and capability. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUser"];
+                };
+            };
+            /** @description Nobody is signed in; the sign-in screen (S7) renders on this. Laravel's body is `{"message": "Unauthenticated."}`, which is not the Problem shape below — the generated spec (A-06) reconciles the error contract across every endpoint. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
     getEntityById: {
         parameters: {
             query?: never;
