@@ -1,8 +1,10 @@
 // The sequential, colour-blind-safe scale for entity scores. Never red-amber-green.
 // Keep this file the one place that maps colour_class → paint; the test file catches
-// dependents. (Palette review itself is PR 1b.)
+// dependents. The hexes themselves come from src/styles/scoreRamp.ts, which tokens.css
+// and `npm run check:tokens` also hold to.
 
 import type { ExpressionSpecification } from 'maplibre-gl';
+import { CANNOT_ASSESS_HEX, SCORE_RAMP_HEX } from '../../styles/scoreRamp';
 
 export type ColourClass = 'b1' | 'b2' | 'b3' | 'b4' | 'b1p' | 'b2p' | 'b3p' | 'b4p' | 'ca';
 
@@ -18,17 +20,18 @@ export const ALL_COLOUR_CLASSES: readonly ColourClass[] = [
   'ca',
 ];
 
-// Dark → light sequential ramp.
+// Dark → light sequential ramp; `p` reuses its band's hex because the stroke width, not
+// the hue, is what marks partly verified.
 export const COLOUR_FOR: Record<ColourClass, string> = {
-  b1: '#0D3B66',
-  b2: '#3E85B0',
-  b3: '#93C5D8',
-  b4: '#E6E6EA',
-  b1p: '#0D3B66',
-  b2p: '#3E85B0',
-  b3p: '#93C5D8',
-  b4p: '#E6E6EA',
-  ca: '#BFBFBF',
+  b1: SCORE_RAMP_HEX.b1,
+  b2: SCORE_RAMP_HEX.b2,
+  b3: SCORE_RAMP_HEX.b3,
+  b4: SCORE_RAMP_HEX.b4,
+  b1p: SCORE_RAMP_HEX.b1,
+  b2p: SCORE_RAMP_HEX.b2,
+  b3p: SCORE_RAMP_HEX.b3,
+  b4p: SCORE_RAMP_HEX.b4,
+  ca: CANNOT_ASSESS_HEX,
 };
 
 export const MEASURED_STROKE_COLOR = '#333333';

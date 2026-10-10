@@ -1,7 +1,10 @@
-/* Tailwind v4 is loaded via @tailwindcss/vite; one import pulls in base, components and
-   utilities. Add project-wide custom tokens and base element styles here. */
+/* The one stylesheet main.tsx imports. Order matters: @font-face first so `swap` has a
+   target, then Tailwind, then our @theme tokens, then the handful of base element styles
+   that apply before any component class. Everything else is a utility on a component. */
 
+@import './styles/fonts.css';
 @import 'tailwindcss';
+@import './styles/tokens.css';
 
 :root {
   color-scheme: light;
@@ -13,23 +16,48 @@ body,
   height: 100%;
 }
 
-body {
-  margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
-  color: #17212b;
-  background: #ffffff;
+html {
+  /* 15px/1.5 is the base of the whole type scale, and 1.5 is never overridden anywhere —
+     no `--text-*--line-height` pairs exist, so `text-*` utilities change size only
+     (DESIGN.md §1.4). */
+  font-size: var(--text-body);
+  line-height: 1.5;
 }
 
-/* Focus ring: always visible when a user navigates by keyboard (CLAUDE.md: keyboard
-   reachable, visible focus). */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-page);
+  /* Public Sans carries real 400/600/700 weights in the variable file, so never let the
+     browser synthesise one. */
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* The reference's one piece of consistently good interaction styling — adopted verbatim
+   with our accent (DESIGN.md §3). Keyboard reachability depends on it. */
 :focus-visible {
-  outline: 2px solid #2657a6;
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* The reference declares this block defensively while having nothing to reduce. We keep it
+   so any transition we add later is honoured without a second thought. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
