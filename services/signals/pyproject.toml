@@ -38,3 +38,7 @@ target-version = "py312"
 [tool.ruff.lint]
 # E/F: errors · I: import order · N: naming · B: likely bugs · UP: modern syntax
 select = ["E", "F", "I", "N", "B", "UP"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["engine*", "modules*"]
