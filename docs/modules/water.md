@@ -153,6 +153,12 @@ counts as an observation, with `metadata.source_id` as its source. Observations 
 Precedence: newest community observation → register → NDWI.
 Null: none of the above → **"No recent report of whether this water point works"**.
 
+Adapter version 1.0.0 reads community observations and the register only. The NDWI input is
+not read: its wet/dry threshold and how an entity is marked as a reservoir or treatment works
+are not decided, and `raw.eo_stats` has no rows until D-13. A contradiction is a report and
+the register saying opposite things (`yes` against `no`); `intermittent` contradicts neither,
+and the report keeps the value. A register status with no `record_date` is not used alone.
+
 Note: 1.2 feeds 2.4. Using the register's own status as the 1.2 input would compare the
 record with itself, so **2.4 is null when 1.2's only input is the register** (reason "Current
 operating state not observed").

@@ -10,6 +10,7 @@ The spec every adapter here follows is `docs/modules/water.md`; change the spec 
 | `adapters/existence_gap.py` | 2.1 Existence gap (V2 gate, reads 1.1) |
 | `adapters/magnitude_gap.py` | 2.2 Magnitude gap (V2 contributor) |
 | `adapters/record_staleness.py` | 2.5 Record staleness (V2 contributor) |
+| `adapters/operational_state.py` | 1.2 Operational state (V1 contributor, feeds 2.4) |
 
 The registry (`engine/registry.py`) finds every `adapters/*.py` not starting with `_`.
 `MODULES_ENABLED=water` runs only this module. Deleting this folder must not break the
