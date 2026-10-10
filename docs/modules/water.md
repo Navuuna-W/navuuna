@@ -195,7 +195,9 @@ to "unpaved". The nearest way decides even when a farther way is tagged. The val
 
 Null (tagging bias): the ward has fewer than `MIN_MAPPED_WATER_POINTS_IN_WARD = 5` →
 **"Too few water points mapped in this ward to judge"**. Under-mapped places must not look
-uncontested.
+uncontested. The ward count includes the water point being scored. The sources are the map
+extracts of the counted entities (`metadata.source_id`); none recorded → **"Map source of
+nearby water points not recorded"**.
 
 ---
 
