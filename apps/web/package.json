@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "basemap": "bash scripts/build-basemap.sh && bash scripts/copy-basemap-assets.sh",
     "gen:api": "bash scripts/gen-api.sh",
-    "check:tokens": "node scripts/check-design-tokens.mjs"
+    "check:tokens": "node scripts/check-design-tokens.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs"
   },
   "dependencies": {
     "@protomaps/basemaps": "5.7.2",
