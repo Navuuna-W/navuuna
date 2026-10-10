@@ -5,6 +5,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Findings\FlagController;
 use App\Http\Controllers\Findings\FlagTransitionController;
@@ -15,6 +16,13 @@ Route::post('/login', [SessionController::class, 'store'])->middleware('throttle
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy']);
+});
+
+// Who is signed in and what they may open (DEC-13, work pack A-10). Session only: a machine
+// holding an X-Api-Key has no screens to choose between, and the sign-in screen's 401 should
+// read "Unauthenticated", not "send an API key" (App\Auth\MissingApiKeyResponse).
+Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    Route::get('/me', CurrentUserController::class);
 });
 
 // The JSON API (Bible §11): the web app signs in with its session, machines with X-Api-Key;
