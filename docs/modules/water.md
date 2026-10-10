@@ -91,8 +91,9 @@ guessed source).
 Null: no matched record → **"No official record found"** (E4) · 1.1 not measured →
 **"Presence could not be checked"** (and no V2 finding, Bible §6.3).
 
-A matched record with no `record_date` still counts as a record, with the freshness factor at
-`MIN_FRESHNESS_FACTOR`: its age cannot be shown, so it is trusted as little as the oldest record.
+For 2.1 and 2.4, a matched record with no `record_date` still counts as a record, with the
+freshness factor at `MIN_FRESHNESS_FACTOR`: its age cannot be shown, so it is trusted as
+little as the oldest record.
 
 ## 2.2 Magnitude gap — contributor
 
@@ -121,7 +122,9 @@ inspection date in the register" (the record is the only input, so its date is t
 | **Confidence** | `min(record confidence, 1.2 confidence)` × freshness factor |
 
 Null: no record → "No official record found" · no declared status → **"No status in the
-register"** · 1.2 not measured → **"Current operating state not observed"**.
+register"** (also for a status that is neither `operational` nor `not_operational`) · 1.2 not
+measured → **"Current operating state not observed"**. 2.4 treats 1.2 as register-only when
+every source of the 1.2 result is a document of a matched record.
 
 ## 2.5 Record staleness — contributor
 
@@ -175,7 +178,10 @@ operating state not observed").
 
 Null (E10, tagging bias, Bible §6.8): no way within 200 m → **"No mapped path within 200 m"**
 · nearest way has no `surface` tag → **"Path surface not mapped in OSM"** · unknown surface
-value → **"Path surface value not recognised"**. Never default to "unpaved".
+value → **"Path surface value not recognised"** · the way's `metadata.source_id` or
+`metadata.observed_at` is missing → **"Map source of this path not recorded"**. Never default
+to "unpaved". The nearest way decides even when a farther way is tagged. The value reads
+`asphalt (residential)`, or the surface alone when the way has no `highway` tag.
 
 ## 4.4 Competition — contributor
 
@@ -189,7 +195,9 @@ value → **"Path surface value not recognised"**. Never default to "unpaved".
 
 Null (tagging bias): the ward has fewer than `MIN_MAPPED_WATER_POINTS_IN_WARD = 5` →
 **"Too few water points mapped in this ward to judge"**. Under-mapped places must not look
-uncontested.
+uncontested. The ward count includes the water point being scored. The sources are the map
+extracts of the counted entities (`metadata.source_id`); none recorded → **"Map source of
+nearby water points not recorded"**.
 
 ---
 
