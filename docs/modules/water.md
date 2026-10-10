@@ -178,7 +178,10 @@ operating state not observed").
 
 Null (E10, tagging bias, Bible §6.8): no way within 200 m → **"No mapped path within 200 m"**
 · nearest way has no `surface` tag → **"Path surface not mapped in OSM"** · unknown surface
-value → **"Path surface value not recognised"**. Never default to "unpaved".
+value → **"Path surface value not recognised"** · the way's `metadata.source_id` or
+`metadata.observed_at` is missing → **"Map source of this path not recorded"**. Never default
+to "unpaved". The nearest way decides even when a farther way is tagged. The value reads
+`asphalt (residential)`, or the surface alone when the way has no `highway` tag.
 
 ## 4.4 Competition — contributor
 
