@@ -12,6 +12,8 @@ The spec every adapter here follows is `docs/modules/water.md`; change the spec 
 | `adapters/record_staleness.py` | 2.5 Record staleness (V2 contributor) |
 | `adapters/operational_state.py` | 1.2 Operational state (V1 contributor, feeds 2.4) |
 | `adapters/status_gap.py` | 2.4 Status gap (V2 contributor, reads 1.2) |
+| `adapters/connection_quality.py` | 5.2 Connection quality (V5 contributor) |
+| `adapters/competition.py` | 4.4 Competition (V4 contributor) |
 
 The registry (`engine/registry.py`) finds every `adapters/*.py` not starting with `_`.
 `MODULES_ENABLED=water` runs only this module. Deleting this folder must not break the
