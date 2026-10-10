@@ -106,7 +106,9 @@ A matched record with no `record_date` still counts as a record, with the freshn
 
 Null: no record → "No official record found" · no rated yield → **"No rated yield in the
 register"** · no production figure → **"No production figure in the register"** · rated yield
-≤ 0 → **"Rated yield in the register is not a positive number"**.
+≤ 0 → **"Rated yield in the register is not a positive number"** · no record date → "No
+inspection date in the register" (the record is the only input, so its date is the result's
+`observed_at`).
 
 ## 2.4 Status gap — contributor
 
