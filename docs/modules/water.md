@@ -136,6 +136,10 @@ register"** · 1.2 not measured → **"Current operating state not observed"**.
 Null: no record → "No official record found" · no record date → **"No inspection date in
 the register"** · no observation yet → **"No observation to compare the record with"**.
 
+"Any source" includes the map extract: the entity's `metadata.observed_at` (the extract date)
+counts as an observation, with `metadata.source_id` as its source. Observations dated after
+`as_of` are ignored.
+
 ## 1.2 Operational state — contributor
 
 | | |
