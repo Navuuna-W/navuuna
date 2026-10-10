@@ -91,6 +91,9 @@ guessed source).
 Null: no matched record → **"No official record found"** (E4) · 1.1 not measured →
 **"Presence could not be checked"** (and no V2 finding, Bible §6.3).
 
+A matched record with no `record_date` still counts as a record, with the freshness factor at
+`MIN_FRESHNESS_FACTOR`: its age cannot be shown, so it is trusted as little as the oldest record.
+
 ## 2.2 Magnitude gap — contributor
 
 | | |
