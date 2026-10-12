@@ -95,18 +95,23 @@ One sequential, colour-blind-safe scale. Nine possible values:
 Suffixes:
 
 - **`ca`** — the entity could not be assessed. `lens_score` is `null` for these features.
-- **`p`** — today `apps/web/fixtures/lensApply.ts` and the dev mock append `p` when the
-  entity's gate is unmeasured **or** a variable's coverage is below 1. Visually distinct
-  from the solid band so a reader never mistakes a provisional score for a full one.
+- **`p`** — today the fixtures append `p` when the entity's `gate_status` is `provisional`
+  **or** a variable's coverage is below 1. The rule is spread over two files:
+  `fixtures/generate.ts:421` makes a variable `partly_verified` on either condition, and
+  `vite-plugins/mockServer.ts:69` raises the `p` flag when the gate is `provisional` or any
+  variable is `partly_verified`. (`fixtures/lensApply.ts` only receives that flag — it does
+  not decide it.) Visually distinct from the solid band so a reader never mistakes a
+  provisional score for a full one.
 
 ### Proposed (S2) — `p` means provisional only. Devyan to confirm.
 
 `lenses/README.md` (`thresholds.provisional_suffix`) already says something narrower, and it
 is the file that matches the merged engine, so **`tiles.md` is the side that should move**:
 
-> `p` is appended when a variable with a weight above 0 is `provisional`, i.e. its gate was
-> unmeasured. A failed gate is not `p`: it makes the variable `cannot_assess`. Coverage
-> below 100 % alone does not add `p`; coverage is shown beside the score instead.
+> `p` is appended when any variable with a weight above 0 is `provisional`, i.e. its gate was
+> unmeasured (`b2p`); the map hatches it. A failed gate is not `p`: it makes the variable
+> `cannot_assess` (Bible §6.3). Coverage below 100 % alone does not add `p`; coverage is shown
+> beside the score instead (DEC-15).
 
 Two consequences if it is confirmed:
 
@@ -142,8 +147,10 @@ vector tiles. That is why clustering must happen server-side (ADR-005).
   dozens of tiles and a shared bucket would starve JSON API calls. This is no longer TBD:
   the `tiles` limiter is already merged in
   `apps/api/app/Providers/AuthServiceProvider.php` as `TILE_REQUESTS_PER_MINUTE = 600`, ten
-  times the API bucket. K-18 measures a real map load and may move the number; until it
-  does, 600 is the contract. A-09 attaches `throttle:tiles` to the route — `routes/api.php`
+  times the API bucket. 600 is the contract until someone measures how many tiles one map
+  load actually fetches — nobody has. K-18 · Performance is the nearest task and it times the
+  tile SQL rather than counting requests, so it will not settle this on its own; it also
+  lists A-09 under **Needs**, so the measurement comes after the endpoint exists. A-09 attaches `throttle:tiles` to the route — `routes/api.php`
   has no tile route yet.
 - **The `429` body** is the shared one from `App\Auth\TooManyRequestsResponse`:
   `{message, limit, window_seconds, retry_after_seconds}`, with `Retry-After`,

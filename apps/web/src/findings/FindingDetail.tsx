@@ -15,14 +15,30 @@ type FindingState = FindingSummary['state'];
 
 const CONTEST_EMAIL = 'contact@navuuna.example';
 
-// The engine has raised the finding and no analyst has cleared it for publication yet.
-// `detected` is the engine's entry state (FlagState::Detected) and joined the contract in
-// C10b; it is listed here so a new non-public state cannot slip through without a banner.
-const PRE_PUBLICATION_STATES: readonly FindingState[] = ['detected', 'held', 'explanation_checked'];
+type Banner = 'pre_publication' | 'contested' | 'none';
+
+// Which banner each state wears. A Record over the contract's own union, so a state added to
+// FindingSummary.state fails to compile until someone picks its banner — a hand-kept list
+// would have let it through silently with no banner at all.
+//
+// `pre_publication` = the engine has raised the finding and no analyst has cleared it for
+// publication yet; `detected` is the engine's entry state (FlagState::Detected) and joined
+// the contract in C10b. `dismissed` gets no banner even though it is analyst-only: it is
+// never going to be published, so "until published" would be the wrong sentence.
+const BANNER_BY_STATE: Record<FindingState, Banner> = {
+  detected: 'pre_publication',
+  held: 'pre_publication',
+  explanation_checked: 'pre_publication',
+  contested: 'contested',
+  dismissed: 'none',
+  published: 'none',
+  resolved: 'none',
+};
 
 export function FindingDetail({ finding }: { finding: FindingSummary }) {
-  const isPrePublication = PRE_PUBLICATION_STATES.includes(finding.state);
-  const isContested = finding.state === 'contested';
+  const banner = BANNER_BY_STATE[finding.state];
+  const isPrePublication = banner === 'pre_publication';
+  const isContested = banner === 'contested';
 
   const borderClass = isPrePublication
     ? 'border-amber-500 bg-amber-50'

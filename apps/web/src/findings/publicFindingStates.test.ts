@@ -12,20 +12,22 @@ import {
   type FindingState,
 } from './publicFindingStates';
 
-// Every state in components.schemas.FindingSummary.state — all seven of FlagState. Listed by
-// hand on purpose: a generated type cannot be iterated at runtime, and this list is what
-// keeps the allow-list honest. `satisfies readonly FindingState[]` proves nothing here is a
-// state the contract lacks; the "five of the seven" assertion below is the reminder in the
-// other direction, so a new contract state has to be added here deliberately.
-const ALL_FINDING_STATES = [
-  'detected',
-  'held',
-  'explanation_checked',
-  'published',
-  'contested',
-  'dismissed',
-  'resolved',
-] as const satisfies readonly FindingState[];
+// Every state in components.schemas.FindingSummary.state — all seven of FlagState. A
+// generated type cannot be iterated at runtime, so the states have to be written out; making
+// it a Record over the contract union means the contract gaining an eighth state fails to
+// compile here instead of quietly passing every test below.
+const EVERY_CONTRACT_STATE: Record<FindingState, true> = {
+  detected: true,
+  held: true,
+  explanation_checked: true,
+  published: true,
+  contested: true,
+  dismissed: true,
+  resolved: true,
+};
+
+// Key order is insertion order for string keys, so this list is stable to assert against.
+const ALL_FINDING_STATES = Object.keys(EVERY_CONTRACT_STATE) as FindingState[];
 
 const NON_PUBLIC_STATES = ALL_FINDING_STATES.filter((state) => !isPublicFindingState(state));
 
