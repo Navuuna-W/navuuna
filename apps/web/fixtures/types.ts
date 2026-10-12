@@ -9,8 +9,16 @@ export type GateStatus = 'measured' | 'provisional' | 'cannot_assess';
 export type VariableStatus = 'measured' | 'partly_verified' | 'cannot_assess';
 export type SubVariableStatus =
   'measured' | 'null_not_measured' | 'null_area_only' | 'null_not_applicable';
+// All seven of FlagState, so a fixture cannot hold a state the contract lacks. `detected` is
+// the engine's entry state and is analyst-only, like everything outside Flag::PUBLIC_STATES.
 export type FindingState =
-  'held' | 'explanation_checked' | 'published' | 'contested' | 'dismissed' | 'resolved';
+  | 'detected'
+  | 'held'
+  | 'explanation_checked'
+  | 'published'
+  | 'contested'
+  | 'dismissed'
+  | 'resolved';
 export type Severity = 'low' | 'medium' | 'high';
 
 export interface Source {

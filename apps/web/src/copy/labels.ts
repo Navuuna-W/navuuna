@@ -47,9 +47,14 @@ export const BADGE = {
   cannot_assess: 'Cannot assess',
 } as const;
 
-// Finding status words — analyst-only labels where marked. Viewers never see these for
-// held / explanation_checked rows because the server strips them (A-19, DEC-08).
+// Finding status words — analyst-only labels where marked. Only `published` and `resolved`
+// reach a viewer; the server strips every other state by role (ADR-013, A-19, DEC-08).
+// One entry per state in the contract's FindingSummary.state, so FindingDetail can never
+// render `undefined` for a state the contract has but this file does not.
 export const FINDING_STATUS = {
+  // CONTEXT.md § 4 marks `detected` "internal, never shown" — the findings engine (K-13)
+  // moves it to `held` in the same run. This is the typed fallback, not a design decision.
+  detected: 'Just detected (analysts only)',
   held: 'Under review (analysts only)',
   explanation_checked: 'Explanation checked (analysts only)',
   published: 'Published',

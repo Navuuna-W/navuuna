@@ -46,6 +46,18 @@ describe('CONTEXT.md labels', () => {
     expect(FINDING_STATUS.dismissed).toMatch(/analysts only/);
   });
 
+  it('has a word for every one of the seven contract finding states', () => {
+    expect(Object.keys(FINDING_STATUS).sort()).toEqual([
+      'contested',
+      'detected',
+      'dismissed',
+      'explanation_checked',
+      'held',
+      'published',
+      'resolved',
+    ]);
+  });
+
   it('contested finding carries CONTEXT.md copy semantically', () => {
     expect(FINDING_STATUS.contested).toBe('Contested');
   });
