@@ -15,7 +15,9 @@ neither (docs, `.claude`, CI config only) → say which commands were skipped an
    plus `app/Http/Controllers/Api/V1`, `app/Http/Resources`, `app/Http/Requests`, `routes/api.php`,
    `app/Tiles`, `app/Lens`, `app/Broadcasting`, `routes/channels.php`, `app/Observations`.
    `app/Http/Controllers/Auth`, `app/Http/Controllers/Findings` and `app/Http/Middleware` are
-   **Core's**. Name every out-of-lane file, which lane owns it, and whether a standing ruling in
+   **Core's**. ADR-015 adds three docs paths Access writes: `docs/status/access.md`,
+   `docs/contracts/**` and `docs/design/**`. `docs/CONTEXT.md` is Devyan's and is not among them.
+   Name every out-of-lane file, which lane owns it, and whether a standing ruling in
    `docs/status/COMMANDS.md` covers it. An out-of-lane file with no ruling is a failure.
 3. **Commits.** `npx commitlint --from origin/main --to HEAD --verbose`. Then state the proposed
    PR title and confirm it passes the same rules — type and scope from `commitlint.config.mjs`,

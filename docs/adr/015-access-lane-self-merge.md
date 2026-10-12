@@ -52,6 +52,11 @@ It applies only to the Access-lane paths as ADR-008 defines them: all of `apps/w
 `routes/channels.php`, `app/Observations`. `app/Http/Controllers/Auth`,
 `app/Http/Controllers/Findings` and `app/Http/Middleware` are Core's and are **not** covered.
 
+It also covers the three documentation paths the Access lane writes rather than reads:
+`docs/status/access.md` (its own queue), `docs/contracts/**` and `docs/design/**`. These are
+Access's to change, so a PR confined to them is in scope. `docs/CONTEXT.md` is **not** among them
+— the vocabulary is Devyan's, and a word of it changes only by asking him.
+
 Outside those paths, the only Access changes permitted are the small FYI PRs already ruled: the
 `composer.json` `dedoc/scramble` line, thin wrappers in `app/Console/Commands`, migration M2's
 `colour_class` CHECK, and the contract calls on S2 and DEC-20 display names. Each is a separate

@@ -51,6 +51,9 @@ ADR-008, not `CLAUDE.md` §3. Access owns these named paths in `apps/api`, and n
 OpenAPI generation. `app/Http/Controllers/Auth/**`, `app/Http/Controllers/Findings/**` and
 `app/Http/Middleware/**` are **Core's**. All of `apps/web` is Access's alone.
 
+ADR-015 adds the three docs paths Access writes rather than reads: `docs/status/access.md`,
+`docs/contracts/**` and `docs/design/**`. `docs/CONTEXT.md` is Devyan's and is not one of them.
+
 ## Standing rulings — cross-lane items `/gate` and `/ship` may let through
 
 Each of these is a small separate PR that touches another lane's file. Do it, FYI the owner in the

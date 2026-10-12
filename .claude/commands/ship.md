@@ -13,8 +13,9 @@ their work.
    - `/gate` steps 1–4 do not pass on this exact HEAD (re-run them if the last run was on an
      older commit)
    - the last `/audit` had anything in its **blocking** list
-   - a changed path is outside the ADR-008 Access paths and is not covered by a standing ruling
-     in `docs/status/COMMANDS.md`
+   - a changed path is outside the Access paths as ADR-008 and ADR-015 "Scope" define them
+     (ADR-015 adds `docs/status/access.md`, `docs/contracts/**`, `docs/design/**`) and is not
+     covered by a standing ruling in `docs/status/COMMANDS.md`
    On a refusal, report what failed and stop. Do not push.
 2. `git push -u origin HEAD`. Never force-push `main` or any shared branch. `--force-with-lease`
    only, only on this branch, and only after a rebase.
