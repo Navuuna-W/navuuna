@@ -6,10 +6,14 @@ official records disagree with observations. Institutions read the scores throug
 
 ## Sources of truth — read before deciding anything
 
+- merged ADRs in `docs/adr/` — newest wins
 - `docs/workpacks/austine.md` — my tasks A-01…A-33 and done-whens
 - `docs/BUILD_BIBLE.md` (v1.1) — §6 engine rules, §8 stack, §11 API, §14 engineering rules
-- `docs/PRD.md` (PRD-001) — screens S1–S8, copy rules §10, edge cases E1–E15, release criteria §15
 - `docs/CONTEXT.md` — vocabulary (Devyan owns it; use its words)
+
+**PRD-001 is deliberately not in the repo**, by my choice. Never guess at it and never block on it:
+a claim that would rest on it is "unverifiable — ask Austine". When a task needs PRD detail —
+screens S1–S8, copy rules, edge cases E1–E15 — say which excerpt you need and I paste it.
 
 If two sources disagree, stop and ask. Never pick silently.
 
@@ -18,7 +22,7 @@ If two sources disagree, stop and ask. Never pick silently.
 - All of `apps/web` (the frontend is mine alone).
 - In `apps/api`: `app/Http/Controllers/Api/V1`, `app/Http/Resources`, `app/Http/Requests`, `routes/api.php`,
   `app/Tiles`, `app/Lens`, `app/Broadcasting` + `routes/channels.php`, `app/Observations`, OpenAPI generation.
-- The `web` job in CI, `docs/adr/002-*`, `docs/adr/008-*` (draft), `docs/contracts/*`.
+- The `web` job in CI, `docs/adr/002-*`, `docs/adr/008-*`, `docs/adr/015-*`, `docs/contracts/*`.
 - Read-only for me: `apps/api` Engine / Findings / Auth / Audit / Consumers (Khillon), `apps/api/database/migrations`
   (I may author; Khillon approves), `services/**`, `data/**` (Devyan; `services/signals/engine` is Khillon),
   `infra/**`, the rest of `.github/**` (Khillon).
@@ -74,7 +78,8 @@ Vitest + Testing Library · Playwright · ESLint 9 flat config + Prettier.
   names the task ID (A-xx) and FR. Examples: `feat(web): self-hosted Nairobi basemap (A-04)`,
   `docs(adr): ADR-002 choose React for apps/web`.
 - One logical change per commit; never commit a failing build. PRs ≤ 400 changed lines; squash-merge.
-  Reviewer: Devyan for `apps/web`, Khillon for `apps/api`. Never push or open a PR unless I say so.
+  Reviewer: Devyan for `apps/web`, Khillon for `apps/api` — FYI, not a gate (ADR-015).
+  Push, open PRs and merge only through `/ship`, under ADR-015.
 
 ## Done means (Bible §14.8)
 

@@ -1,6 +1,10 @@
 # Claude Code — personal state, not shared
 .claude/state/
 .claude/settings.local.json
+# Background-agent worktrees and local screenshots: machine-local, and the worktrees
+# are whole checkouts that would otherwise be committed into the repo they live in.
+.claude/worktrees/
+.claude/shots/
 
 # Secrets
 .env
