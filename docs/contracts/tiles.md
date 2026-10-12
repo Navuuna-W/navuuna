@@ -94,9 +94,31 @@ One sequential, colour-blind-safe scale. Nine possible values:
 
 Suffixes:
 
-- **`p`** — the entity is partly verified (gate failed or coverage < 1). Visually distinct
-  from the solid band so a reader never mistakes a provisional score for a full one.
 - **`ca`** — the entity could not be assessed. `lens_score` is `null` for these features.
+- **`p`** — today `apps/web/fixtures/lensApply.ts` and the dev mock append `p` when the
+  entity's gate is unmeasured **or** a variable's coverage is below 1. Visually distinct
+  from the solid band so a reader never mistakes a provisional score for a full one.
+
+### Proposed (S2) — `p` means provisional only. Devyan to confirm.
+
+`lenses/README.md` (`thresholds.provisional_suffix`) already says something narrower, and it
+is the file that matches the merged engine, so **`tiles.md` is the side that should move**:
+
+> `p` is appended when a variable with a weight above 0 is `provisional`, i.e. its gate was
+> unmeasured. A failed gate is not `p`: it makes the variable `cannot_assess`. Coverage
+> below 100 % alone does not add `p`; coverage is shown beside the score instead.
+
+Two consequences if it is confirmed:
+
+- **A failed gate is `ca`, never `p`.** A failed gate makes the variable `cannot_assess`
+  (Bible §6.3), and when every weighted variable is `cannot_assess` the class is `ca`.
+- **Coverage below 1 on its own is not `p`.** Coverage shows through "X of Y" beside the
+  score (DEC-15), not through the hatch.
+
+Nothing changes in this file's live rule until Devyan confirms. On confirmation the bullet
+above is replaced by the quoted rule and `lensApply.ts`, the dev mock and the
+`partly_verified` → `provisional` status rename (C1) move together in one slice, because
+the fixtures compute all three from the same flag.
 
 Red/amber/green is **banned** (CLAUDE.md product rule 5). Colour is never the only carrier
 of meaning — pattern/stroke carry the `p` and `ca` signals too.
@@ -115,9 +137,18 @@ vector tiles. That is why clustering must happen server-side (ADR-005).
 
 - **Session auth.** Signed-in users only. The Reverb session cookie is attached
   automatically on the same origin; no bearer token is used.
-- **Dedicated rate limiter.** The tile endpoint has its own bucket, not the 60/min
-  API-key limiter. One map load fetches dozens of tiles — a shared limiter would starve
-  JSON API calls. Current limit: TBD (Khillon, K-11).
+- **Dedicated rate limiter: 600 requests per minute**, counted per signed-in user (per IP
+  when there is no session). Not the 60/min API-key limiter (NFR-05) — one map load fetches
+  dozens of tiles and a shared bucket would starve JSON API calls. This is no longer TBD:
+  the `tiles` limiter is already merged in
+  `apps/api/app/Providers/AuthServiceProvider.php` as `TILE_REQUESTS_PER_MINUTE = 600`, ten
+  times the API bucket. K-18 measures a real map load and may move the number; until it
+  does, 600 is the contract. A-09 attaches `throttle:tiles` to the route — `routes/api.php`
+  has no tile route yet.
+- **The `429` body** is the shared one from `App\Auth\TooManyRequestsResponse`:
+  `{message, limit, window_seconds, retry_after_seconds}`, with `Retry-After`,
+  `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers. A client must back off on
+  `Retry-After` rather than re-request the tile straight away.
 - **Role filtering.** Entities are returned regardless of the caller's role; the lens
   score is identical for every role. **Held findings never appear here** (they are a
   JSON-API concern, filtered by role server-side — see
@@ -135,7 +166,11 @@ not the headers.
 
 ## 9 · Reference implementation
 
-Until K-10 ships the real tile endpoint, `apps/web/vite-plugins/mockServer.ts` serves
+The MVT endpoint belongs to the **Access lane as A-09**. Bible §11.2 and the change log put
+it with Khillon as K-10; ADR-005 "Ownership moved" records the reassignment and asked for
+this line to be corrected here.
+
+Until A-09 ships the real tile endpoint, `apps/web/vite-plugins/mockServer.ts` serves
 this contract against the deterministic fixtures in `apps/web/fixtures/`. The mock
 attaches to **both** `configureServer` (dev) and `configurePreviewServer` (preview),
 and is excluded from the production bundle. The parity test

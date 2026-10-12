@@ -45,6 +45,12 @@ describe('FindingDetail', () => {
     expect(screen.getByText(/Not visible to other users until published/i)).toBeInTheDocument();
   });
 
+  it('also shows the "Not visible" banner for detected, the engine entry state (C10b)', () => {
+    render(<FindingDetail finding={{ ...base, state: 'detected', published_at: null }} />);
+
+    expect(screen.getByText(/Not visible to other users until published/i)).toBeInTheDocument();
+  });
+
   it('also shows the "Not visible" banner for explanation_checked (still held)', () => {
     render(
       <FindingDetail finding={{ ...base, state: 'explanation_checked', published_at: null }} />

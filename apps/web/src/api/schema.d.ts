@@ -88,7 +88,7 @@ export interface components {
             /** @description Always the five variables, in fixed order V1…V5. */
             variables: components["schemas"]["VariableScore"][];
             sub_variables: components["schemas"]["SubVariableScore"][];
-            /** @description Published findings only when returned to a Viewer. Analysts see held and explanation_checked findings here too; the API applies the role filter (DEC-08, A-19). */
+            /** @description Published and resolved findings only when returned to a Viewer — the public list is Flag::PUBLIC_STATES. An analyst sees every state here; the API applies the role filter server-side (ADR-013, DEC-08, A-19). */
             findings: components["schemas"]["FindingSummary"][];
             /** @description Static attribution block for NFR-09. */
             attribution: string;
@@ -145,10 +145,13 @@ export interface components {
             /** @description Which sub-variable raised the finding (2.1, 2.2, 2.4). */
             sub_variable: string;
             /**
-             * @description Lifecycle per Bible §6.5 and CONTEXT.md § 4. `contested` means a published finding has been challenged by someone (the subject, a reviewer, or an analyst). Still visible to viewers; the UI shows the challenge copy. `held` and `explanation_checked` and `dismissed` are analyst-only; the API filters them out server-side by the session's role (A-19, DEC-08).
+             * @description Lifecycle per Bible §6.5 and CONTEXT.md § 4. Seven states, spelled exactly as app/Findings/FlagState.php stores them in flags.flags.state.
+             *     Viewer-visible: `published` and `resolved`, and nothing else — those two are the whole of Flag::PUBLIC_STATES. Every other state is analyst-only and the API strips it server-side by the session's role before the response leaves the service (ADR-013, A-19, DEC-08).
+             *     `detected` is where the findings engine (K-13) raises a finding. It is system-transient: the same run moves it to `held`, so a client should never plan around seeing it. It is listed here because the enum must match FlagState, and because a state missing from the contract cannot be filtered by name.
+             *     `contested` means a published finding has been challenged by someone (the subject, a reviewer, or an analyst), and the finding is hidden again while the challenge is looked at — exactly as `held` is. An earlier draft of this file said contested was "still visible to viewers; the UI shows the challenge copy". That contradicted ADR-013 and FlagState::Contested's own docblock, and it is where the viewer-visible contested finding in the fixtures came from (fixed in #93). The challenge copy is an analyst-only affordance.
              * @enum {string}
              */
-            state: "held" | "explanation_checked" | "published" | "contested" | "dismissed" | "resolved";
+            state: "detected" | "held" | "explanation_checked" | "published" | "contested" | "dismissed" | "resolved";
             /** @enum {string} */
             severity: "low" | "medium" | "high";
             /** Format: date-time */
