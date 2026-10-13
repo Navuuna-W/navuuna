@@ -49,6 +49,14 @@ def test_metadata_keeps_only_the_tags_the_feature_has() -> None:
     }
 
 
+def test_feature_with_both_tags_is_named_by_the_more_specific_man_made_tag() -> None:
+    well_tagged_twice = build_node({"amenity": "water_point", "man_made": "water_well"})
+
+    entity_rows = build_water_point_entities([well_tagged_twice])
+
+    assert entity_rows[0].metadata["water_point_kind"] == "Water well"
+
+
 def test_storage_tank_counts_only_when_it_holds_water() -> None:
     water_tank = build_node({"man_made": "storage_tank", "content": "water"})
     oil_tank = build_node({"man_made": "storage_tank", "content": "oil"})

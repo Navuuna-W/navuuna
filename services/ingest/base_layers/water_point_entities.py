@@ -16,12 +16,9 @@ WATER_MODULE = "water"
 DEFAULT_WATER_POINT_RADIUS_M = 25.0
 
 # OSM tag → value → the kind of water point it marks. The list is the one in work pack D-05.
+# `man_made` is checked first: many Nairobi features carry both tags, such as
+# amenity=water_point with man_made=water_well, and `man_made` says what is really there.
 WATER_POINT_KINDS_BY_TAG: dict[str, dict[str, str]] = {
-    "amenity": {
-        "drinking_water": "Drinking water point",
-        "water_point": "Water point",
-        "toilets": "Toilets",
-    },
     "man_made": {
         "water_well": "Water well",
         "water_tap": "Water tap",
@@ -29,6 +26,11 @@ WATER_POINT_KINDS_BY_TAG: dict[str, dict[str, str]] = {
         "water_works": "Water works",
         "reservoir_covered": "Covered reservoir",
         "wastewater_plant": "Wastewater plant",
+    },
+    "amenity": {
+        "drinking_water": "Drinking water point",
+        "water_point": "Water point",
+        "toilets": "Toilets",
     },
 }
 
