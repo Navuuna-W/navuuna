@@ -1,6 +1,6 @@
 # Status — Access lane (one queue)
 
-Anchor: main @ `dc81cfc` · latest PR seen #117
+Anchor: main @ `dc81cfc` · latest PR seen #118
 
 One file, one queue. This replaced `docs/status/api.md` and `docs/status/web.md`, which never
 reached `main` — they existed only on `docs/status-austine-lane`, so there was nothing to delete.
@@ -9,8 +9,22 @@ Every row below carries an `[api]` or `[web]` tag; the commands take no argument
 
 ## Open PR (one at a time)
 
-**None.** `gh pr list --state open` returns empty. The queue rule — never two open PRs at once —
-holds, and the next item may start.
+**#118** `[web]` docs — `docs(docs): rewrite the Access status file from real state after #117`,
+head `63d5dd6`, branch `docs/status-access-after-117`. **9 of 9 checks green** (commitlint,
+dependency-audit, flows, migration-lint, modularity, php, python, secret-scan, web). Open, not
+merged.
+
+This PR is this file, which is why the line above reads #118 and not "none": the revision that
+first recorded the post-#117 state could not name its own PR, because the PR did not exist until
+the branch was pushed. That is a standing property of this section, not a one-off — every `/wrap`
+output is blind to itself until pushed, and this revision closes the gap on the previous one.
+
+**Row 1 may not start yet.** One open PR is the limit, so the A2 remainder waits on #118 merging.
+Nothing else is queued behind it; the rule is holding, not breached.
+
+Merging is hand-gated: root `CLAUDE.md` §6.0 forbids an agent merging a PR, and ADR-015's
+Access-lane carve-out does not reach the permission layer that reads it. Austine runs
+`gh pr merge 118 --squash --delete-branch`. ADR-015's Consequences already records this for #115.
 
 ## Merged since last update
 
@@ -37,7 +51,9 @@ Two Core merges still shape what this lane must do:
 
 ## In progress
 
-**Nothing open.** #117 landed and its branch is deleted both locally and on the remote.
+**`docs/status-access-after-117` @ `63d5dd6` — pushed, PR #118, green, awaiting a hand merge.**
+Two commits, 227 changed lines (139+/88−) in `docs/status/access.md` alone. Nothing left to do on
+it but merge. #117's own branch is deleted both locally and on the remote.
 
 **A-02 is part-merged, not done.** #117 was the description-only slice. Three pieces remain and
 are row 1 of the queue below:
@@ -240,7 +256,17 @@ Only commands that actually ran, with their real results.
 - **#117 CI: 9 checks, all green** — commitlint, dependency-audit, flows, migration-lint,
   modularity, php, python, secret-scan, web. The count is 9, not the 8 recorded last revision.
 - **#117 merged** as squash commit `dc81cfc`; branch deleted locally and on the remote.
-- `gh pr list --state open` → empty.
+- **#118 on `63d5dd6`:** `git diff --stat origin/main...HEAD` → 227 changed lines (139+/88−,
+  1 file), under the 400 cap · `git diff --name-only` → `docs/status/access.md` only, named in
+  ADR-015 "Scope" as a path this lane writes · commitlint → 0 problems on both commits and on the
+  PR title · CI **9 of 9 green**. The web and api gate commands were **correctly skipped**: the
+  diff touches no `apps/api/**` and no `apps/web/**`, so per `/gate` there is no code to typecheck,
+  lint, test or build.
+- **One commitlint failure, fixed before the push.** `docs(docs): correct the S1 call-site count
+  and show how both were measured` was 74 characters against a 72 cap. Reset soft and recommitted
+  as `63d5dd6` with a 65-character header. A header defect on an earlier commit cannot be fixed by
+  adding a later one, and nothing had been pushed, so the rewrite was local only.
+- `gh pr list --state open` → `#118` and nothing else.
 
 **Not claimed:** nothing in this lane is verified against a live API or deployed to staging.
 Everything above is fixtures, local commands and CI.
