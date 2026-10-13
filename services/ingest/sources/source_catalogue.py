@@ -46,8 +46,21 @@ OPEN_DATA_SOURCES = (
         name="KNBS / IEBC boundaries (HDX)",
         kind=SourceKind.VECTOR,
         base_url="https://data.humdata.org/dataset/cod-ab-ken",
-        licence=LICENCE_NOT_CONFIRMED,
+        licence="Creative Commons Attribution for Intergovernmental Organisations (CC BY-IGO)",
         attribution="IEBC and KNBS, via the Humanitarian Data Exchange (HDX)",
+    ),
+    # The HDX set above stops at sub-county, so the wards come from this separate HDX data set.
+    # HDX states: digitised by FAO Kenya from IEBC PDF maps; "not an official administrative
+    # layer from the authorities". The attribution says so, because the map footer shows it.
+    SourceDefinition(
+        name="Kenya ward boundaries (FAO, HDX)",
+        kind=SourceKind.VECTOR,
+        base_url="https://data.humdata.org/dataset/kenya-admin-level-3-wards",
+        licence="Creative Commons Attribution International (CC BY)",
+        attribution=(
+            "Ward boundaries digitised by FAO Kenya from IEBC maps, via the Humanitarian "
+            "Data Exchange (HDX); not an official boundary layer"
+        ),
     ),
     SourceDefinition(
         name="CHIRPS rainfall",
