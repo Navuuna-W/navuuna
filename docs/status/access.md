@@ -10,14 +10,15 @@ Every row below carries an `[api]` or `[web]` tag; the commands take no argument
 ## Open PR (one at a time)
 
 **#118** `[web]` docs — `docs(docs): rewrite the Access status file from real state after #117`,
-head `63d5dd6`, branch `docs/status-access-after-117`. **9 of 9 checks green** (commitlint,
-dependency-audit, flows, migration-lint, modularity, php, python, secret-scan, web). Open, not
-merged.
+head `50ff3a7`, branch `docs/status-access-after-117`, 3 commits. **9 of 9 checks green**
+(commitlint, dependency-audit, flows, migration-lint, modularity, php, python, secret-scan, web).
+Open, not merged. Head moved `63d5dd6` → `50ff3a7` since the last revision; the check run above is
+the one for `50ff3a7`, not a carried-over result.
 
-This PR is this file, which is why the line above reads #118 and not "none": the revision that
-first recorded the post-#117 state could not name its own PR, because the PR did not exist until
-the branch was pushed. That is a standing property of this section, not a one-off — every `/wrap`
-output is blind to itself until pushed, and this revision closes the gap on the previous one.
+This PR is this file, which is why the line above reads #118 and not "none": a revision cannot name
+its own PR until the branch is pushed. That is a standing property of this section, not a one-off —
+every `/wrap` output is blind to itself until pushed, and each revision closes the gap on the
+previous one.
 
 **Row 1 may not start yet.** One open PR is the limit, so the A2 remainder waits on #118 merging.
 Nothing else is queued behind it; the rule is holding, not breached.
@@ -28,16 +29,15 @@ Access-lane carve-out does not reach the permission layer that reads it. Austine
 
 ## Merged since last update
 
-The previous anchor was `5d98b6d`. Three PRs merged since it.
+**Nothing has merged since the anchor.** The previous revision of this file also anchored at
+`dc81cfc`, and `origin/main` is still `dc81cfc`; #118 is the same open PR, now one commit further
+on. This section is empty on purpose rather than repeating #115–#117 as though they were new.
 
-| PR | Track | Task IDs | One line |
-|---|---|---|---|
-| #117 | `[web]` | A-02 (part) | `detected` added to the finding states; `contested` no longer described as viewer-visible; `tiles.md` limiter, 429 body and §9 ownership corrected. |
-| #116 | `[web]` | docs | The two Access status files merged into this one queue. |
-| #115 | `[web]` | the command loop, ADR-015 | The five no-argument Access commands. Hand-gated, as ADR-015's Consequences records. |
-
-Already absorbed before the old anchor, kept so the done-set is not lost: #114, #113 (B1b),
-#112 (A1), #95, #94 (B1a), #93 (A0), #74, #73. So **A0, A1, B1a and B1b are done.**
+The done-set, kept so it is not lost across revisions: #117 (A-02 part — `detected` added to the
+finding states, `contested` no longer described as viewer-visible, `tiles.md` limiter, 429 body and
+§9 ownership corrected), #116 (the two Access status files merged into this one queue), #115 (the
+five no-argument Access commands, hand-gated per ADR-015), #114, #113 (B1b), #112 (A1), #95,
+#94 (B1a), #93 (A0), #74, #73. So **A0, A1, B1a and B1b are done**, and A-02 is part-done.
 
 Two Core merges still shape what this lane must do:
 
@@ -51,9 +51,11 @@ Two Core merges still shape what this lane must do:
 
 ## In progress
 
-**`docs/status-access-after-117` @ `63d5dd6` — pushed, PR #118, green, awaiting a hand merge.**
-Two commits, 227 changed lines (139+/88−) in `docs/status/access.md` alone. Nothing left to do on
-it but merge. #117's own branch is deleted both locally and on the remote.
+**`docs/status-access-after-117` @ `50ff3a7` — pushed, PR #118, green, awaiting a hand merge.**
+Three commits, 251 changed lines (164+/87−) in `docs/status/access.md` alone.
+`git rev-list --left-right --count` against its upstream → `0 0`, so local and remote agree and
+nothing is unpushed. Nothing left to do on it but merge. #117's own branch is deleted both locally
+and on the remote.
 
 **A-02 is part-merged, not done.** #117 was the description-only slice. Three pieces remain and
 are row 1 of the queue below:
@@ -78,7 +80,8 @@ C1 and S1 were split out of #117 deliberately: either one alone would have carri
 A2 and A4a lead because both unblock the web track. After that the two tracks alternate, each
 keeping its own approved order. **Never two open PRs at once.** The tail is all `[web]` because the
 api track runs out of items first — that is the rule working, not a breach of the alternation.
-Numbering is unchanged from the previous revision; row 1 is narrowed, not dropped.
+Numbering is unchanged from the previous revision: nothing merged this round, so no row was dropped
+and none was renumbered. Rows 17 and 19 gained a triage flag as `feat/web-demo` grew into them.
 
 | # | Track | What | Task IDs |
 |---|---|---|---|
@@ -98,9 +101,9 @@ Numbering is unchanged from the previous revision; row 1 is narrowed, not droppe
 | 14 | `[api]` | A8 — `lens:sync` validation, `LensApplier`, `lens:apply --all` | A-11 |
 | 15 | `[web]` | B3c — URL state: lens, filters, centre, zoom, selected entity | A-14 |
 | 16 | `[api]` | A9 — MVT exactly per `tiles.md` + parity test against the frontend. `routes/api.php` has no tile route yet; the `tiles` limiter is already merged | A-09 |
-| 17 | `[web]` | B4 — Passport restyle, visuals only; adds the "what would improve this" tip on not-measured rows, built from `null_reason`. Needs A2's C1 | A-16, A-17 |
+| 17 | `[web]` | B4 — Passport restyle, visuals only; adds the "what would improve this" tip on not-measured rows, built from `null_reason`. Needs A2's C1. **Largely written on `feat/web-demo` (`dd5c0a8`) — triage first** | A-16, A-17 |
 | 18 | `[api]` | A10 — `VITE_DATA_SOURCE=api` switch + the `synthetic` flag | A-08 follow-up |
-| 19 | `[web]` | B5a — finding detail; composes its sentences from `declared`/`observed` + `src/copy`. Needs A2's C7 | A-18 |
+| 19 | `[web]` | B5a — finding detail; composes its sentences from `declared`/`observed` + `src/copy`. Needs A2's C7. **Partly written on `feat/web-demo` (`c044fae`), which rewrites the same files #117 just fixed — triage first** | A-18 |
 | 20 | `[api]` | A11 — broadcast channels. Last, after A2–A10 merge | A-21 |
 | 21 | `[web]` | B5b — states matrix + tile-failure retry | A-24 |
 | 22 | `[web]` | B6 — sign-in S7. Unblocked: `GET /me` merged as #112 | A-10 |
@@ -157,8 +160,8 @@ this line — only the `navuuna-demo` pairing is stable.
 
 | Branch | Head | What it is | What moves it |
 |---|---|---|---|
-| `feat/web-demo` | `0c07c15` | **Unrecorded until now, and the largest.** 3 commits, +1044/−85 across 24 files, no remote, checked out in the `navuuna-demo` worktree. Reference shell (header, tab bar, banner pill, page grid), map controls row, layer toggles, place register, neutral basemap palette, map selection state. Adds `TabBar.tsx`, `SegmentedControl.tsx`, `MapControls.tsx`, `MapLegend.tsx`, `PlaceRegister.tsx`, `BrandMark.tsx`. | Triage against queue rows 7, 9, 11 and 13 before any of them starts. Two conflicts to settle: `PlaceRegister.tsx` is an entity-register rail, which the design ruling below says was deliberately **not** built this round; and the work predates B2a, so its components may not sit on the B2a primitives. |
-| `test/web-visual-regression-harness` | `3078c36` | B1c work — harness page, token-name test, four baselines. +671 lines, no remote. | Queue row 3. Rebase on `dc81cfc` first. |
+| `feat/web-demo` | `c044fae` | **The largest, and it grew this round: 3 commits → 6.** +1716/−302 across 38 files, no remote, checked out in the `navuuna-demo` worktree. Merge-base with `main` is `886bb57` (#115), so **it does not contain #117.** Earlier three: reference shell, map controls row, layer toggles, place register, neutral basemap palette, map selection state. New three: `dd5c0a8` Passport rebuilt on the reference's `.report` shape (adds `CompletenessBlock.tsx`, `readingCompleteness.ts`, moves `entityTypeLabel` into `copy/labels.ts`); `0e9687c` says "measured" not "present", drops the ward from `ENTITY_TYPE_LABELS`, and adds `PlaceRegister.leak.test.tsx` (135 lines, mutation-verified); `c044fae` neutral finding cards, a notice driven by `isPublicFindingState`, an analyst-preview notice on `RoleSwitch`, and `NoticePill.tsx`. | **Salvage by cherry-pick onto `dc81cfc`. Do not merge wholesale — it would regress #117.** Three measured regressions: `labels.ts` on this branch has **no `detected` entry at all** (`dc81cfc:labels.ts:57` has it), so `FindingDetail` can render `undefined`; `publicFindingStates.test.ts` still lists the states "by hand on purpose", the fail-open pattern #117 replaced with a `Record` over the generated union; and `partly_verified` is on **18** lines here against 11 on `dc81cfc`, so it grows the C1 debt it should shrink. The wanted parts are the leak test, the neutral cards, the analyst-preview notice and the Passport restyle — take those onto rows 7, 9, 11, 13, 17 and 19, each as its own ≤400-line PR, after row 1 lands C1/S1. Second conflict unchanged: `PlaceRegister.tsx` is an entity-register rail the design ruling says was deliberately **not** built this round — though it now carries its own leak guard. |
+| `test/web-visual-regression-harness` | `3078c36` | B1c work — harness page, token-name test, four baselines. +671 lines, no remote. Merge-base `5d98b6d`, confirmed this round. | Queue row 3. Rebase on `dc81cfc` first. |
 | `fix/web-scale-fallback-and-line-styles` | `e164bba` | **Still unverified.** Looks superseded by #66 and #73, but shows unique content in `map/style/layers.ts` and `fixtures/generate.ts`. | Diff it against `dc81cfc` and either salvage or delete. Unchanged from the last revision. |
 | `docs/contract-detected-state-and-tiles-fixes` | `a3741d5` | **Superseded by #117 — safe to delete.** It was the A2 partial. #117 is a strict improvement on it: `a3741d5` guards `FindingDetail` and `publicFindingStates.test.ts` with hand-kept arrays, which #117 replaced with a `Record` over the generated union. Merging it now would regress those two guards to fail-open. | `git branch -D docs/contract-detected-state-and-tiles-fixes` |
 
@@ -167,12 +170,17 @@ Safe to prune, all now merged or empty: `chore/claude-access-commands` (`aafa07f
 by this file), and the six `worktree-agent-*` branches — only `…ae149f4255ea86115` carries a commit
 ahead of `main` (`95ef18d`), and that merged as #93.
 
-**Three untracked files are deliberately not committed**, so they are recorded here instead of
-being lost: `apps/web/DEMO-CHEAT-SHEET.md` and `apps/web/scripts/demo-cheat-sheet-ids.mjs` both
-declare themselves scratch in their own headers ("Not committed" / "Not shipped"), and the cheat
-sheet is stale — it names `origin/main` as #68 `6110a74`. `.pr-bodies/` holds PR-body drafts.
-None is in `.gitignore`, so all three show in every `git status`; adding them to it is a one-line
-PR nobody has raised.
+**Three untracked paths are deliberately not committed**, so they are recorded here instead of
+being lost. Re-verified this round by reading their own headers: `apps/web/DEMO-CHEAT-SHEET.md`
+line 3 reads "**Not committed** — a one-off scratch note for the live walkthrough" and
+`apps/web/scripts/demo-cheat-sheet-ids.mjs` line 2 reads "Not shipped". The cheat sheet is
+measurably stale: it names `origin/main` as #68 `6110a74` and demos from
+`fix/web-roads-partly-verified-cannot-assess`, a branch whose remote is gone. `.pr-bodies/` holds
+20 PR-body drafts. `/wrap` step 3 says commit uncommitted work, but committing these would add
+self-declared scratch and a stale sha to a tracked path and would break the one-file diff the Gate
+section below relies on, so the register is the record instead — the decision is unchanged from the
+last revision, not a new one. None is in `.gitignore`, so all three show in every `git status`;
+adding them to it is a one-line PR nobody has raised.
 
 ## Contract changes between the tracks
 
@@ -219,6 +227,8 @@ PR nobody has raised.
   The "Partly verified" badge means **provisional only**; coverage below 1 shows through "X of Y",
   never through the badge. `labels.ts` still reads `partly_verified`, kept pending this. Touches
   `fixtures/types.ts`, `panel/VariableRow.tsx` and `map/style/scale.ts`; the last lands in B4.
+  Do C1 **before** salvaging `feat/web-demo`: that branch carries 18 `partly_verified` lines
+  against 11 on `dc81cfc`, so cherry-picking it first would hand C1 seven more call sites.
 - **C11 — ruled into A4a**, not A10, so fixture mode and the seeded database never diverge: the
   engine's `coverage` is weight-weighted and the fixtures must weight it the same way.
 - **C5, C7, C13, R4, R7 — accepted.** The R4 test pinning Core's `inputs` keys is required, not
@@ -256,16 +266,28 @@ Only commands that actually ran, with their real results.
 - **#117 CI: 9 checks, all green** — commitlint, dependency-audit, flows, migration-lint,
   modularity, php, python, secret-scan, web. The count is 9, not the 8 recorded last revision.
 - **#117 merged** as squash commit `dc81cfc`; branch deleted locally and on the remote.
-- **#118 on `63d5dd6`:** `git diff --stat origin/main...HEAD` → 227 changed lines (139+/88−,
-  1 file), under the 400 cap · `git diff --name-only` → `docs/status/access.md` only, named in
-  ADR-015 "Scope" as a path this lane writes · commitlint → 0 problems on both commits and on the
-  PR title · CI **9 of 9 green**. The web and api gate commands were **correctly skipped**: the
-  diff touches no `apps/api/**` and no `apps/web/**`, so per `/gate` there is no code to typecheck,
-  lint, test or build.
-- **One commitlint failure, fixed before the push.** `docs(docs): correct the S1 call-site count
-  and show how both were measured` was 74 characters against a 72 cap. Reset soft and recommitted
-  as `63d5dd6` with a 65-character header. A header defect on an earlier commit cannot be fixed by
-  adding a later one, and nothing had been pushed, so the rewrite was local only.
+- **#118 on `50ff3a7` (this round):** `git fetch --all --prune` → clean ·
+  `git rev-parse --short origin/main` → `dc81cfc`, unmoved · `gh pr list --state all --limit 5`
+  → highest number is 118 · `git diff --stat origin/main...HEAD` → 251 changed lines (164+/87−,
+  1 file), under the 400 cap · `git diff --name-only origin/main...HEAD` → `docs/status/access.md`
+  only, named in ADR-015 "Scope" as a path this lane writes · `gh pr checks 118` → **9 of 9 pass**
+  on run 38358327125 · `gh pr view 118` → head `50ff3a7`, 3 commits ·
+  `git rev-list --left-right --count` against upstream → `0 0`. The web and api gate commands were
+  **correctly skipped**: the diff touches no `apps/api/**` and no `apps/web/**`, so per `/gate`
+  there is no code to typecheck, lint, test or build.
+- **The two A2 grep counts re-measured on `dc81cfc`, both unchanged:**
+  `git grep -n partly_verified -- apps/web` → 11 lines / 8 files;
+  `git grep -n entity_type -- apps/web` → 25 lines / 12 files.
+- **`feat/web-demo` measured, not assumed:** `git merge-base main feat/web-demo` → `886bb57`, so
+  the branch predates #117 · `git log --oneline main..feat/web-demo` → 6 commits ·
+  `git diff --stat` → +1716/−302, 38 files · `git grep -n detected feat/web-demo -- labels.ts` →
+  **no match**, against `dc81cfc:labels.ts:57` which has it · its `publicFindingStates.test.ts`
+  line 15 still reads "Listed by hand on purpose" · `git grep -n partly_verified` → 18 lines.
+  That is the whole basis for the cherry-pick-not-merge verdict above.
+- **One commitlint failure, fixed before an earlier push.** `docs(docs): correct the S1 call-site
+  count and show how both were measured` was 74 characters against a 72 cap. Reset soft and
+  recommitted as `63d5dd6` with a 65-character header. A header defect on an earlier commit cannot
+  be fixed by adding a later one, and nothing had been pushed, so the rewrite was local only.
 - `gh pr list --state open` → `#118` and nothing else.
 
 **Not claimed:** nothing in this lane is verified against a live API or deployed to staging.
@@ -287,7 +309,12 @@ re-litigated:
 - **Entity register rail:** not built this round. The A-12 rail is lens + filters + legend only.
   Leak rule: any future entity list reads `GET /entities`, which never carries finding state, and
   shows a viewer no finding indicator of any kind. **`feat/web-demo` adds a `PlaceRegister.tsx`
-  against this ruling** — triage it before B3b.
+  against this ruling** — triage it before B3b. It now also carries
+  `PlaceRegister.leak.test.tsx`, which proves a Viewer gets the same rows in the same order whether
+  or not a place has a held or contested finding, and that hiding such a row — itself a signal —
+  does not happen either; `readVisiblePlaces.ts` lost its finding-state read. So the leak rule is
+  satisfied on that branch. The open question is the ruling, not the leak: whether the rail is built
+  at all this round. That is a call for Austine, not something the leak test settles.
 - **Dark theme:** recorded, not built. Thirty hex values in `DESIGN.md` §1.2; light theme only.
 - **Raw-response `<details>`:** adopted but backlogged until A10, and then it renders the exact JSON
   the client fetched — no client-side composition.
