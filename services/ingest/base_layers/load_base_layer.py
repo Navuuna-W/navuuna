@@ -34,12 +34,23 @@ COPY_STAGED_ENTITIES_SQL = """
 
 # `external_ref` is unique, so an entity loaded before is updated in place and keeps its id
 # (FR-02). `retired_at = NULL` brings back an entity that had dropped out of an earlier file.
+# A point entity must be stored as a point (Bible §5), but OSM draws some water points as an
+# outline, e.g. a water works. ST_PointOnSurface gives a point inside the outline, and leaves
+# a feature that already is a point where it was.
 UPSERT_ENTITIES_SQL = """
     INSERT INTO core.entities (entity_type, module, name, external_ref, geom, radius_m, metadata)
     SELECT entity_type, module, name, external_ref,
-           public.ST_SetSRID(public.ST_GeomFromGeoJSON(geometry_geojson), %(storage_srid)s),
+           CASE WHEN entity_type = 'point' THEN public.ST_PointOnSurface(feature_geom)
+                ELSE feature_geom
+           END,
            radius_m, metadata
-    FROM staged_entities
+    FROM (
+        SELECT *,
+               public.ST_SetSRID(
+                   public.ST_GeomFromGeoJSON(geometry_geojson), %(storage_srid)s
+               ) AS feature_geom
+        FROM staged_entities
+    ) AS staged
     ON CONFLICT (external_ref) DO UPDATE SET
         entity_type = EXCLUDED.entity_type,
         module = EXCLUDED.module,
