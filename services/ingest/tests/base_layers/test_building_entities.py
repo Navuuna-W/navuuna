@@ -48,3 +48,11 @@ def test_footprint_without_a_building_tag_is_left_out() -> None:
     entity_rows = build_building_entities([water_works_outline])
 
     assert entity_rows == []
+
+
+def test_building_that_is_also_a_water_point_is_left_to_the_water_points_layer() -> None:
+    toilet_block = build_footprint({"building": "yes", "amenity": "toilets"})
+
+    entity_rows = build_building_entities([toilet_block])
+
+    assert entity_rows == []
