@@ -21,7 +21,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["database*", "sources*"]
+include = ["base_layers*", "database*", "sources*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
