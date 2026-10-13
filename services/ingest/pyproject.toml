@@ -1,0 +1,42 @@
+# Python project for the ingest service (Bible §14.1, §14.5): everything that brings data
+# into Navuuna. It starts with the source catalogue (D-06); the scrapers, parsers, aligners,
+# earth-observation and vector loaders join it with their own tasks.
+
+[project]
+name = "navuuna-ingest"
+version = "0.1.0"
+description = "Navuuna ingest service: sources, loaders, scrapers and parsers"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.9,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.3,<10",
+    "mypy>=1.13,<2",
+    "ruff>=0.7,<1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sources*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+# Without these two, mypy sees `sources` and `tests/sources` as the same module name.
+mypy_path = "."
+explicit_package_bases = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/F: errors · I: import order · N: naming · B: likely bugs · UP: modern syntax
+select = ["E", "F", "I", "N", "B", "UP"]
