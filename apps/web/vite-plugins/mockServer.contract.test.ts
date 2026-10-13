@@ -32,14 +32,7 @@ function featurePropertiesForFirstEntity() {
   const { entities } = fixtures();
   const [first] = entities;
   if (!first) throw new Error('fixtures emitted no entities');
-  const isPartlyVerified =
-    first.detail.gate_status === 'provisional' ||
-    first.detail.variables.some((v) => v.status === 'partly_verified');
-  const { lens_score, colour_class } = applyLens(
-    first.detail.variables,
-    COUNTY_PLANNER_LENS,
-    isPartlyVerified
-  );
+  const { lens_score, colour_class } = applyLens(first.detail.variables, COUNTY_PLANNER_LENS);
   return {
     id: first.detail.id,
     entity_type: first.detail.entity_type,
@@ -73,10 +66,7 @@ describe('tile contract parity (docs/contracts/tiles.md §4)', () => {
     const legal = new Set(['b1', 'b2', 'b3', 'b4', 'b1p', 'b2p', 'b3p', 'b4p', 'ca']);
     const { entities } = fixtures();
     for (const e of entities) {
-      const isPartlyVerified =
-        e.detail.gate_status === 'provisional' ||
-        e.detail.variables.some((v) => v.status === 'partly_verified');
-      const { colour_class } = applyLens(e.detail.variables, COUNTY_PLANNER_LENS, isPartlyVerified);
+      const { colour_class } = applyLens(e.detail.variables, COUNTY_PLANNER_LENS);
       expect(legal.has(colour_class), `unknown colour_class '${colour_class}'`).toBe(true);
     }
   });
@@ -86,11 +76,7 @@ describe('tile contract parity (docs/contracts/tiles.md §4)', () => {
     const ca = entities.filter((e) => e.detail.gate_status === 'cannot_assess');
     expect(ca.length).toBeGreaterThan(0);
     for (const e of ca) {
-      const { lens_score, colour_class } = applyLens(
-        e.detail.variables,
-        COUNTY_PLANNER_LENS,
-        false
-      );
+      const { lens_score, colour_class } = applyLens(e.detail.variables, COUNTY_PLANNER_LENS);
       expect(lens_score).toBeNull();
       expect(colour_class).toBe('ca');
     }

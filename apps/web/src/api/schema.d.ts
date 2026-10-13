@@ -104,8 +104,11 @@ export interface components {
             coverage: number;
             /** @description Rollup confidence after any provisional downweighting. */
             confidence: number;
-            /** @enum {string} */
-            status: "measured" | "partly_verified" | "cannot_assess";
+            /**
+             * @description The engine's own three words, from `App\Engine\VariableStatus` and the `variable_scores_score_matches_status_check` CHECK on `scores.variable_scores`: `scored` when the gate passed (or there is no gate) and at least one contributor is measured; `provisional` when the gate was not measured, so the score is kept at half confidence (Bible §6.3); `cannot_assess` when the gate failed or no contributor is measured. Coverage below 1 is **not** `provisional` on its own — it shows through `measured_count` of `total_count` (DEC-15).
+             * @enum {string}
+             */
+            status: "scored" | "provisional" | "cannot_assess";
             /** @enum {string} */
             gate_status: "measured" | "provisional" | "cannot_assess";
             measured_count: number;

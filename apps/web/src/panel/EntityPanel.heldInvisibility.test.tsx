@@ -69,7 +69,7 @@ function makeEntity(findings: FindingSummary[]): EntityDetail {
       score: 60,
       coverage: 0.75,
       confidence: 0.65,
-      status: 'measured',
+      status: 'scored',
       gate_status: 'measured',
       measured_count: 3,
       total_count: 4,

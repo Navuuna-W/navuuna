@@ -86,44 +86,38 @@ One sequential, colour-blind-safe scale. Nine possible values:
 | `b2` | 60–79 | Fair | Darker fill |
 | `b3` | 40–59 | Poor | Lighter fill |
 | `b4` | 0–39 | Critical | Lightest fill |
-| `b1p` | 80–100 | Good, partly verified | Hollow + darkest ring |
-| `b2p` | 60–79 | Fair, partly verified | Hollow + darker ring |
-| `b3p` | 40–59 | Poor, partly verified | Hollow + lighter ring |
-| `b4p` | 0–39 | Critical, partly verified | Hollow + lightest ring |
+| `b1p` | 80–100 | Good, provisional | Hollow + darkest ring |
+| `b2p` | 60–79 | Fair, provisional | Hollow + darker ring |
+| `b3p` | 40–59 | Poor, provisional | Hollow + lighter ring |
+| `b4p` | 0–39 | Critical, provisional | Hollow + lightest ring |
 | `ca` | — | Cannot assess | Neutral grey hollow pattern — never drawn as 0 |
 
 Suffixes:
 
 - **`ca`** — the entity could not be assessed. `lens_score` is `null` for these features.
-- **`p`** — today the fixtures append `p` when the entity's `gate_status` is `provisional`
-  **or** a variable's coverage is below 1. The rule is spread over two files:
-  `fixtures/generate.ts:421` makes a variable `partly_verified` on either condition, and
-  `vite-plugins/mockServer.ts:69` raises the `p` flag when the gate is `provisional` or any
-  variable is `partly_verified`. (`fixtures/lensApply.ts` only receives that flag — it does
-  not decide it.) Visually distinct from the solid band so a reader never mistakes a
-  provisional score for a full one.
+- **`p`** — the rule is `lenses/README.md` (`thresholds.provisional_suffix`), quoted verbatim
+  because that file matches the merged engine:
 
-### Proposed (S2) — `p` means provisional only. Devyan to confirm.
+  > `p` is appended when any variable with a weight above 0 is `provisional`, i.e. its gate was
+  > unmeasured (`b2p`); the map hatches it. A failed gate is not `p`: it makes the variable
+  > `cannot_assess` (Bible §6.3). Coverage below 100 % alone does not add `p`; coverage is shown
+  > beside the score instead (DEC-15).
 
-`lenses/README.md` (`thresholds.provisional_suffix`) already says something narrower, and it
-is the file that matches the merged engine, so **`tiles.md` is the side that should move**:
+  Two consequences, both now enforced:
 
-> `p` is appended when any variable with a weight above 0 is `provisional`, i.e. its gate was
-> unmeasured (`b2p`); the map hatches it. A failed gate is not `p`: it makes the variable
-> `cannot_assess` (Bible §6.3). Coverage below 100 % alone does not add `p`; coverage is shown
-> beside the score instead (DEC-15).
+  - **A failed gate is `ca`, never `p`.** A failed gate makes the variable `cannot_assess`
+    (Bible §6.3), and when every weighted variable is `cannot_assess` the class is `ca`.
+  - **Coverage below 1 on its own is not `p`.** Coverage shows through "X of Y" beside the
+    score (DEC-15), not through the hatch.
 
-Two consequences if it is confirmed:
+  One file decides it: `fixtures/lensApply.ts` reads the lens weights, because "weight above 0"
+  cannot be answered without them. The dev mock passes the variables and the lens and nothing
+  else. Visually distinct from the solid band so a reader never mistakes a provisional score for
+  a full one.
 
-- **A failed gate is `ca`, never `p`.** A failed gate makes the variable `cannot_assess`
-  (Bible §6.3), and when every weighted variable is `cannot_assess` the class is `ca`.
-- **Coverage below 1 on its own is not `p`.** Coverage shows through "X of Y" beside the
-  score (DEC-15), not through the hatch.
-
-Nothing changes in this file's live rule until Devyan confirms. On confirmation the bullet
-above is replaced by the quoted rule and `lensApply.ts`, the dev mock and the
-`partly_verified` → `provisional` status rename (C1) move together in one slice, because
-the fixtures compute all three from the same flag.
+Applied by Access under ADR-015 (S2, with C1's `partly_verified` → `provisional` rename, which
+had to move in the same slice because the fixtures computed both from one flag). Devyan owns the
+vocabulary and may object — an objection is a follow-up PR, not a rollback.
 
 Red/amber/green is **banned** (CLAUDE.md product rule 5). Colour is never the only carrier
 of meaning — pattern/stroke carry the `p` and `ca` signals too.

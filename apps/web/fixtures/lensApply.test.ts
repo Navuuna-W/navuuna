@@ -6,14 +6,20 @@ import { describe, it, expect } from 'vitest';
 import { applyLens, COUNTY_PLANNER_LENS, type LensConfig } from './lensApply';
 import type { VariableScore } from './types';
 
-function v(variable: VariableScore['variable'], score: number | null): VariableScore {
+// Coverage is 0.8 on every variable here on purpose: it proves that coverage below 1 never
+// reaches colour_class. Pass `status` to make one variable provisional.
+function v(
+  variable: VariableScore['variable'],
+  score: number | null,
+  status: VariableScore['status'] = score === null ? 'cannot_assess' : 'scored'
+): VariableScore {
   return {
     variable,
     name: variable,
     score,
     coverage: 0.8,
     confidence: 0.7,
-    status: score === null ? 'cannot_assess' : 'measured',
+    status,
     gate_status: 'measured',
     measured_count: 1,
     total_count: 1,
@@ -41,9 +47,9 @@ describe('applyLens — county planner (V2 lower_is_better)', () => {
     // 100*.40 + 20*.30 + <ignored> + 60*.10 + 50*.20 = 40 + 6 + 6 + 10 = 62.
     const result = applyLens(
       [v('V1', 100), v('V2', 80), v('V3', 10), v('V4', 60), v('V5', 50)],
-      COUNTY_PLANNER_LENS,
-      false
+      COUNTY_PLANNER_LENS
     );
+
     expect(result.lens_score).toBe(62);
     expect(result.colour_class).toBe('b2');
   });
@@ -53,9 +59,9 @@ describe('applyLens — county planner (V2 lower_is_better)', () => {
     // (100*.40 + (100-80)*.30 + 60*.10) / .80 = (40 + 6 + 6) / .80 = 65 → b2.
     const result = applyLens(
       [v('V1', 100), v('V2', 80), v('V3', 0), v('V4', 60), v('V5', null)],
-      COUNTY_PLANNER_LENS,
-      false
+      COUNTY_PLANNER_LENS
     );
+
     expect(result.lens_score).toBe(65);
     expect(result.colour_class).toBe('b2');
   });
@@ -63,20 +69,41 @@ describe('applyLens — county planner (V2 lower_is_better)', () => {
   it('returns cannot_assess when every weighted variable is null', () => {
     const result = applyLens(
       [v('V1', null), v('V2', null), v('V3', 60), v('V4', null), v('V5', null)],
-      COUNTY_PLANNER_LENS,
-      false
+      COUNTY_PLANNER_LENS
     );
+
     expect(result.lens_score).toBeNull();
     expect(result.colour_class).toBe('ca');
   });
+});
 
-  it('suffixes p when partly verified', () => {
+describe('applyLens — the p suffix means provisional only (tiles.md §5)', () => {
+  it('suffixes p when a weighted variable is provisional', () => {
+    const result = applyLens(
+      [v('V1', 100, 'provisional'), v('V2', 80), v('V3', 10), v('V4', 60), v('V5', 50)],
+      COUNTY_PLANNER_LENS
+    );
+
+    expect(result.colour_class).toBe('b2p');
+  });
+
+  it('does not suffix p when only a zero-weight variable is provisional', () => {
+    // V3 carries weight 0 in this lens, so its gate cannot colour the map.
+    const result = applyLens(
+      [v('V1', 100), v('V2', 80), v('V3', 10, 'provisional'), v('V4', 60), v('V5', 50)],
+      COUNTY_PLANNER_LENS
+    );
+
+    expect(result.colour_class).toBe('b2');
+  });
+
+  it('does not suffix p for coverage below 1 when every variable is scored', () => {
     const result = applyLens(
       [v('V1', 100), v('V2', 80), v('V3', 10), v('V4', 60), v('V5', 50)],
-      COUNTY_PLANNER_LENS,
-      true
+      COUNTY_PLANNER_LENS
     );
-    expect(result.colour_class).toBe('b2p');
+
+    expect(result.colour_class).toBe('b2');
   });
 });
 
@@ -84,8 +111,7 @@ describe('applyLens — banding (all higher_is_better, uniform scores)', () => {
   it('>=80 → b1', () => {
     const r = applyLens(
       [v('V1', 100), v('V2', 100), v('V3', 0), v('V4', 100), v('V5', 100)],
-      HIGHER_IS_BETTER_LENS,
-      false
+      HIGHER_IS_BETTER_LENS
     );
     expect(r.colour_class).toBe('b1');
   });
@@ -93,8 +119,7 @@ describe('applyLens — banding (all higher_is_better, uniform scores)', () => {
   it('>=60 → b2', () => {
     const r = applyLens(
       [v('V1', 70), v('V2', 70), v('V3', 0), v('V4', 70), v('V5', 70)],
-      HIGHER_IS_BETTER_LENS,
-      false
+      HIGHER_IS_BETTER_LENS
     );
     expect(r.colour_class).toBe('b2');
   });
@@ -102,8 +127,7 @@ describe('applyLens — banding (all higher_is_better, uniform scores)', () => {
   it('>=40 → b3', () => {
     const r = applyLens(
       [v('V1', 50), v('V2', 50), v('V3', 0), v('V4', 50), v('V5', 50)],
-      HIGHER_IS_BETTER_LENS,
-      false
+      HIGHER_IS_BETTER_LENS
     );
     expect(r.colour_class).toBe('b3');
   });
@@ -111,8 +135,7 @@ describe('applyLens — banding (all higher_is_better, uniform scores)', () => {
   it('<40 → b4', () => {
     const r = applyLens(
       [v('V1', 20), v('V2', 20), v('V3', 0), v('V4', 20), v('V5', 20)],
-      HIGHER_IS_BETTER_LENS,
-      false
+      HIGHER_IS_BETTER_LENS
     );
     expect(r.colour_class).toBe('b4');
   });

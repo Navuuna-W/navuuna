@@ -40,7 +40,7 @@ const SEED = '20261006';
 const NAIROBI_BBOX = { minLng: 36.65, maxLng: 37.05, minLat: -1.45, maxLat: -1.15 };
 
 const WATER_POINT_COUNT = 200;
-const PROVISIONAL_COUNT = 30; // partly_verified entities
+const PROVISIONAL_COUNT = 30; // entities whose V1 1.1 gate was not measured
 const CANNOT_ASSESS_COUNT = 20; // entities with the V1 1.1 gate failing
 const PROVISIONAL_CONFIDENCE_FACTOR = 0.5; // Bible §6.1 A6
 const BASE_COMPUTED_AT = '2026-10-05T16:00:00Z';
@@ -418,7 +418,9 @@ function rollUpVariable(
     2
   );
 
-  const status = gate === 'provisional' || coverage < 1 ? 'partly_verified' : 'measured';
+  // Only an unmeasured gate makes a variable provisional. Low coverage does not: it is already
+  // reported as measured_count of total_count (DEC-15, lenses/README.md).
+  const status = gate === 'provisional' ? 'provisional' : 'scored';
 
   return {
     variable,

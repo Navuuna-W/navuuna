@@ -33,6 +33,5 @@
     "src/api/schema.d.ts",
     "playwright.config.ts",
     "e2e"
-  ],
-  "exclude": ["fixtures/**/*.test.ts"]
+  ]
 }
