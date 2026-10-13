@@ -9,11 +9,17 @@ database role (ADR-004a).
   The map footer and the API read attribution from those rows (NFR-09), so this file is the
   one place that text is written.
   `register_sources.py` writes that list into `core.sources`.
+- `base_layers/` — the base layers (D-05): boundaries and OpenStreetMap layers that become
+  entities in `core.entities`. `layer_file.py` reads a layer file (GeoJSON lines, one feature
+  per line), `area_entities.py` turns the county and ward features into `area` entities, and
+  `entity_row.py` is the shape every entity has on its way into the table.
 - `database/` — `connection.py` opens the service's one connection, from `NV_INGEST_DATABASE_URL`.
-- `tests/` — pytest; `tests/sources/` mirrors `sources/`, `tests/database/` mirrors `database/`.
+- `tests/` — pytest; each folder under `tests/` mirrors the package of the same name.
 
-Scrapers, parsers, aligners, earth-observation and vector loaders arrive with their own tasks
-(D-05, D-07, D-13, D-15, D-16).
+The loader that writes a layer, the OpenStreetMap layers and the extract script arrive with
+D-05b, D-05c and D-05d.
+Scrapers, parsers, aligners and earth observation arrive with their own tasks (D-07, D-13,
+D-15, D-16).
 
 ## Adding or changing a source
 
