@@ -27,6 +27,10 @@ SOURCE_NAMES_FROM_BIBLE_7_1 = {
     "People's own data",
 }
 
+# Not a row of Bible §7.1: its boundary set on HDX stops at sub-county, so the wards come from
+# a second HDX data set with its own licence and credit (work pack D-05).
+SOURCE_NAMES_ADDED_FOR_D_05 = {"Kenya ward boundaries (FAO, HDX)"}
+
 # The kinds the CHECK constraint on core.sources.kind allows.
 KINDS_THE_TABLE_ACCEPTS = {"scrape", "raster", "vector", "upload", "community"}
 
@@ -34,7 +38,7 @@ KINDS_THE_TABLE_ACCEPTS = {"scrape", "raster", "vector", "upload", "community"}
 def test_every_bible_7_1_source_has_a_catalogue_entry() -> None:
     catalogue_names = {source.name for source in SOURCE_CATALOGUE}
 
-    assert catalogue_names == SOURCE_NAMES_FROM_BIBLE_7_1
+    assert catalogue_names == SOURCE_NAMES_FROM_BIBLE_7_1 | SOURCE_NAMES_ADDED_FOR_D_05
 
 
 def test_source_names_are_unique() -> None:
@@ -61,12 +65,12 @@ def test_only_the_phase_2_energy_source_is_inactive() -> None:
     assert inactive_names == ["Kenya Power outage notices"]
 
 
-def test_sources_with_an_unconfirmed_licence_are_the_two_we_know_about() -> None:
+def test_only_grid3_still_has_an_unconfirmed_licence() -> None:
     unconfirmed_names = {
         source.name for source in SOURCE_CATALOGUE if source.licence == LICENCE_NOT_CONFIRMED
     }
 
-    assert unconfirmed_names == {"GRID3 Kenya", "KNBS / IEBC boundaries (HDX)"}
+    assert unconfirmed_names == {"GRID3 Kenya"}
 
 
 def test_source_without_attribution_is_rejected() -> None:
