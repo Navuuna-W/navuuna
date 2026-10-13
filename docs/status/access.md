@@ -10,15 +10,15 @@ Every row below carries an `[api]` or `[web]` tag; the commands take no argument
 ## Open PR (one at a time)
 
 **#118** `[web]` docs — `docs(docs): rewrite the Access status file from real state after #117`,
-head `50ff3a7`, branch `docs/status-access-after-117`, 3 commits. **9 of 9 checks green**
-(commitlint, dependency-audit, flows, migration-lint, modularity, php, python, secret-scan, web).
-Open, not merged. Head moved `63d5dd6` → `50ff3a7` since the last revision; the check run above is
-the one for `50ff3a7`, not a carried-over result.
+branch `docs/status-access-after-117`, open and not merged. **CI last measured 9 of 9 green**
+(commitlint, dependency-audit, flows, migration-lint, modularity, php, python, secret-scan, web) on
+run 38358327125, which ran on `50ff3a7`.
 
-This PR is this file, which is why the line above reads #118 and not "none": a revision cannot name
-its own PR until the branch is pushed. That is a standing property of this section, not a one-off —
-every `/wrap` output is blind to itself until pushed, and each revision closes the gap on the
-previous one.
+The head sha is deliberately not pinned here. This PR *is* this file, so every revision of this
+section is written by a commit that changes the head the section would name — pinning it guarantees
+the line is stale the moment it is committed, which is what happened to `63d5dd6` and then to
+`50ff3a7`. The CI sha above is pinned instead, because that one is a measurement of a specific
+commit and stays true. For the live head, run `gh pr view 118 --json headRefOid`.
 
 **Row 1 may not start yet.** One open PR is the limit, so the A2 remainder waits on #118 merging.
 Nothing else is queued behind it; the rule is holding, not breached.
@@ -51,11 +51,11 @@ Two Core merges still shape what this lane must do:
 
 ## In progress
 
-**`docs/status-access-after-117` @ `50ff3a7` — pushed, PR #118, green, awaiting a hand merge.**
-Three commits, 251 changed lines (164+/87−) in `docs/status/access.md` alone.
-`git rev-list --left-right --count` against its upstream → `0 0`, so local and remote agree and
-nothing is unpushed. Nothing left to do on it but merge. #117's own branch is deleted both locally
-and on the remote.
+**`docs/status-access-after-117` — pushed, PR #118, green, awaiting a hand merge.** Five commits,
+288 changed lines (196+/92−) in `docs/status/access.md` alone, under the 400 cap. Nothing left to do
+on it but merge. #117's own branch is deleted both locally and on the remote. As above, the head sha
+is not pinned; `git rev-list --left-right --count` against its upstream was `0 0` before this
+revision's own commits, which are pushed in the same step that writes this line.
 
 **A-02 is part-merged, not done.** #117 was the description-only slice. Three pieces remain and
 are row 1 of the queue below:
