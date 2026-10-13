@@ -15,14 +15,18 @@ database role (ADR-004a).
   - `area_entities.py` turns the county and ward features into `area` entities.
   - `water_point_entities.py` turns OpenStreetMap water and sanitation features into `point`
     entities; `osm_feature.py` reads their OSM ids and tags.
+  - `road_entities.py` turns OpenStreetMap ways into `segment` entities, and
+    `building_entities.py` turns building footprints into `parcel` entities of the disabled
+    `land` module (docs/modules/land.md).
+  - `assign_parent_areas.py` links a layer's entities to the ward they sit in.
   - `entity_row.py` is the shape every entity has on its way into the table.
   - `load_base_layer.py` writes a layer. A reload keeps every entity's ID (it matches on
     `external_ref`), retires entities the new file no longer has, and never deletes one.
 - `database/` — `connection.py` opens the service's one connection, from `NV_INGEST_DATABASE_URL`.
 - `tests/` — pytest; each folder under `tests/` mirrors the package of the same name.
 
-The OpenStreetMap roads and buildings arrive with D-05d; the extract script, the
-`raw.vectors` row and the command that loads every layer with D-05e.
+The extract script, the `raw.vectors` row and the command that loads every layer arrive with
+D-05e.
 Scrapers, parsers, aligners and earth observation arrive with their own tasks (D-07, D-13,
 D-15, D-16).
 
