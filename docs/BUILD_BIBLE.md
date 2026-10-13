@@ -990,7 +990,7 @@ The agentic layer is the reason the provenance rules in §7.3 exist. **Agents ca
 |---|---|---|---|
 | A1 | Devyan has final say across areas; Khillon backend, Austine frontend | All three | 21 Sep |
 | A2 | ~~One VPS is enough~~ **Resolved: two boxes, ≤ USD 150/mo (ADR-006)** | Khillon | ✅ 20 Sep |
-| A3 | WASREB / Nairobi Water publish a scrapable scheme register with rated yields. If not, fall back to county water department documents | Devyan | 22 Sep |
+| A3 | ~~WASREB / Nairobi Water publish a scrapable scheme register with rated yields. If not, fall back to county water department documents~~ **Resolved: not confirmed; register is hand-curated from public documents, data requests in parallel (ADR-016)** | Devyan | ✅ 10 Oct |
 | A4 | Frontend framework chosen by Austine in Week 1 and not revisited | Austine | 22 Sep |
 | A5 | Freedom Index §6.9 definition replaces the population-density formula | Devyan | 25 Sep |
 | A6 | Agriculture is a Land module adapter set, not its own module | Devyan | 25 Sep |
