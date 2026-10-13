@@ -52,11 +52,12 @@ Two Core merges still shape what this lane must do:
 
 ## In progress
 
-**`docs/status-access-after-117` — pushed, PR #118, green, awaiting a hand merge.** Five commits,
-288 changed lines (196+/92−) in `docs/status/access.md` alone, under the 400 cap. Nothing left to do
-on it but merge. #117's own branch is deleted both locally and on the remote. As above, the head sha
-is not pinned; `git rev-list --left-right --count` against its upstream was `0 0` before this
-revision's own commits, which are pushed in the same step that writes this line.
+**`docs/status-access-after-117` — pushed, PR #118, green, awaiting a hand merge.** It touches
+`docs/status/access.md` and nothing else, and has stayed under the 400-line cap at every push. The
+commit count and diff stat are not quoted here for the same reason the head sha is not: this branch
+only ever edits this file, so writing either number changes it. `git diff --stat origin/main...HEAD`
+is the live answer. Nothing left to do on it but merge. #117's own branch is deleted both locally
+and on the remote.
 
 **A-02 is part-merged, not done.** #117 was the description-only slice. Three pieces remain and
 are row 1 of the queue below:
