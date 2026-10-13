@@ -19,14 +19,15 @@ database role (ADR-004a).
     `building_entities.py` turns building footprints into `parcel` entities of the disabled
     `land` module (docs/modules/land.md).
   - `assign_parent_areas.py` links a layer's entities to the ward they sit in.
+  - `load_all.py` is the command that loads all five layers from a folder of layer files.
   - `entity_row.py` is the shape every entity has on its way into the table.
   - `load_base_layer.py` writes a layer. A reload keeps every entity's ID (it matches on
     `external_ref`), retires entities the new file no longer has, and never deletes one.
 - `database/` — `connection.py` opens the service's one connection, from `NV_INGEST_DATABASE_URL`.
 - `tests/` — pytest; each folder under `tests/` mirrors the package of the same name.
 
-The extract script, the `raw.vectors` row and the command that loads every layer arrive with
-D-05e.
+The `raw.vectors` row for each layer arrives with D-05f, together with the upload of the layer
+files to MinIO.
 Scrapers, parsers, aligners and earth observation arrive with their own tasks (D-07, D-13,
 D-15, D-16).
 
@@ -57,3 +58,14 @@ Laravel migrations applied. They act as `nv_ingest` and roll back, so they leave
         python -m sources.register_sources
 
 It is safe to run again: a source that already has a row is updated, never duplicated.
+
+## Load the base layers (work pack D-05)
+
+First make the layer files with `data/extract_base_layers.sh` (see `data/README.md`), then:
+
+    NV_INGEST_DATABASE_URL=postgresql://<nv_ingest login>@127.0.0.1:15432/navuuna \
+        python -m base_layers.load_all <layer folder> <OSM extract date, e.g. 2026-10-12>
+
+It loads the county, the wards, the water points, the roads and the buildings, in that order.
+Safe to run again. The buildings layer is large (about 600,000 footprints): allow a few
+minutes and about 3 GB of memory.

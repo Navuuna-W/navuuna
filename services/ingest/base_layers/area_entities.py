@@ -26,6 +26,16 @@ class BoundaryFeatureError(Exception):
     """A boundary feature has no name or no code, so it cannot become an entity."""
 
 
+def build_county_entities(features: list[LayerFeature]) -> list[EntityRow]:
+    """Turn every feature of the county layer file into an `area` entity."""
+    return [build_county_entity(feature) for feature in features]
+
+
+def build_ward_entities(features: list[LayerFeature]) -> list[EntityRow]:
+    """Turn every feature of the wards layer file into an `area` entity."""
+    return [build_ward_entity(feature) for feature in features]
+
+
 def build_county_entity(feature: LayerFeature) -> EntityRow:
     """Turn the county boundary feature into an `area` entity.
 
