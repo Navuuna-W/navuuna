@@ -10,15 +10,16 @@ Every row below carries an `[api]` or `[web]` tag; the commands take no argument
 ## Open PR (one at a time)
 
 **#118** `[web]` docs — `docs(docs): rewrite the Access status file from real state after #117`,
-branch `docs/status-access-after-117`, open and not merged. **CI last measured 9 of 9 green**
-(commitlint, dependency-audit, flows, migration-lint, modularity, php, python, secret-scan, web) on
-run 38358327125, which ran on `50ff3a7`.
+branch `docs/status-access-after-117`, open and not merged. Every head pushed so far has gone
+**9 of 9 green** (commitlint, dependency-audit, flows, migration-lint, modularity, php, python,
+secret-scan, web); the Gate section pins each run to the sha it measured.
 
-The head sha is deliberately not pinned here. This PR *is* this file, so every revision of this
-section is written by a commit that changes the head the section would name — pinning it guarantees
-the line is stale the moment it is committed, which is what happened to `63d5dd6` and then to
-`50ff3a7`. The CI sha above is pinned instead, because that one is a measurement of a specific
-commit and stays true. For the live head, run `gh pr view 118 --json headRefOid`.
+Neither the head sha nor the newest run is pinned in this section, on purpose. This PR *is* this
+file, so the commit that writes this line moves the head the line would name and triggers the run
+the line would cite — pinning either guarantees it is stale on arrival, which already happened to
+`63d5dd6` and to `50ff3a7`. For live values:
+`gh pr view 118 --json headRefOid` and `gh pr checks 118`. The Gate section is the right home for
+pinned shas, because a finished check run is a measurement of one commit and stays true.
 
 **Row 1 may not start yet.** One open PR is the limit, so the A2 remainder waits on #118 merging.
 Nothing else is queued behind it; the rule is holding, not breached.
@@ -270,11 +271,15 @@ Only commands that actually ran, with their real results.
   `git rev-parse --short origin/main` → `dc81cfc`, unmoved · `gh pr list --state all --limit 5`
   → highest number is 118 · `git diff --stat origin/main...HEAD` → 251 changed lines (164+/87−,
   1 file), under the 400 cap · `git diff --name-only origin/main...HEAD` → `docs/status/access.md`
-  only, named in ADR-015 "Scope" as a path this lane writes · `gh pr checks 118` → **9 of 9 pass**
-  on run 38358327125 · `gh pr view 118` → head `50ff3a7`, 3 commits ·
-  `git rev-list --left-right --count` against upstream → `0 0`. The web and api gate commands were
-  **correctly skipped**: the diff touches no `apps/api/**` and no `apps/web/**`, so per `/gate`
+  only, named in ADR-015 "Scope" as a path this lane writes ·
+  `npx commitlint --from origin/main --to HEAD` → **0 problems, 0 warnings** on every commit ·
+  `git push` → fast-forward `50ff3a7..5ce7289`, no force, not `main`. The web and api gate commands
+  were **correctly skipped**: the diff touches no `apps/api/**` and no `apps/web/**`, so per `/gate`
   there is no code to typecheck, lint, test or build.
+- **Two green CI runs this round, each pinned to the commit it measured:** run 38358327125 on
+  `50ff3a7` → 9 of 9 pass · run 38382175174 on `5ce7289` → 9 of 9 pass. The commit that added this
+  line is measured by the run after it, which is the same self-reference the Open PR section
+  describes; `gh pr checks 118` is the live answer.
 - **The two A2 grep counts re-measured on `dc81cfc`, both unchanged:**
   `git grep -n partly_verified -- apps/web` → 11 lines / 8 files;
   `git grep -n entity_type -- apps/web` → 25 lines / 12 files.
