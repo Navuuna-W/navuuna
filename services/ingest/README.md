@@ -10,16 +10,19 @@ database role (ADR-004a).
   one place that text is written.
   `register_sources.py` writes that list into `core.sources`.
 - `base_layers/` — the base layers (D-05): boundaries and OpenStreetMap layers that become
-  entities in `core.entities`. `layer_file.py` reads a layer file (GeoJSON lines, one feature
-  per line), `area_entities.py` turns the county and ward features into `area` entities, 
-  `entity_row.py` is the shape every entity has on its way into the table, and
-  `load_base_layer.py` writes a layer. A reload keeps every entity's ID (it matches on
-  `external_ref`), retires entities the new file no longer has, and never deletes one.
+  entities in `core.entities`.
+  - `layer_file.py` reads a layer file (GeoJSON lines, one feature per line).
+  - `area_entities.py` turns the county and ward features into `area` entities.
+  - `water_point_entities.py` turns OpenStreetMap water and sanitation features into `point`
+    entities; `osm_feature.py` reads their OSM ids and tags.
+  - `entity_row.py` is the shape every entity has on its way into the table.
+  - `load_base_layer.py` writes a layer. A reload keeps every entity's ID (it matches on
+    `external_ref`), retires entities the new file no longer has, and never deletes one.
 - `database/` — `connection.py` opens the service's one connection, from `NV_INGEST_DATABASE_URL`.
 - `tests/` — pytest; each folder under `tests/` mirrors the package of the same name.
 
-The OpenStreetMap layers arrive with D-05c; the extract script, the `raw.vectors` row and the
-command that loads every layer with D-05d.
+The OpenStreetMap roads and buildings arrive with D-05d; the extract script, the
+`raw.vectors` row and the command that loads every layer with D-05e.
 Scrapers, parsers, aligners and earth observation arrive with their own tasks (D-07, D-13,
 D-15, D-16).
 

@@ -15,7 +15,9 @@ from sources.source_definition import SourceDefinition
 from sources.source_kind import SourceKind
 
 SELECT_LAYER_ENTITIES_SQL = """
-    SELECT id, name, external_ref, metadata, retired_at, public.ST_SRID(geom) AS srid
+    SELECT id, name, external_ref, metadata, retired_at, public.ST_SRID(geom) AS srid,
+           public.ST_GeometryType(geom) AS geometry_type,
+           public.ST_X(public.ST_PointOnSurface(geom)) AS longitude
     FROM core.entities
     WHERE metadata ->> 'base_layer' = %s
     ORDER BY external_ref
@@ -204,3 +206,17 @@ def test_layer_from_a_source_that_is_not_registered_is_refused(
 
     with pytest.raises(BaseLayerLoadError, match="register_sources"):
         load_base_layer(ingest_connection, layer)
+
+
+def test_point_entity_drawn_as_an_outline_is_stored_as_a_point_inside_it(
+    connection_with_source: DatabaseConnection,
+) -> None:
+    water_works_outline = build_ward("A").model_copy(
+        update={"entity_type": EntityType.POINT, "radius_m": 25.0}
+    )
+
+    load_base_layer(connection_with_source, build_layer([water_works_outline]))
+
+    stored_entity = select_layer_entities(connection_with_source)[0]
+    assert stored_entity["geometry_type"] == "ST_Point"
+    assert 36.85 < stored_entity["longitude"] < 36.86
