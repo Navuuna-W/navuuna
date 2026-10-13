@@ -43,9 +43,13 @@ Two Core merges still shape what this lane must do:
 are row 1 of the queue below:
 
 - **C1** — adopt the engine's statuses `scored · cannot_assess · provisional`; `labels.ts` still
-  reads `partly_verified`. Measured at 11 call sites across 8 files.
+  reads `partly_verified`, which appears on 11 lines across 8 files
+  (`git grep -n partly_verified -- apps/web`, on `dc81cfc`).
 - **S1** — the storage `entity_type` vocabulary (`point · parcel · segment · area`) plus `module`.
-  Measured at 21 call sites across 8 files.
+  `entity_type` appears on 25 lines across 12 files
+  (`git grep -n entity_type -- apps/web`, on `dc81cfc`). The previous revision of this file said
+  "21 call sites across 8 files", carried over from #117's commit body; that was already stale and
+  is corrected here. Both counts are a grep, not a count of edits the change needs.
 - **S2** — apply the ruling to `tiles.md` §5, replacing the live bullet with the quoted
   `lenses/README.md` rule. #117 recorded it as a proposal under Devyan's name rather than applying
   it.
@@ -130,8 +134,10 @@ PR, not a rollback. An entry leaves only when the owner answers.
 ## Unmerged local branches
 
 This repo squash-merges, so `git branch --no-merged` lists merged work too. Only these carry
-content that is not on `main`. Four live worktrees exist — `navuuna` (main), `navuuna-api` and
-`navuuna-web` (both detached at `5d98b6d`), and `navuuna-demo` (on `feat/web-demo`).
+content that is not on `main`. Four live worktrees exist: `navuuna` is the primary checkout and
+moves with whatever is being worked on, `navuuna-api` and `navuuna-web` sit detached at `5d98b6d`,
+and `navuuna-demo` holds `feat/web-demo`. Re-read it with `git worktree list` rather than trusting
+this line — only the `navuuna-demo` pairing is stable.
 
 | Branch | Head | What it is | What moves it |
 |---|---|---|---|
