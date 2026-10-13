@@ -32,25 +32,34 @@ COPY_STAGED_ENTITIES_SQL = """
     FROM STDIN
 """
 
+# The staged GeoJSON text as a PostGIS geometry in the storage SRID.
+STAGED_GEOMETRY_SQL = (
+    "public.ST_SetSRID(public.ST_GeomFromGeoJSON(geometry_geojson), %(storage_srid)s)"
+)
+
+# A few OSM features have a broken shape, e.g. a building whose outline has two corners.
+# PostGIS cannot measure or draw those, so they are counted and left out, never repaired
+# by guessing. They stay in staged_entities, so an entity stored earlier is not retired.
+COUNT_BROKEN_GEOMETRIES_SQL = f"""
+    SELECT count(*) AS broken_count
+    FROM staged_entities
+    WHERE NOT public.ST_IsValid({STAGED_GEOMETRY_SQL})
+"""
+
 # `external_ref` is unique, so an entity loaded before is updated in place and keeps its id
 # (FR-02). `retired_at = NULL` brings back an entity that had dropped out of an earlier file.
 # A point entity must be stored as a point (Bible §5), but OSM draws some water points as an
 # outline, e.g. a water works. ST_PointOnSurface gives a point inside the outline, and leaves
 # a feature that already is a point where it was.
-UPSERT_ENTITIES_SQL = """
+UPSERT_ENTITIES_SQL = f"""
     INSERT INTO core.entities (entity_type, module, name, external_ref, geom, radius_m, metadata)
     SELECT entity_type, module, name, external_ref,
            CASE WHEN entity_type = 'point' THEN public.ST_PointOnSurface(feature_geom)
                 ELSE feature_geom
            END,
            radius_m, metadata
-    FROM (
-        SELECT *,
-               public.ST_SetSRID(
-                   public.ST_GeomFromGeoJSON(geometry_geojson), %(storage_srid)s
-               ) AS feature_geom
-        FROM staged_entities
-    ) AS staged
+    FROM (SELECT *, {STAGED_GEOMETRY_SQL} AS feature_geom FROM staged_entities) AS staged
+    WHERE public.ST_IsValid(feature_geom)
     ON CONFLICT (external_ref) DO UPDATE SET
         entity_type = EXCLUDED.entity_type,
         module = EXCLUDED.module,
@@ -96,18 +105,21 @@ class BaseLayer(BaseModel):
 
 
 class BaseLayerLoadResult(BaseModel):
-    """What one load did: how many entities it wrote and how many it retired."""
+    """What one load did: how many entities it wrote, left out and retired."""
 
     model_config = ConfigDict(frozen=True)
 
     loaded_count: int
+    # Entities left out because PostGIS says their geometry is broken.
+    skipped_count: int
     retired_count: int
 
 
 def load_base_layer(connection: DatabaseConnection, base_layer: BaseLayer) -> BaseLayerLoadResult:
     """Store a layer's entities and retire the ones the layer no longer has.
 
-    Inputs: an open connection and the layer. Output: the loaded and retired counts.
+    Inputs: an open connection and the layer. Output: the loaded, skipped and retired counts.
+    An entity whose geometry is broken is skipped: counted, not stored, not repaired.
     Runs in one transaction, so a failed load leaves the stored layer exactly as it was.
     Raises BaseLayerLoadError for an empty layer, a repeated external reference, or a source
     that is not in core.sources.
@@ -115,15 +127,19 @@ def load_base_layer(connection: DatabaseConnection, base_layer: BaseLayer) -> Ba
     E15 (entities missing from a new extract are retired, never deleted).
     """
     check_layer_can_be_loaded(base_layer)
+    storage_srid = {"storage_srid": STORAGE_SRID}
     with connection.transaction():
         source_id = find_source_id(connection, base_layer.source_name)
         stage_entities(connection, base_layer, source_id)
-        connection.execute(UPSERT_ENTITIES_SQL, {"storage_srid": STORAGE_SRID})
+        broken = connection.execute(COUNT_BROKEN_GEOMETRIES_SQL, storage_srid).fetchone()
+        upserted = connection.execute(UPSERT_ENTITIES_SQL, storage_srid)
         retired = connection.execute(
             RETIRE_MISSING_ENTITIES_SQL, {"layer_name": base_layer.layer_name}
         )
     return BaseLayerLoadResult(
-        loaded_count=len(base_layer.entity_rows), retired_count=retired.rowcount
+        loaded_count=upserted.rowcount,
+        skipped_count=0 if broken is None else broken["broken_count"],
+        retired_count=retired.rowcount,
     )
 
 
