@@ -220,3 +220,39 @@ def test_point_entity_drawn_as_an_outline_is_stored_as_a_point_inside_it(
     stored_entity = select_layer_entities(connection_with_source)[0]
     assert stored_entity["geometry_type"] == "ST_Point"
     assert 36.85 < stored_entity["longitude"] < 36.86
+
+
+def build_ward_with_a_broken_outline(ward_code: str) -> EntityRow:
+    """A ward whose outline crosses itself like a bow tie, which PostGIS calls invalid."""
+    bow_tie = [[[36.85, -1.27], [36.86, -1.28], [36.86, -1.27], [36.85, -1.28], [36.85, -1.27]]]
+    return build_ward(ward_code).model_copy(
+        update={"geometry": {"type": "Polygon", "coordinates": bow_tie}}
+    )
+
+
+def test_entity_with_a_broken_geometry_is_counted_and_left_out(
+    connection_with_source: DatabaseConnection,
+) -> None:
+    layer = build_layer([build_ward("A"), build_ward_with_a_broken_outline("B")])
+
+    result = load_base_layer(connection_with_source, layer)
+
+    stored_entities = select_layer_entities(connection_with_source)
+    assert result.loaded_count == 1
+    assert result.skipped_count == 1
+    assert [entity["external_ref"] for entity in stored_entities] == ["test:ward:A"]
+
+
+def test_stored_entity_whose_newer_geometry_is_broken_is_kept_and_not_retired(
+    connection_with_source: DatabaseConnection,
+) -> None:
+    load_base_layer(connection_with_source, build_layer([build_ward("A")]))
+
+    result = load_base_layer(
+        connection_with_source, build_layer([build_ward_with_a_broken_outline("A")])
+    )
+
+    stored_entities = select_layer_entities(connection_with_source)
+    assert result.retired_count == 0
+    assert stored_entities[0]["retired_at"] is None
+    assert stored_entities[0]["longitude"] is not None
