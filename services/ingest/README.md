@@ -9,6 +9,9 @@ database role (ADR-004a).
   The map footer and the API read attribution from those rows (NFR-09), so this file is the
   one place that text is written.
   `register_sources.py` writes that list into `core.sources`.
+- `local_fixture/` — builds the 500-entity seed file for the local stack (D-14):
+  `select_fixture_rows.py` picks the entities from a loaded database, `write_fixture_sql.py`
+  writes them as SQL, `build_local_fixture.py` is the command. See `data/fixtures/README.md`.
 - `database/` — `connection.py` opens the service's one connection, from `NV_INGEST_DATABASE_URL`.
 - `tests/` — pytest; `tests/sources/` mirrors `sources/`, `tests/database/` mirrors `database/`.
 
