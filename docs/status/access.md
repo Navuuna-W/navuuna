@@ -10,14 +10,18 @@ Anchor: main @ `dbfaa39` · latest PR seen #121 (Devyan's, merged)
 2. **Keep this file short.** No commentary on pinned shas or runs; live values come from `gh`.
 3. **The place register is allowed**, with entity data only, no finding indicator of any kind, and
    `PlaceRegister.leak.test.tsx` required. Settled, not an open question.
-4. **The demo is done, so `feat/web-demo` is now a salvage source and nothing else.** It is never
-   merged whole — it predates #117. Every S row below cuts a fresh branch from `origin/main`,
-   cherry-picks or reapplies one slice at ≤ 400 changed lines, and keeps #117's guards: the
-   `detected` label and `findings/publicFindingStates.ts`'s derived states, never the demo
-   branch's older hand-kept versions.
-5. **The salvage rows are `S1`–`S10`; the contract items are also called S1 and S2.** They are
-   unrelated. A bare `S1` in the queue table means the salvage row; contract items are always
+4. **`feat/web-demo` is a DESIGN SOURCE, read with `git show` and `git diff`. Never merged, never
+   pushed.** The demo is done; the real frontend is now built from its design. Every S row cuts a
+   fresh branch from `origin/main`, **rebuilds** one piece at ≤ 400 changed lines, and keeps #117's
+   guards: the `detected` label and `findings/publicFindingStates.ts`'s derived states, never the
+   demo branch's older versions. The branch has no remote and must not get one — it is backed up
+   offline at `../navuuna-demo-backup.bundle` (branch + `demo-ready` tag, verified complete).
+5. **The S rows are `S1`–`S10`; the contract items are also called S1 and S2.** They are
+   unrelated. A bare `S1` in the queue table means the rebuild row; contract items are always
    written "contract S1" or named (`entity_type`, the `p` suffix).
+6. **No Viewer/Analyst toggle anywhere.** Visibility follows the signed-in role from `GET /me`
+   (#112). The demo's `ui/RoleSwitch.tsx` is deliberately **not** rebuilt — a client-side role
+   switch is a held-finding leak waiting to happen.
 
 One file, one queue. This replaced `docs/status/api.md` and `docs/status/web.md`, which never
 reached `main` — they existed only on `docs/status-austine-lane`, so there was nothing to delete.
@@ -86,55 +90,66 @@ restyles those same filters, so A-02b lands first or the two collide.
 
 ## Next, in order
 
-**The `[web]` items are unpaused.** A2 finishes first — the salvage needs C1's statuses and
-A-02b's `entity_type` — then the tracks interleave as before, api unblockers ahead of the S rows
-that need them. **Never two open PRs at once.** The tail is all `[web]` because the api track runs
-out of items first — that is the rule working, not a breach of the alternation.
+**The `[web]` items are unpaused.** A2 finishes first — the rebuild needs C1's statuses and A-02b's
+`entity_type` — then the tracks interleave, api unblockers ahead of the web rows that need them.
+**Never two open PRs at once.** The tail is all `[web]` because the api track runs out of items
+first — that is the rule working, not a breach of the alternation.
 
-Rows **S1–S10** replace the old B1c, B2a–c, B3a–c, B4 and B5a. Each one reapplies one slice of
-`feat/web-demo` onto a branch cut from fresh `origin/main`, under rule 4.
+Rows **S1–S10** replace the old B1c, B2a–c, B3a–c, B4 and B5a. Each one rebuilds one piece of the
+demo's design on a branch cut from fresh `origin/main`, under rule 4.
 
-**Ten slices became fourteen PRs.** The demo branch is +3994/−355 over 60 files; at ≤ 400 changed
-lines that is eleven PRs minimum before any rebase churn, so S4, S5, S6 and S10 are split, and the
-split is recorded here per `CLAUDE.md` §6.4. The row count moved; the ten slices did not.
+**Two changes of shape from the demo queue.** `A10` moves to right after `A6`, so the screens read
+the real API on seeded data early and fixtures fall back to tests and local dev only. `B6` and
+`B7a/b` follow `S7`, so real users and the real `/flags` arrive while the finding surfaces are
+fresh.
+
+**Nine slices became sixteen PRs.** The demo branch is 62 files, +3743/−450 against `dbfaa39`; at
+≤ 400 changed lines that is eleven PRs minimum before rebase churn, so S4, S5 and S6 are split.
+Every split row is measured in the Gate. Recorded per `CLAUDE.md` §6.4 — the row count moved, the
+nine slices did not.
+
+**Deliberately not rebuilt:** `scripts/demo.mjs` and the `npm run demo` script (49 lines),
+`docs/design/DEMO.md` and its cheat sheet, `e2e/compare.spec.ts` (112 lines — it copies reference
+shots for human review and asserts no pixel), and `ui/RoleSwitch.tsx` under rule 6.
 
 | # | Track | What | Task IDs |
 |---|---|---|---|
-| 1 | `[api]` | **A-02b — contract S1 only.** `entity_type` → `point · parcel · segment · area` + `module`, including the map layer filters. A-02a (C1 + contract S2) is committed and awaiting `/ship`. Unblocks S5a–c and S6a/b | A-02 |
-| 2 | `[web]` | **S1** — colour tokens + score ramp: `styles/tokens.css`, `styles/scoreRamp.ts`, `index.css`, `map/style/scale.ts` and its test. **Fonts are not in this row** — #114 already self-hosted Public Sans and Bricolage Grotesque, and the demo branch never touched them | design |
-| 3 | `[api]` | A4a — fixtures compute coverage exactly as the engine does, weights from `weights.yml` (C11), plus C14 `gate_status`. Unblocks S6b | A-08 pre-req |
+| 1 | `[api]` | **A-02b — contract S1 only.** `entity_type` → `point · parcel · segment · area` + `module`, including the map layer filters. A-02a (C1 + contract S2) is committed and awaiting `/ship`. Unblocks S5a and S6a | A-02 |
+| 2 | `[web]` | **S1** — colour tokens + score ramp: `styles/tokens.css`, `styles/scoreRamp.ts`, `index.css`, `map/style/scale.ts` + test. **Fonts need no work** — #114 already self-hosted Public Sans and Bricolage Grotesque (`styles/fonts.css`, two woff2 subsets, `OFL.txt`); the demo only `@import`s them. Confirm, don't re-add | design |
+| 3 | `[api]` | A3 — A-07a/b scored resources; the base resource throws on a score without coverage + confidence | A-07 |
 | 4 | `[web]` | **S2** — UI primitives: BrandMark, NoticePill, SegmentedControl, TabBar, icon set | design |
-| 5 | `[api]` | A3 — A-07a/b scored resources; the base resource throws on a score without coverage + confidence | A-07 |
-| 6 | `[web]` | **S3** — shell: header, tab bar, banner pill, footer, page grid, role switch | A-12 |
-| 7 | `[api]` | A4b — `SyntheticDemoSeeder` + `fixtures:export` | A-08 pre-req |
-| 8 | `[web]` | **S4a** — map controls row, layer toggles, lens selector replaced | A-12 |
+| 5 | `[api]` | A4a — fixtures compute coverage exactly as the engine does, weights from `weights.yml` (C11), plus C14 `gate_status`. Unblocks S6b | A-08 pre-req |
+| 6 | `[web]` | **S3** — app shell: header, tab bar, routing, footer, page grid. **Illustrative banner driven by the API's `synthetic` flag**; fixture mode always shows it, so this lands before A10 and reads the real flag once A10 is in. No role switch (rule 6) | A-12 |
+| 7 | `[api]` | A4b — `SyntheticDemoSeeder` + `fixtures:export`. Gives A10 its seeded data and S3 its real `synthetic` flag | A-08 pre-req |
+| 8 | `[web]` | **S4a** — map controls row, viewport controls, layer toggles, lens selector replaced | A-12 |
 | 9 | `[api]` | A5 — `GET /entities/{id}`, `/entities/{id}/scores` | A-08 |
-| 10 | `[web]` | **S4b** — legend, how-to-read, **place register under rule 3** — entity data only, no finding indicator, `PlaceRegister.leak.test.tsx` required and mutation-verified | A-12 |
+| 10 | `[web]` | **S4b** — legend + how-to-read | A-12 |
 | 11 | `[api]` | A6 — `GET /entities` (bbox required, ≤500), `/entities/{id}/flags`, `/lenses`; held-finding invisibility tests on every path | A-08, A-19 |
-| 12 | `[web]` | **S5a** — basemap palette, road and line styling: `style/flavor.ts`, `style/layers.ts`, `style/baseStyle.ts`. Needs A-02b's layer filters | design |
-| 13 | `[api]` | A7 — Scramble at `/api/v1/openapi.json`; `gen:api` reads it, committed snapshot as the CI fallback | A-06 |
-| 14 | `[web]` | **S5b** — pin sprite + hover/selection emphasis. **Replaces `pinEmphasis.ts`'s NUL sentinel** — see the Gate | design |
-| 15 | `[api]` | A8 — `lens:sync` validation, `LensApplier`, `lens:apply --all` | A-11 |
-| 16 | `[web]` | **S5c** — tooltip, selection fit, `MapView` wiring: `MapTooltip.tsx`, `featureBounds.ts` + test | design |
-| 17 | `[api]` | A9 — MVT exactly per `tiles.md` + parity test against the frontend | A-09 |
-| 18 | `[web]` | **S6a** — Passport shell: `EntityPanel`, `Badges`, `Bars`, `VariableRow`, visuals only. Needs C1 | A-16 |
-| 19 | `[api]` | A10 — `VITE_DATA_SOURCE=api` switch + the `synthetic` flag | A-08 follow-up |
-| 20 | `[web]` | **S6b** — completeness block, sub-variable accordion, and the "what would improve this" tip on not-measured rows from `null_reason`. Needs A4a's C14 | A-17 |
-| 21 | `[api]` | A11 — broadcast channels. Last, after A2–A10 merge | A-21 |
-| 22 | `[web]` | **S7** — finding detail + the visible analyst preview; sentences composed from `declared`/`observed` + `src/copy` (C7). Takes #117's `detected` label and derived states, not the demo's | A-18 |
-| 23 | `[web]` | **S8** — Evidence and limits on one screen: `routes/EvidenceRoute.tsx` + `copy/evidence.ts` | A-18 |
-| 24 | `[web]` | **S9** — motion, with `ui/reducedMotion.ts` respected on every animated surface | design |
-| 25 | `[web]` | **S10a** — `npm run demo` + `e2e/demo.spec.ts`, the offline proof | design |
-| 26 | `[web]` | **S10b** — `docs/design/DEMO.md` + the cheat sheet | design |
-| 27 | `[web]` | B2-rest — Button, Card and a real Tooltip primitive. The demo never built them; raise only when a row needs one | design |
-| 28 | `[web]` | B3c-rest — URL state for **centre and zoom only**; lens, layers and selected entity already ride S4a and S6a | A-14 |
-| 29 | `[web]` | B1c — Playwright visual harness + baselines, on `test/web-visual-regression-harness`. **Moved after S10, not replaced:** it is not on the demo branch, and baselines shot before S1–S9 would be re-shot immediately | design |
-| 30 | `[web]` | B5b — states matrix + tile-failure retry | A-24 |
-| 31 | `[web]` | B6 — sign-in S7. Unblocked: `GET /me` merged as #112 | A-10 |
-| 32 | `[web]` | B7a — review queue S4 | A-22 |
-| 33 | `[web]` | B7b — review actions S5; buildable against the real `/flags`, 404-not-403 behaviour kept | A-22 |
-| 34 | `[web]` | B8a — accessibility | A-25 |
-| 35 | `[web]` | B8b — 390 px | A-25 |
+| 12 | `[api]` | **A10 — `VITE_DATA_SOURCE=api` switch + the `synthetic` flag.** Moved up to here: from this row on, the screens read the real API on seeded data, and fixtures are for tests and local dev only | A-08 follow-up |
+| 13 | `[web]` | **S4c** — **place register under rule 3** — entity data only, no finding indicator of any kind, `PlaceRegister.leak.test.tsx` required and mutation-verified, plus `readVisiblePlaces.ts` | A-12 |
+| 14 | `[web]` | **S5a** — basemap and road/line styling: `style/layers.ts`, `style/baseStyle.ts`. Needs A-02b's layer filters | design |
+| 15 | `[api]` | A7 — Scramble at `/api/v1/openapi.json`; `gen:api` reads it, committed snapshot as the CI fallback | A-06 |
+| 16 | `[web]` | **S5b** — palette + pin sprite: `style/flavor.ts`, `style/pinSprite.ts` | design |
+| 17 | `[api]` | A8 — `lens:sync` validation, `LensApplier`, `lens:apply --all` | A-11 |
+| 18 | `[web]` | **S5c** — pin interactions, hover/selection emphasis, tooltip. **Rewrites `pinEmphasis.ts`'s NUL sentinel** as an ordinary unusable id — see the Gate | design |
+| 19 | `[api]` | A9 — MVT exactly per `tiles.md` + parity test against the frontend | A-09 |
+| 20 | `[web]` | **S5d** — selection fit + `MapView` wiring: `featureBounds.ts` + test, `MapView.tsx` | design |
+| 21 | `[web]` | **S6a** — Passport shell: `EntityPanel`, `Badges`, `Bars`, `VariableRow`, visuals only. Needs C1 | A-16 |
+| 22 | `[web]` | **S6b** — completeness block, sub-variable accordion, and the "what would improve this" tip on not-measured rows from `null_reason`. Needs A4a's C14 | A-17 |
+| 23 | `[web]` | **S7** — finding detail; sentences composed from `declared`/`observed` + `src/copy` (C7). **Visibility from the signed-in role via `GET /me`, no toggle** (rule 6). Takes #117's `detected` label and derived states, never the demo's older versions | A-18 |
+| 24 | `[web]` | B6 — sign-in. Unblocked: `GET /me` merged as #112 | A-10 |
+| 25 | `[web]` | B7a — review queue, on the real `/flags` from A6 | A-22 |
+| 26 | `[web]` | B7b — review actions; 404-not-403 behaviour kept | A-22 |
+| 27 | `[api]` | A11 — broadcast channels. Last, after A2–A10 merge | A-21 |
+| 28 | `[web]` | **S8** — Evidence and limits on one screen: `routes/EvidenceRoute.tsx` + `copy/evidence.ts` | A-18 |
+| 29 | `[web]` | **S9** — motion, with `ui/reducedMotion.ts` respected on every animated surface | design |
+| 30 | `[web]` | **S10** — `e2e/demo.spec.ts` ported as **`e2e/click-path.spec.ts`**, plus the `e2e/smoke.spec.ts` update. `npm run demo` and `DEMO.md` are not ported | design |
+| 31 | `[web]` | B5b — error and empty states matrix + tile-failure retry | A-24 |
+| 32 | `[web]` | B8a — accessibility | A-25 |
+| 33 | `[web]` | B8b — 390 px | A-25 |
+| 34 | `[web]` | B2-rest — Button, Card and a real Tooltip primitive. The demo never built them; raise only when a row needs one | design |
+| 35 | `[web]` | B3c-rest — URL state for **centre and zoom only**; lens, layers and selected entity already ride S4a and S6a | A-14 |
+| 36 | `[web]` | B1c — Playwright visual harness + baselines, on `test/web-visual-regression-harness`. **Moved after S10, not replaced:** it is not on the demo branch, and baselines shot before S1–S9 would be re-shot immediately | design |
 
 ## Blocked / needs a decision
 
@@ -159,6 +174,10 @@ PRD detail, name the excerpt and Austine pastes it.
 Applied with a defensible recommendation and logged here, per ADR-015. An objection is a follow-up
 PR, not a rollback.
 
+- **The Viewer/Analyst toggle is dropped, not rebuilt** (rule 6). The demo shipped
+  `ui/RoleSwitch.tsx` so one browser could show both audiences; the real frontend takes the role
+  from `GET /me` and nothing else. A client-side switch over held findings is a leak path, and
+  ADR-013 puts that invisibility on the server. The demo's 16 changed lines there are not ported.
 - **S2's `p` ruling is applied, not deferred.** `tiles.md` §5 moved to match `lenses/README.md` and
   the merged engine. Devyan owns the vocabulary and may still object.
 - **`detected` has a display label, though `docs/CONTEXT.md` gives it none.** #117 gave it
@@ -233,7 +252,7 @@ re-litigated:
 - **Place register: allowed, under rule 3.** Entity data only. It reads `GET /entities`, which
   never carries finding state, and shows a viewer no finding indicator of any kind — including never
   hiding a row, since absence is itself a signal. `PlaceRegister.leak.test.tsx` is required and
-  already exists on `feat/web-demo`, mutation-verified. Lands with S4b, row 10.
+  already exists on `feat/web-demo`, mutation-verified. Lands with **S4c, row 13**.
 - **Dark theme:** recorded, not built. Thirty hex values in `DESIGN.md` §1.2; light theme only.
 - **Raw-response `<details>`:** adopted but backlogged until A10, and then it renders the exact JSON
   the client fetched — no client-side composition.
@@ -248,7 +267,7 @@ carry content that is not on `main`:
 
 | Branch | Head | What it is |
 |---|---|---|
-| `feat/web-demo` | `28d2f7f` | The salvage source: 11 commits, **+3994/−355 across 60 files**, no remote, checked out in the `navuuna-demo` worktree. Merge-base `886bb57`, so it **does not contain #117**. Rule 4 governs it; the three regressions behind that rule are in the Gate. Tag `demo-ready` is at `3d6a911` and is **one commit short** of the branch — cherry-pick from the branch, not the tag. |
+| `feat/web-demo` | `28d2f7f` | **The design source** (rule 4): 11 commits, 62 files, +3743/−450 against `dbfaa39`. **No remote and it must not get one.** The `navuuna-demo` worktree is removed; read the branch with `git show feat/web-demo:<path>` and `git diff origin/main feat/web-demo -- <path>`. Merge-base `886bb57`, so it **does not contain #117**. Tag `demo-ready` is at `3d6a911`, **one commit short** of the branch — read the branch, not the tag. Backed up offline at `../navuuna-demo-backup.bundle`. |
 | `test/web-visual-regression-harness` | `3078c36` | B1c work — harness page, token-name test, four baselines. +671 lines. |
 | `fix/web-scale-fallback-and-line-styles` | `e164bba` | **Unverified.** Looks superseded by #66 and #73, but still shows unique content in `map/style/layers.ts` and `fixtures/generate.ts`. Check before deleting. |
 | `docs/contract-detected-state-and-tiles-fixes` | `a3741d5` | **Superseded by #117 — safe to delete.** It was the A2 partial; #117 replaced its hand-kept guard arrays with a `Record` over the generated union. |
@@ -270,6 +289,18 @@ Only commands that actually ran, with their real results. Live CI is `gh pr chec
   `map/style/scale.test.ts` are fixed here.
 - **#117 merged as `dc81cfc`** at 225 changed lines, CI 9 of 9 green — the same nine checks this
   branch must pass. `entity_type` is 25 lines / 12 files on it; that is A-02b's size.
+- **Demo cleanup ran, with one loss to report.** `../navuuna-demo-backup.bundle` created and
+  `git bundle verify`d: complete history, both refs (`feat/web-demo` `28d2f7f`, `demo-ready`
+  `3d6a911`). The worktree was clean (`git status --porcelain` empty, no untracked files) and
+  `git worktree remove` succeeded without `--force`; the branch and tag survive in this repo.
+  **But the worktree was removed before the request to copy a backup video out of it, and no
+  `.webm` exists anywhere on this machine.** A search of the whole profile for `*.webm *.mp4 *.mov
+  *.mkv *.gif` over 100 KB found no Navuuna demo recording — the newest screen recordings are from
+  2026-09-17 — and the Recycle Bin (2040 items) has nothing matching. Whether a video ever existed
+  cannot now be determined: the demo branch never references `.webm`, but `apps/web/.gitignore`
+  ignores `test-results/`, where Playwright writes video, so an ignored recording would have been
+  invisible to `git status` and destroyed by the removal. **Treat the video as gone. The code is
+  not** — the bundle and the branch both hold it.
 - **`feat/web-demo` re-measured against fresh `origin/main` (`dbfaa39`): 62 files, +3743/−450.**
   Merge-base is still `886bb57`, so it predates #117 · no `detected` in its `labels.ts` ·
   `partly_verified` across 7 files. **Correction:** an earlier line here said the branch has no
@@ -286,12 +317,31 @@ Only commands that actually ran, with their real results. Live CI is `gh pr chec
 - **`map/pinEmphasis.ts` is binary to git.** Its `MATCHES_NOTHING` sentinel is a literal NUL byte,
   so the file diffs as `Bin 0 -> 5851 bytes` and cannot be reviewed. S5b replaces the sentinel with
   an ordinary unusable id before the file lands.
-- **Measured slice sizes** (changed lines against `886bb57`): tokens + ramp 354 · `ui/` 388 ·
-  `map/` 2046 · `panel/` 516 · routes + evidence copy 319 · findings 159 · demo script, spec and
-  DEMO.md 632. That is where the S4, S5, S6 and S10 splits come from.
-- **S1 re-measured against fresh `origin/main`: +327/−27 across 5 files**, under the 400 limit with
-  room for rebase churn. Fonts are confirmed absent from it: `styles/fonts.css`, the two woff2
-  subsets and `OFL.txt` are already on `main` from #114, and the demo branch's `index.css` only
-  `@import`s them.
+- **Every row measured against fresh `origin/main` (`dbfaa39`), changed lines.** This is the whole
+  basis of the splits; no row is estimated except S9.
+
+  | Row | Files | Lines |
+  |---|---|---|
+  | S1 | `tokens.css` 139 · `scoreRamp.ts` 16 · `index.css` 87 · `scale.ts` 62 · `scale.test.ts` 50 | **354** |
+  | S2 | `icons` 103 · `TabBar` 98 · `SegmentedControl` 69 · `NoticePill` 23 · `BrandMark` 22 | **315** |
+  | S3 | `MapRoute` 69 · `App.tsx` 38 · `IllustrativeBanner` 20 · `mockServer` 7 · `AttributionFooter` 5 · `App.test` 5 | **144** |
+  | S4a | `useMapLayers` 75 · `applyLayerVisibility` 72 · `MapViewportControls` 81 · `MapControls` 45 · `lenses` 28 · `LensSelector` −29 | **330** |
+  | S4b | `MapLegend` 89 · `MapHowToRead` 66 | **155** |
+  | S4c | `PlaceRegister.leak.test` 135 · `PlaceRegister` 59 · `readVisiblePlaces` 51 | **245** |
+  | S5a | `style/layers.ts` 301 · `style/baseStyle.ts` 16 | **317** |
+  | S5b | `style/pinSprite.ts` 195 · `style/flavor.ts` 126 | **321** |
+  | S5c | `pinEmphasis.ts` 181 · `attachPinInteractions` 112 · `MapTooltip` 54 | **347** |
+  | S5d | `MapView.tsx` 192 · `featureBounds.test` 105 · `featureBounds` 65 | **362** |
+  | S6a | `Bars` 74 · `VariableRow` 68 · `EntityPanel` 61 · `Badges` 17 · `LazyEntityPanel` 2 | **222** |
+  | S6b | `SubVariableAccordion` 96 · `readingCompleteness.test` 90 · `readingCompleteness` 62 · `CompletenessBlock` 52 | **300** |
+  | S7 | `FindingDetail` 116 · `FindingDetail.test` 73 · `publicFindingStates.test` 41 · `labels.ts` 40 · `labels.test` 12 | **282** |
+  | S8 | `EvidenceRoute` 174 · `copy/evidence` 76 | **250** |
+  | S9 | `reducedMotion.ts` 32 + applying it on the animated surfaces | **~150 est** |
+  | S10 | `click-path.spec.ts` (from `demo.spec.ts` 195) · `smoke.spec.ts` 7 | **202** |
+
+- **Fonts need no rebuild, verified two ways:** `styles/fonts.css`, `public-sans-latin-variable.woff2`,
+  `bricolage-grotesque-latin-variable.woff2` and `OFL.txt` are on `origin/main` from #114, and
+  `git diff origin/main feat/web-demo -- apps/web/public apps/web/src/index.css` shows the demo
+  touching only `index.css`, whose font handling is a single `@import './styles/fonts.css'`.
 
 **Not claimed:** nothing here is verified against a live API or deployed to staging.
