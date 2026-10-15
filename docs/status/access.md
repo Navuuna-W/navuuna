@@ -270,10 +270,14 @@ Only commands that actually ran, with their real results. Live CI is `gh pr chec
   `map/style/scale.test.ts` are fixed here.
 - **#117 merged as `dc81cfc`** at 225 changed lines, CI 9 of 9 green — the same nine checks this
   branch must pass. `entity_type` is 25 lines / 12 files on it; that is A-02b's size.
-- **`feat/web-demo` measured, not assumed:** merge-base `886bb57`, so it predates #117 · no
-  `detected` in its `labels.ts` · it has no `findings/publicFindingStates.ts` at all, the file
-  #117 added to derive the states instead of listing them by hand · `partly_verified` across 7
-  files. That is rule 4's basis.
+- **`feat/web-demo` re-measured against fresh `origin/main` (`dbfaa39`): 62 files, +3743/−450.**
+  Merge-base is still `886bb57`, so it predates #117 · no `detected` in its `labels.ts` ·
+  `partly_verified` across 7 files. **Correction:** an earlier line here said the branch has no
+  `findings/publicFindingStates.ts`. It does — the file arrived in #93 (`b05caec`) and is
+  **byte-identical** to main's. #117 rewrote its *test* and `FindingDetail.tsx`, so the demo
+  carries the pre-#117 versions of `publicFindingStates.test.ts` (41 lines) and
+  `FindingDetail.tsx` (116 lines). Rule 4 stands, with a narrower target: the regression to guard
+  against is the missing `detected` label and those two older files, not a missing module.
 - **1743 lines of the demo were never committed.** The `navuuna-demo` worktree held +749/−101
   tracked and 994 untracked lines — the tokens and ramp revision, the pin sprite and emphasis, the
   tooltip, the viewport controls, the icon set and `reducedMotion.ts`. S1, S5b and S9 are made of
@@ -285,5 +289,9 @@ Only commands that actually ran, with their real results. Live CI is `gh pr chec
 - **Measured slice sizes** (changed lines against `886bb57`): tokens + ramp 354 · `ui/` 388 ·
   `map/` 2046 · `panel/` 516 · routes + evidence copy 319 · findings 159 · demo script, spec and
   DEMO.md 632. That is where the S4, S5, S6 and S10 splits come from.
+- **S1 re-measured against fresh `origin/main`: +327/−27 across 5 files**, under the 400 limit with
+  room for rebase churn. Fonts are confirmed absent from it: `styles/fonts.css`, the two woff2
+  subsets and `OFL.txt` are already on `main` from #114, and the demo branch's `index.css` only
+  `@import`s them.
 
 **Not claimed:** nothing here is verified against a live API or deployed to staging.
