@@ -1,6 +1,6 @@
 # Status — Access lane (one queue)
 
-Anchor: main @ `7655ce2` · latest PR seen #119 (Devyan's, merged)
+Anchor: main @ `dbfaa39` · latest PR seen #121 (Devyan's, merged)
 
 ## Standing rules
 
@@ -10,8 +10,14 @@ Anchor: main @ `7655ce2` · latest PR seen #119 (Devyan's, merged)
 2. **Keep this file short.** No commentary on pinned shas or runs; live values come from `gh`.
 3. **The place register is allowed**, with entity data only, no finding indicator of any kind, and
    `PlaceRegister.leak.test.tsx` required. Settled, not an open question.
-4. **`feat/web-demo` is untouched until after the demo.** Then C1 lands first and the branch is
-   salvaged by cherry-pick into ≤ 400-line PRs. Never merged whole — it predates #117.
+4. **The demo is done, so `feat/web-demo` is now a salvage source and nothing else.** It is never
+   merged whole — it predates #117. Every S row below cuts a fresh branch from `origin/main`,
+   cherry-picks or reapplies one slice at ≤ 400 changed lines, and keeps #117's guards: the
+   `detected` label and `findings/publicFindingStates.ts`'s derived states, never the demo
+   branch's older hand-kept versions.
+5. **The salvage rows are `S1`–`S10`; the contract items are also called S1 and S2.** They are
+   unrelated. A bare `S1` in the queue table means the salvage row; contract items are always
+   written "contract S1" or named (`entity_type`, the `p` suffix).
 
 One file, one queue. This replaced `docs/status/api.md` and `docs/status/web.md`, which never
 reached `main` — they existed only on `docs/status-austine-lane`, so there was nothing to delete.
@@ -20,8 +26,8 @@ Every row below carries an `[api]` or `[web]` tag; the commands take no argument
 
 ## Open PR (one at a time)
 
-**None.** Row 1's first half — **A-02a (C1 + S2)** — is committed on
-`feat/web-a02-remainder-c1-s1`, rebased on `7655ce2`, and waits for `/ship` to push and open it.
+**None.** Row 1's first half — **A-02a (C1 + contract S2)** — is committed on
+`feat/web-a02-remainder-c1-s1`, rebased on `dbfaa39`, and waits for `/ship` to push and open it.
 
 Merging stays hand-gated: root `CLAUDE.md` §6.0 forbids an agent merging a PR, and ADR-015's
 Access-lane carve-out does not reach the permission layer that reads it. Austine runs
@@ -29,9 +35,11 @@ Access-lane carve-out does not reach the permission layer that reads it. Austine
 
 ## Merged since last update
 
-Nothing of this lane's. `origin/main` moved to Devyan's #119 (ADR-016): the water register is
-hand-curated and nothing is estimated, so coverage will be thin and more variables arrive
-`null_not_measured` or provisional. No contract change; it raises the value of B4's tip.
+Nothing of this lane's. `origin/main` moved to Devyan's #119 (ADR-016), then #120 and #121 (the
+Bible 7.1 source catalogue, written into `core.sources`). All three are `services/ingest/**` and
+`docs/`, so no Access path moved and no contract changed. ADR-016 still raises the value of S6b's
+not-measured tip: the water register is hand-curated and nothing is estimated, so coverage will be
+thin and more variables arrive `null_not_measured` or provisional.
 
 | PR | Task IDs | One line |
 |---|---|---|
@@ -61,53 +69,72 @@ Two Core merges still shape what this lane must do:
 
 ## In progress
 
-**Row 1 split into A-02a and A-02b.** C1 and S2 had to move together, because the fixtures computed
-the status and the `p` suffix from one flag; S1 is independent, so it is its own PR.
+**Row 1 split into A-02a and A-02b.** C1 and contract S2 had to move together, because the fixtures
+computed the status and the `p` suffix from one flag; contract S1 is independent, so it is its own
+PR.
 
-**A-02a — C1 + S2 — committed on `feat/web-a02-remainder-c1-s1`, not yet pushed.** The contract now
+**A-02a — C1 + contract S2 — committed on `feat/web-a02-remainder-c1-s1`, not yet pushed.** The contract now
 carries the engine's `scored · provisional · cannot_assess` and `tiles.md` §5 quotes
 `lenses/README.md` rather than proposing a rule. Behaviour changed with it: `p` was raised when the
 gate was provisional **or** coverage was below 1, and is now provisional only, and only where the
 lens weights the variable above 0. `fixtures/lensApply.ts` decides it, since "weight above 0" cannot
 be answered without the lens. Three new tests pin it.
 
-**A-02b — S1 — not started.** `entity_type` is on 25 lines across 12 files, and it also has to move
-the map layer filters, which today match `'road_segment'` and `'water_point'`.
+**A-02b — contract S1 — not started.** `entity_type` is on 25 lines across 12 files, and it also
+has to move the map layer filters, which today match `'road_segment'` and `'water_point'`. S5a
+restyles those same filters, so A-02b lands first or the two collide.
 
 ## Next, in order
 
-A2 and A4a lead because both unblock the web track. After that the two tracks alternate, each
-keeping its own approved order. **Never two open PRs at once.** The tail is all `[web]` because the
-api track runs out of items first — that is the rule working, not a breach of the alternation.
+**The `[web]` items are unpaused.** A2 finishes first — the salvage needs C1's statuses and
+A-02b's `entity_type` — then the tracks interleave as before, api unblockers ahead of the S rows
+that need them. **Never two open PRs at once.** The tail is all `[web]` because the api track runs
+out of items first — that is the rule working, not a breach of the alternation.
+
+Rows **S1–S10** replace the old B1c, B2a–c, B3a–c, B4 and B5a. Each one reapplies one slice of
+`feat/web-demo` onto a branch cut from fresh `origin/main`, under rule 4.
+
+**Ten slices became fourteen PRs.** The demo branch is +3994/−355 over 60 files; at ≤ 400 changed
+lines that is eleven PRs minimum before any rebase churn, so S4, S5, S6 and S10 are split, and the
+split is recorded here per `CLAUDE.md` §6.4. The row count moved; the ten slices did not.
 
 | # | Track | What | Task IDs |
 |---|---|---|---|
-| 1 | `[api]` | **A-02b — S1 only.** `entity_type` → `point · parcel · segment · area` + `module`, including the map layer filters. A-02a (C1 + S2) is committed and awaiting `/ship`. Unblocks B4 and B5a | A-02 |
-| 2 | `[api]` | A4a — fixtures compute coverage exactly as the engine does, weights from `weights.yml`, so fixture mode and the seeded database agree from the start (C11) | A-08 pre-req |
-| 3 | `[web]` | B1c — Playwright visual-regression harness + committed baselines | design |
-| 4 | `[api]` | A3 — A-07a/b scored resources; the base resource throws on a score without coverage + confidence | A-07 |
-| 5 | `[web]` | B2a — Button / Badge / Notice / Card | design |
-| 6 | `[api]` | A4b — `SyntheticDemoSeeder` + `fixtures:export` | A-08 pre-req |
-| 7 | `[web]` | B2b — SegmentedControl / ToggleGroup | design |
-| 8 | `[api]` | A5 — `GET /entities/{id}`, `/entities/{id}/scores` | A-08 |
-| 9 | `[web]` | B2c — Tabs / Tooltip | design |
-| 10 | `[api]` | A6 — `GET /entities` (bbox required, ≤500), `/entities/{id}/flags`, `/lenses`; held-finding invisibility tests on every path | A-08, A-19 |
-| 11 | `[web]` | B3a — shell + header + banner + footer. No longer blocked, see the ruling below | A-12 |
-| 12 | `[api]` | A7 — Scramble at `/api/v1/openapi.json`; `gen:api` reads it, committed snapshot as the CI fallback | A-06 |
-| 13 | `[web]` | B3b — left rail: lens, filters, legend, **plus the place register under rule 3** — entity data only, no finding indicator, leak test required | A-12 |
-| 14 | `[api]` | A8 — `lens:sync` validation, `LensApplier`, `lens:apply --all` | A-11 |
-| 15 | `[web]` | B3c — URL state: lens, filters, centre, zoom, selected entity | A-14 |
-| 16 | `[api]` | A9 — MVT exactly per `tiles.md` + parity test against the frontend | A-09 |
-| 17 | `[web]` | B4 — Passport restyle, visuals only; adds the "what would improve this" tip on not-measured rows, built from `null_reason`. Needs A2's C1 | A-16, A-17 |
-| 18 | `[api]` | A10 — `VITE_DATA_SOURCE=api` switch + the `synthetic` flag | A-08 follow-up |
-| 19 | `[web]` | B5a — finding detail; composes its sentences from `declared`/`observed` + `src/copy`. Needs A2's C7 | A-18 |
-| 20 | `[api]` | A11 — broadcast channels. Last, after A2–A10 merge | A-21 |
-| 21 | `[web]` | B5b — states matrix + tile-failure retry | A-24 |
-| 22 | `[web]` | B6 — sign-in S7. Unblocked: `GET /me` merged as #112 | A-10 |
-| 23 | `[web]` | B7a — review queue S4 | A-22 |
-| 24 | `[web]` | B7b — review actions S5; buildable against the real `/flags`, 404-not-403 behaviour kept | A-22 |
-| 25 | `[web]` | B8a — accessibility | A-25 |
-| 26 | `[web]` | B8b — 390 px | A-25 |
+| 1 | `[api]` | **A-02b — contract S1 only.** `entity_type` → `point · parcel · segment · area` + `module`, including the map layer filters. A-02a (C1 + contract S2) is committed and awaiting `/ship`. Unblocks S5a–c and S6a/b | A-02 |
+| 2 | `[web]` | **S1** — colour tokens + score ramp: `styles/tokens.css`, `styles/scoreRamp.ts`, `index.css`, `map/style/scale.ts` and its test. **Fonts are not in this row** — #114 already self-hosted Public Sans and Bricolage Grotesque, and the demo branch never touched them | design |
+| 3 | `[api]` | A4a — fixtures compute coverage exactly as the engine does, weights from `weights.yml` (C11), plus C14 `gate_status`. Unblocks S6b | A-08 pre-req |
+| 4 | `[web]` | **S2** — UI primitives: BrandMark, NoticePill, SegmentedControl, TabBar, icon set | design |
+| 5 | `[api]` | A3 — A-07a/b scored resources; the base resource throws on a score without coverage + confidence | A-07 |
+| 6 | `[web]` | **S3** — shell: header, tab bar, banner pill, footer, page grid, role switch | A-12 |
+| 7 | `[api]` | A4b — `SyntheticDemoSeeder` + `fixtures:export` | A-08 pre-req |
+| 8 | `[web]` | **S4a** — map controls row, layer toggles, lens selector replaced | A-12 |
+| 9 | `[api]` | A5 — `GET /entities/{id}`, `/entities/{id}/scores` | A-08 |
+| 10 | `[web]` | **S4b** — legend, how-to-read, **place register under rule 3** — entity data only, no finding indicator, `PlaceRegister.leak.test.tsx` required and mutation-verified | A-12 |
+| 11 | `[api]` | A6 — `GET /entities` (bbox required, ≤500), `/entities/{id}/flags`, `/lenses`; held-finding invisibility tests on every path | A-08, A-19 |
+| 12 | `[web]` | **S5a** — basemap palette, road and line styling: `style/flavor.ts`, `style/layers.ts`, `style/baseStyle.ts`. Needs A-02b's layer filters | design |
+| 13 | `[api]` | A7 — Scramble at `/api/v1/openapi.json`; `gen:api` reads it, committed snapshot as the CI fallback | A-06 |
+| 14 | `[web]` | **S5b** — pin sprite + hover/selection emphasis. **Replaces `pinEmphasis.ts`'s NUL sentinel** — see the Gate | design |
+| 15 | `[api]` | A8 — `lens:sync` validation, `LensApplier`, `lens:apply --all` | A-11 |
+| 16 | `[web]` | **S5c** — tooltip, selection fit, `MapView` wiring: `MapTooltip.tsx`, `featureBounds.ts` + test | design |
+| 17 | `[api]` | A9 — MVT exactly per `tiles.md` + parity test against the frontend | A-09 |
+| 18 | `[web]` | **S6a** — Passport shell: `EntityPanel`, `Badges`, `Bars`, `VariableRow`, visuals only. Needs C1 | A-16 |
+| 19 | `[api]` | A10 — `VITE_DATA_SOURCE=api` switch + the `synthetic` flag | A-08 follow-up |
+| 20 | `[web]` | **S6b** — completeness block, sub-variable accordion, and the "what would improve this" tip on not-measured rows from `null_reason`. Needs A4a's C14 | A-17 |
+| 21 | `[api]` | A11 — broadcast channels. Last, after A2–A10 merge | A-21 |
+| 22 | `[web]` | **S7** — finding detail + the visible analyst preview; sentences composed from `declared`/`observed` + `src/copy` (C7). Takes #117's `detected` label and derived states, not the demo's | A-18 |
+| 23 | `[web]` | **S8** — Evidence and limits on one screen: `routes/EvidenceRoute.tsx` + `copy/evidence.ts` | A-18 |
+| 24 | `[web]` | **S9** — motion, with `ui/reducedMotion.ts` respected on every animated surface | design |
+| 25 | `[web]` | **S10a** — `npm run demo` + `e2e/demo.spec.ts`, the offline proof | design |
+| 26 | `[web]` | **S10b** — `docs/design/DEMO.md` + the cheat sheet | design |
+| 27 | `[web]` | B2-rest — Button, Card and a real Tooltip primitive. The demo never built them; raise only when a row needs one | design |
+| 28 | `[web]` | B3c-rest — URL state for **centre and zoom only**; lens, layers and selected entity already ride S4a and S6a | A-14 |
+| 29 | `[web]` | B1c — Playwright visual harness + baselines, on `test/web-visual-regression-harness`. **Moved after S10, not replaced:** it is not on the demo branch, and baselines shot before S1–S9 would be re-shot immediately | design |
+| 30 | `[web]` | B5b — states matrix + tile-failure retry | A-24 |
+| 31 | `[web]` | B6 — sign-in S7. Unblocked: `GET /me` merged as #112 | A-10 |
+| 32 | `[web]` | B7a — review queue S4 | A-22 |
+| 33 | `[web]` | B7b — review actions S5; buildable against the real `/flags`, 404-not-403 behaviour kept | A-22 |
+| 34 | `[web]` | B8a — accessibility | A-25 |
+| 35 | `[web]` | B8b — 390 px | A-25 |
 
 ## Blocked / needs a decision
 
@@ -137,7 +164,7 @@ PR, not a rollback.
 - **`detected` has a display label, though `docs/CONTEXT.md` gives it none.** #117 gave it
   `'Just detected (analysts only)'` so `FINDING_STATUS` is total over the contract's seven states
   and `FindingDetail` cannot render `undefined`. Analyst-only copy; one line to change.
-- **DEC-20 no longer blocks B3a.** The entity panel is **"Passport"**. Variable names come from
+- **DEC-20 no longer blocks the shell (S3).** The entity panel is **"Passport"**. Variable names come from
   `docs/CONTEXT.md` verbatim — Activity · Record vs reality · Momentum · Resource security ·
   Access — with CONTEXT.md's question as the tooltip, not as the label. The header reads
   **"Navuuna"**.
@@ -166,7 +193,7 @@ as FYI.
   contract, the fixtures, `copy/labels.ts`, `panel/Badges.tsx` and `panel/VariableRow.tsx`. The
   badge means **provisional only**; coverage below 1 shows through "X of Y", never the badge. The
   word on screen stays "Partly verified" pending `apps/web/README.md` open question (b).
-  `map/style/scale.ts`'s naming lands in B4, not here.
+  `map/style/scale.ts`'s naming lands in S1, not here.
 - **C14 `gate_status` — newly measured, deferred to A4a.** The contract says
   `[measured, provisional, cannot_assess]` and required; `App\Engine\GateState` and the
   `variable_scores_gate_status_check` CHECK say `passed · failed · unmeasured`, nullable and
@@ -206,7 +233,7 @@ re-litigated:
 - **Place register: allowed, under rule 3.** Entity data only. It reads `GET /entities`, which
   never carries finding state, and shows a viewer no finding indicator of any kind — including never
   hiding a row, since absence is itself a signal. `PlaceRegister.leak.test.tsx` is required and
-  already exists on `feat/web-demo`, mutation-verified. Lands with B3b, row 13.
+  already exists on `feat/web-demo`, mutation-verified. Lands with S4b, row 10.
 - **Dark theme:** recorded, not built. Thirty hex values in `DESIGN.md` §1.2; light theme only.
 - **Raw-response `<details>`:** adopted but backlogged until A10, and then it renders the exact JSON
   the client fetched — no client-side composition.
@@ -221,7 +248,7 @@ carry content that is not on `main`:
 
 | Branch | Head | What it is |
 |---|---|---|
-| `feat/web-demo` | `c044fae` | The largest: 6 commits, +1716/−302 across 38 files, no remote, checked out in the `navuuna-demo` worktree. Merge-base `886bb57`, so it **does not contain #117**. Reference shell, map controls, layer toggles, place register + its leak test, Passport restyle, neutral finding cards, analyst-preview notice. Rule 4 governs it; the three regressions behind that rule are in the Gate. |
+| `feat/web-demo` | `28d2f7f` | The salvage source: 11 commits, **+3994/−355 across 60 files**, no remote, checked out in the `navuuna-demo` worktree. Merge-base `886bb57`, so it **does not contain #117**. Rule 4 governs it; the three regressions behind that rule are in the Gate. Tag `demo-ready` is at `3d6a911` and is **one commit short** of the branch — cherry-pick from the branch, not the tag. |
 | `test/web-visual-regression-harness` | `3078c36` | B1c work — harness page, token-name test, four baselines. +671 lines. |
 | `fix/web-scale-fallback-and-line-styles` | `e164bba` | **Unverified.** Looks superseded by #66 and #73, but still shows unique content in `map/style/layers.ts` and `fixtures/generate.ts`. Check before deleting. |
 | `docs/contract-detected-state-and-tiles-fixes` | `a3741d5` | **Superseded by #117 — safe to delete.** It was the A2 partial; #117 replaced its hand-kept guard arrays with a `Record` over the generated union. |
@@ -244,8 +271,19 @@ Only commands that actually ran, with their real results. Live CI is `gh pr chec
 - **#117 merged as `dc81cfc`** at 225 changed lines, CI 9 of 9 green — the same nine checks this
   branch must pass. `entity_type` is 25 lines / 12 files on it; that is A-02b's size.
 - **`feat/web-demo` measured, not assumed:** merge-base `886bb57`, so it predates #117 · no
-  `detected` in its `labels.ts` · `publicFindingStates.test.ts` still lists states "by hand on
-  purpose", the fail-open pattern #117 replaced · `partly_verified` on **18** lines against 11, so
-  merging it first would hand C1 seven more call sites. That is rule 4's basis.
+  `detected` in its `labels.ts` · it has no `findings/publicFindingStates.ts` at all, the file
+  #117 added to derive the states instead of listing them by hand · `partly_verified` across 7
+  files. That is rule 4's basis.
+- **1743 lines of the demo were never committed.** The `navuuna-demo` worktree held +749/−101
+  tracked and 994 untracked lines — the tokens and ramp revision, the pin sprite and emphasis, the
+  tooltip, the viewport controls, the icon set and `reducedMotion.ts`. S1, S5b and S9 are made of
+  it. Committed as `28d2f7f` so the worktree is clean and removable; `git worktree remove` would
+  have refused while it was dirty, and `--force` would have destroyed it.
+- **`map/pinEmphasis.ts` is binary to git.** Its `MATCHES_NOTHING` sentinel is a literal NUL byte,
+  so the file diffs as `Bin 0 -> 5851 bytes` and cannot be reviewed. S5b replaces the sentinel with
+  an ordinary unusable id before the file lands.
+- **Measured slice sizes** (changed lines against `886bb57`): tokens + ramp 354 · `ui/` 388 ·
+  `map/` 2046 · `panel/` 516 · routes + evidence copy 319 · findings 159 · demo script, spec and
+  DEMO.md 632. That is where the S4, S5, S6 and S10 splits come from.
 
 **Not claimed:** nothing here is verified against a live API or deployed to staging.
