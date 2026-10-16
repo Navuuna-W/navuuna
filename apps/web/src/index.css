@@ -5,6 +5,7 @@
 @import './styles/fonts.css';
 @import 'tailwindcss';
 @import './styles/tokens.css';
+@import './styles/motion.css';
 
 :root {
   color-scheme: light;
@@ -50,8 +51,25 @@ h3 {
   outline-offset: 2px;
 }
 
-/* The reference declares this block defensively while having nothing to reduce. We keep it
-   so any transition we add later is honoured without a second thought. */
+/* Numerals that sit in columns or change in place never jiggle. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* MapLibre's own canvas sits on the map token, so the map reads as part of the design even
+   before (or without) the basemap tiles. Its default controls are replaced by our own glass
+   ones, so only the canvas styling is kept. */
+.maplibregl-map {
+  font-family: var(--font-sans);
+  background: var(--color-map);
+}
+.maplibregl-canvas:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+/* Every transition and animation in the fresh UI is decoration (FRESH-UI.md §3), so all of it
+   switches off for people who ask the OS for less motion. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -60,4 +78,16 @@ h3 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* MapLibre's scale bar, restyled as a glass pill to match the other map controls. */
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-scale {
+  margin: 0 16px 16px 0;
+  border: 1.5px solid var(--color-muted);
+  border-top: 0;
+  border-radius: 0 0 4px 4px;
+  background: rgb(251 252 250 / 0.84);
+  color: var(--color-muted);
+  font-size: var(--text-axis);
+  backdrop-filter: blur(10px);
 }

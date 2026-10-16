@@ -1,0 +1,170 @@
+/* Keyframes behind the `animate-*` tokens in tokens.css, plus the few motion utilities a
+   Tailwind class cannot express. FRESH-UI.md §3. Everything here is switched off by the
+   prefers-reduced-motion block in index.css — nothing in the product needs motion to be
+   understood. */
+
+@keyframes nv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nv-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nv-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nv-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nv-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* The selected-place halo on the map: a ring that grows and fades, forever. */
+@keyframes nv-pulse-ring {
+  from {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.6;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* Meter fills grow from the left on first paint. */
+@keyframes nv-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes nv-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Frosted glass for anything that floats over the map. */
+@utility glass {
+  background-color: rgb(251 252 250 / 0.84);
+  -webkit-backdrop-filter: saturate(1.6) blur(14px);
+  backdrop-filter: saturate(1.6) blur(14px);
+}
+
+/* Press feedback shared by every button: lift on hover, settle on press. */
+@utility pressable {
+  transition:
+    transform 160ms var(--ease-spring),
+    background-color 160ms var(--ease-standard),
+    box-shadow 200ms var(--ease-standard),
+    color 160ms var(--ease-standard);
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+/* Staggered entrances: put `stagger-1`…`stagger-4` beside an `animate-rise`. */
+@utility stagger-1 {
+  animation-delay: 60ms;
+}
+@utility stagger-2 {
+  animation-delay: 120ms;
+}
+@utility stagger-3 {
+  animation-delay: 180ms;
+}
+@utility stagger-4 {
+  animation-delay: 240ms;
+}
+
+/* Skeleton fill for loading states. */
+@utility skeleton {
+  border-radius: var(--radius-control);
+  background: linear-gradient(
+    90deg,
+    var(--color-sunken) 25%,
+    var(--color-hover) 50%,
+    var(--color-sunken) 75%
+  );
+  background-size: 400% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Height-animating disclosure: the wrapper animates grid rows 0fr → 1fr. */
+@utility disclosure {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms var(--ease-spring);
+  &[data-open='true'] {
+    grid-template-rows: 1fr;
+  }
+  & > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+}
+
+/* The two non-hue patterns of the score legend: partly verified and cannot assess. */
+@utility pattern-partly {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 3px,
+    var(--color-score-pattern) 3px 5px
+  );
+}
+@utility pattern-cannot {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-score-cannot-assess) 0 3px,
+    #c9cfcb 3px 6px
+  );
+}
+
+/* The soft version of the cannot-assess stripes, light enough to carry text (badges). */
+@utility pattern-cannot-soft {
+  background-image: repeating-linear-gradient(45deg, #e9edea 0 5px, #dbe1dd 5px 10px);
+}
