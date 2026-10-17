@@ -16,7 +16,9 @@
 //     "lower_is_better" (effective score = 100 − score). V2 is lower-is-better in the
 //     county planner lens: a higher discrepancy score means a bigger gap, which is bad.
 //   - Bands 80/60/40 → colour_class b1/b2/b3/b4.
-//   - Partly verified entities get a 'p' suffix: b1p, b2p, b3p, b4p.
+//   - 'p' suffix when any variable with a weight above 0 is 'provisional': b1p…b4p. A failed
+//     gate is not 'p' — it makes the variable 'cannot_assess'. Coverage below 1 is not 'p'
+//     either (docs/contracts/tiles.md §5, quoting lenses/README.md).
 //   - Cannot assess (every weighted variable null) returns null + 'ca'.
 
 import type { Variable, VariableScore } from './types';
@@ -70,18 +72,16 @@ export interface LensResult {
   colour_class: ColourClass;
 }
 
-export function applyLens(
-  variables: readonly VariableScore[],
-  lens: LensConfig,
-  isPartlyVerified: boolean
-): LensResult {
+export function applyLens(variables: readonly VariableScore[], lens: LensConfig): LensResult {
   let weightedSum = 0;
   let weightTotal = 0;
+  let isProvisional = false;
 
   for (const v of variables) {
-    if (v.score === null) continue;
     const weight = lens.weights[v.variable];
     if (weight === 0) continue;
+    if (v.status === 'provisional') isProvisional = true;
+    if (v.score === null) continue;
     const direction = lens.direction[v.variable];
     const effective = direction === 'lower_is_better' ? 100 - v.score : v.score;
     weightedSum += effective * weight;
@@ -94,7 +94,7 @@ export function applyLens(
 
   const score = Math.round(weightedSum / weightTotal);
   const band = bandFor(score);
-  const colour_class = (isPartlyVerified ? `${band}p` : band) as ColourClass;
+  const colour_class = (isProvisional ? `${band}p` : band) as ColourClass;
   return { lens_score: score, colour_class };
 }
 

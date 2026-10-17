@@ -6,7 +6,9 @@
 export type Variable = 'V1' | 'V2' | 'V3' | 'V4' | 'V5';
 
 export type GateStatus = 'measured' | 'provisional' | 'cannot_assess';
-export type VariableStatus = 'measured' | 'partly_verified' | 'cannot_assess';
+// The engine's words (App\Engine\VariableStatus): `provisional` means the gate was unmeasured,
+// never "coverage below 1" — coverage is reported as measured_count of total_count (DEC-15).
+export type VariableStatus = 'scored' | 'provisional' | 'cannot_assess';
 export type SubVariableStatus =
   'measured' | 'null_not_measured' | 'null_area_only' | 'null_not_applicable';
 // All seven of FlagState, so a fixture cannot hold a state the contract lacks. `detected` is

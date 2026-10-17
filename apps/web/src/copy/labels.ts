@@ -7,8 +7,9 @@
 //   (owner: Devyan; D-09; DEC-20)
 //
 // Deviations kept until the open questions in apps/web/README.md close:
-//   - BADGE.partly_verified stays "Partly verified" (PRD §19.1 / CLAUDE.md) rather than
-//     switching to CONTEXT.md's "Provisional" — open question (b) in README.
+//   - BADGE.provisional reads "Partly verified" (PRD §19.1 / CLAUDE.md) rather than
+//     CONTEXT.md's "Provisional" — open question (b) in README. The key is the engine's
+//     status value; only the word is undecided.
 
 export const VARIABLE_LABELS = {
   V1: 'Activity',
@@ -40,10 +41,12 @@ export function confidenceWord(confidence: number): 'low' | 'medium' | 'good' {
   return 'good';
 }
 
+// Keyed by the engine's variable statuses. `scored` has no badge — a plain row is the badge.
 export const BADGE = {
-  // Kept as 'Partly verified' pending README open question (b) — CONTEXT.md uses
-  // 'Provisional'.
-  partly_verified: 'Partly verified',
+  // The word is kept as 'Partly verified' pending README open question (b) — CONTEXT.md uses
+  // 'Provisional'. The badge means provisional only: a gate that was not measured. Low
+  // coverage never raises it (DEC-15).
+  provisional: 'Partly verified',
   cannot_assess: 'Cannot assess',
 } as const;
 

@@ -1,6 +1,6 @@
 // One of the five variable rows in the entity panel (S2). Shows the plain-language name,
 // the integer score, coverage bar + "X of Y", confidence bar + word, and badges when the
-// variable is partly verified or cannot assess.
+// variable is provisional or cannot assess.
 //
 // Guards:
 //   - The NFR-02 guard runs on every row at the call site (EntityPanel). If it throws, the
@@ -8,7 +8,7 @@
 
 import type { components } from '@/api/schema';
 import { CoverageBar, ConfidenceBar } from './Bars';
-import { CannotAssessBadge, PartlyVerifiedBadge } from './Badges';
+import { CannotAssessBadge, ProvisionalBadge } from './Badges';
 import { EMPTY, VARIABLE_LABELS, VARIABLE_TOOLTIPS } from '@/copy/labels';
 import { useState } from 'react';
 import { SubVariableAccordion } from './SubVariableAccordion';
@@ -28,7 +28,7 @@ export function VariableRow({
   const tooltip = VARIABLE_TOOLTIPS[variable.variable];
 
   const isCannotAssess = variable.status === 'cannot_assess' || variable.score === null;
-  const isPartlyVerified = variable.status === 'partly_verified';
+  const isProvisional = variable.status === 'provisional';
 
   return (
     <section
@@ -52,8 +52,8 @@ export function VariableRow({
       </header>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        {isPartlyVerified && (
-          <PartlyVerifiedBadge
+        {isProvisional && (
+          <ProvisionalBadge
             reason={
               variable.gate_status === 'provisional'
                 ? 'activity gate was not measured — confidence halved'

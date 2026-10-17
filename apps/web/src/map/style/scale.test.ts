@@ -41,8 +41,13 @@ function compile(expr: unknown, spec: StylePropertySpecification) {
   if (r.result !== 'success') throw new Error(r.value.map((e) => e.message).join('; '));
   return r.value;
 }
+// evaluate() wants a whole feature; only `properties` affects a colour_class expression, so
+// this is the smallest shape the style spec accepts.
+function featureWith(cc: string) {
+  return { type: 'Point' as const, properties: { colour_class: cc } };
+}
 function evalColor(expr: unknown, cc: string): { r: number; g: number; b: number; a: number } {
-  return compile(expr, COLOR_SPEC).evaluate({ zoom: 12 }, { properties: { colour_class: cc } }) as {
+  return compile(expr, COLOR_SPEC).evaluate({ zoom: 12 }, featureWith(cc)) as {
     r: number;
     g: number;
     b: number;
@@ -50,7 +55,7 @@ function evalColor(expr: unknown, cc: string): { r: number; g: number; b: number
   };
 }
 function evalNumber(expr: unknown, cc: string): number {
-  return compile(expr, NUMBER_SPEC).evaluate({ zoom: 12 }, { properties: { colour_class: cc } });
+  return compile(expr, NUMBER_SPEC).evaluate({ zoom: 12 }, featureWith(cc));
 }
 
 describe('scale table', () => {
@@ -84,9 +89,7 @@ describe('circles — stroke always visible, unknown class falls back to ca (B1)
   it('circleRadiusExpression returns > 0 across zoom', () => {
     const compiled = compile(circleRadiusExpression(), NUMBER_SPEC);
     for (const z of [10, 12, 14, 18]) {
-      expect(
-        compiled.evaluate({ zoom: z }, { properties: { colour_class: 'b1' } })
-      ).toBeGreaterThan(0);
+      expect(compiled.evaluate({ zoom: z }, featureWith('b1'))).toBeGreaterThan(0);
     }
   });
 });

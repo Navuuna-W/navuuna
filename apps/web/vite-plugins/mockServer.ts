@@ -66,10 +66,7 @@ function buildFeatureCollection(
   return {
     type: 'FeatureCollection',
     features: entities.map((e) => {
-      const isPartlyVerified =
-        e.detail.gate_status === 'provisional' ||
-        e.detail.variables.some((v) => v.status === 'partly_verified');
-      const { lens_score, colour_class } = applyLens(e.detail.variables, lens, isPartlyVerified);
+      const { lens_score, colour_class } = applyLens(e.detail.variables, lens);
 
       const coverage = round(
         e.detail.variables.reduce((s, v) => s + v.coverage, 0) / e.detail.variables.length,
