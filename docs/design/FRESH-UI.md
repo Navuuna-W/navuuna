@@ -8,8 +8,9 @@ wins — that is the one deliberate departure. Colour, the score ramp, type fami
 product rule in `apps/web/CLAUDE.md` are unchanged.
 
 The reference implementation is the local branch `feat/web-fresh-ui` (one commit on top of
-`dbfaa39`). It passes typecheck, lint, 140 unit tests, `check:tokens`, the build and all six
-Playwright specs. It is a source to copy from, **never merged as-is** — see §8.
+`dbfaa39`). It passed typecheck, lint, 140 unit tests, `check:tokens`, the build and all six
+Playwright specs locally; it has never run in CI. It is a source to copy from, **never merged
+as-is** — see §8.
 
 ---
 
