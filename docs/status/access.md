@@ -1,6 +1,6 @@
 # Status — Access lane (one queue)
 
-Anchor: main @ `c934b25` · latest PR seen #138
+Anchor: main @ `17a4703` · latest PR seen #139
 
 One file, one queue. Every row below carries an `[api]` or `[web]` tag; the commands take no
 argument and read this file (`docs/status/COMMANDS.md`).
@@ -9,7 +9,7 @@ argument and read this file (`docs/status/COMMANDS.md`).
 
 | PR | Task IDs | State | Waiting on |
 |---|---|---|---|
-| this branch | F2 + this status update | opens with this file | `/ship` |
+| this branch | F3 + this status update | opens with this file | `/ship` |
 
 ## Merged since last update
 
@@ -17,10 +17,7 @@ Verified with `gh pr view`, not assumed.
 
 | PR | Task IDs | One line |
 |---|---|---|
-| #138 | A-02a `[api]` | Engine statuses `scored · provisional · cannot_assess`; `p` = provisional by gate, weighted above 0 (C1, S2). Tests now typechecked. |
-| #117 | A0 follow-up `[web]` | `detected` added to the finding states; `contested` hidden from viewers (C10, C10b). |
-| #116 · #115 | ADR-015 | This one queue, and the no-argument command loop with Access self-merge. |
-| #119 · #120 · #121 | Signal — FYI | ADR-016 water register; the source catalogue in `core.sources`. No Access change. |
+| #139 | F2 `[web]` | `docs/design/FRESH-UI.md`, the design the F rows build to, and this queue of F3–F19 and G1–G15. |
 
 ## In progress
 
@@ -38,11 +35,11 @@ are superseded: B2–B8 are the F rows, B1c rides in G15.
 
 | # | Track | What | Task IDs |
 |---|---|---|---|
-| 1 | `[web]` | F3 … F19 — one PR per row of `FRESH-UI.md` §8 (F3b is the brand mark) | A-10, A-12 – A-18, A-22, A-24, A-25 |
+| 1 | `[web]` | F3b … F19 — one PR per row of `FRESH-UI.md` §8 (F3b is the brand mark) | A-10, A-12 – A-18, A-22, A-24, A-25 |
 | 2 | `[web]` | G1 — basemap visible: `npm run basemap` works end to end; a light, calm Protomaps flavour; every score colour ≥ 3:1 on its land; a console warning naming `npm run basemap` when it is missing | A-04, FR-13 |
 | 3 | `[web]` | G2 — brand from the logo: Comfortaa (OFL, self-hosted) for display type; brand colours on chrome only; `b1`–`b4` one sequential ramp from the logo teal | design, NFR-02 |
 | 4 | `[web]` | G3 — a "Sample data" pill in the header replaces the prototype bar; fixture mode or `synthetic` only | A-08 |
-| 5 | `[web]` | G4 — map icons: drop pins with hover and selected states, cased roads with a midpoint badge; pattern, never hue, for `p` and `ca` | A-13 |
+| 5 | `[web]` | G4 — map icons: drop pins with hover and selected states, cased roads with a midpoint badge; pattern, never hue, for `p` and `ca`. Split four ways to stay under 400 lines: G4a pins and the selected halo · G4b the hover pin · G4c cased roads with hover and selected halos · G4d the road badge | A-13 |
 | 6 | `[web]` | G5 — polish: glass and depth, data router + view transitions, skeletons, 390/768/1024/1440, reduced motion | A-25 |
 | 7 | `[api]` | G6a — `GET /entities` in the draft contract + mock | A-08, FR-16 |
 | 8 | `[web]` | G6b — place search and register: type, ward, lens score with coverage and confidence; no finding indicator of any kind; leak test | FR-13, A-19 |
@@ -150,7 +147,9 @@ content that is not on `main`:
 
 | Branch | Head | What it is |
 |---|---|---|
-| `feat/web-passport-rows` | `a427c6c` | The F2–F19 chain, 38 commits on `dbfaa39`. Every F row is cut from it; the per-row local branches point into it and are deleted as their rows merge. |
+| `feat/web-passport-rows` | `a427c6c` | The original F2–F19 chain, 38 commits on `dbfaa39`, written before #138 renamed the statuses. Superseded by `replay/f-chain`; deleted once F19 merges. |
+| `replay/f-chain` | `a4d864b` | F3–F19 replayed on F2 with #138's vocabulary and every header passing commitlint. Each F PR cherry-picks its row from here. Worktree `../navuuna-replay`. |
+| `replay/g-rows` | `450cf68` | G1–G4d built ahead on top of `replay/f-chain`, each gated locally. Shipped after F19, one row per PR. |
 | `feat/web-fresh-ui` | `4afe74b` | The reference implementation. A source to copy from, never merged. |
 | `test/web-visual-regression-harness` | `3078c36` | B1c — harness page, token-name test, four baselines. Lands in G15. |
 | `docs/contract-detected-state-and-tiles-fixes` | `a3741d5` | The old A2 partial. #117 and #138 landed most of it; check before deleting. |
@@ -158,5 +157,6 @@ content that is not on `main`:
 
 ## Gate
 
-- #138 — `gh pr view 138` → MERGED as `c934b25`; all 9 checks green on its head
-- `gh pr view` on #115, #116, #117, #119, #120, #121 → all MERGED
+- #139 — `gh pr view 139` → MERGED as `17a4703`; all 9 checks green on its head
+- `git diff 17a4703 docs/web-fresh-ui-plan` → empty: `main` holds exactly the tree the F chain
+  was replayed on, so every F row cherry-picks cleanly
