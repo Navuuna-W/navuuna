@@ -12,6 +12,10 @@
   --color-page: #e6ece8; /* reference --bg */
   --color-surface: #f5f8f4; /* reference --panel: cards, panels, header */
   --color-sunken: #dde6e0; /* reference --chip: chip fill, meter track, hover fill */
+  /* Fresh UI (FRESH-UI.md §1): the card a panel floats on. A shade lighter than --surface so
+     a shadowed card reads as lifted off the page without needing a border. */
+  --color-card: #fbfcfa;
+  --color-hover: #eef3ef; /* row and ghost-button hover fill on a card */
   --color-map: #f2f4ea; /* reference --mapbg: basemap land, what the score ramp is measured against */
 
   /* ---- Text ------------------------------------------------------------------------ */
@@ -91,16 +95,37 @@
   --spacing-gutter: 22px; /* header and main side padding */
   --spacing-page-end: 40px; /* main bottom padding */
 
-  /* ---- Radii (DESIGN.md §1.6) ------------------------------------------------------- */
-  /* Square is the default and the dominant case: panels, cards, tables, the map sheet and
-     meters take no radius utility at all. These three are the only exceptions, plus
-     `rounded-full` for the 9px status dot. */
-  --radius-control: 6px; /* segmented control, buttons */
-  --radius-chip: 3px;
-  --radius-pill: 99px;
+  /* ---- Radii (FRESH-UI.md §1, revising DESIGN.md §1.6) ------------------------------ */
+  /* The fresh UI is rounded throughout: soft cards, pill buttons, round icon buttons. The
+     reference's square corners are no longer the default. */
+  --radius-chip: 8px; /* small inline tags: gate / guard, sub-variable IDs */
+  --radius-control: 12px; /* inputs, segmented items, list rows */
+  --radius-field: 14px; /* text inputs and selects */
+  --radius-tile: 16px; /* inner tiles inside a card: date tiles, notices */
+  --radius-card: 22px; /* rail, map card, Passport, page cards */
+  --radius-sheet: 28px; /* phone bottom sheet, top corners only */
+  --radius-pill: 999px; /* buttons, nav, badges, switches */
 
-  /* ---- Elevation ------------------------------------------------------------------- */
-  /* There is not one box-shadow in the reference stylesheet and there is none here.
-     Elevation is a 1px border plus a panel fill — use `shadow-none` if you must say so. */
-  --shadow-raised: none;
+  /* ---- Elevation (FRESH-UI.md §1) --------------------------------------------------- */
+  /* Soft, layered and low-contrast — depth comes from light, never from a dark outline.
+     Ink at very low alpha so shadows stay in the palette's hue. */
+  --shadow-card: 0 1px 2px rgb(19 36 42 / 0.05), 0 8px 28px rgb(19 36 42 / 0.07);
+  --shadow-float: 0 4px 16px rgb(19 36 42 / 0.1);
+  --shadow-pop: 0 12px 32px rgb(19 36 42 / 0.18);
+  --shadow-sheet: 0 -8px 40px rgb(19 36 42 / 0.16);
+  --shadow-raised: var(--shadow-card);
+
+  /* ---- Motion (FRESH-UI.md §3) ------------------------------------------------------ */
+  /* One spring-like ease for everything that moves, three durations. Keyframes live in
+     ./motion.css; index.css switches all of it off under prefers-reduced-motion. */
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-rise: nv-rise 480ms var(--ease-spring) both;
+  --animate-fade: nv-fade 240ms var(--ease-standard) both;
+  --animate-pop: nv-pop 180ms var(--ease-spring) both;
+  --animate-slide-in: nv-slide-in 360ms var(--ease-spring) both;
+  --animate-sheet-up: nv-sheet-up 420ms var(--ease-spring) both;
+  --animate-pulse-ring: nv-pulse-ring 2s var(--ease-spring) infinite;
+  --animate-shimmer: nv-shimmer 1.4s linear infinite;
+  --animate-grow: nv-grow 600ms var(--ease-spring) both;
 }

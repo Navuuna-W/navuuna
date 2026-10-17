@@ -41,6 +41,9 @@ const deltaE = differenceCiede2000();
 const PAGE = token('color-page');
 const SURFACE = token('color-surface');
 const SUNKEN = token('color-sunken');
+// Fresh UI (FRESH-UI.md §1): cards and their hover fill now carry most of the text.
+const CARD = token('color-card');
+const HOVER = token('color-hover');
 const MAP = token('color-map');
 const RAMP = ['b1', 'b2', 'b3', 'b4'].map((band) => ({
   name: `score-${band}`,
@@ -49,9 +52,11 @@ const RAMP = ['b1', 'b2', 'b3', 'b4'].map((band) => ({
 
 /** Every pair where failing the ratio would hide something a user needs to see. */
 const PAIRS = [
-  ...pairsAgainst('color-ink', [PAGE, SURFACE, SUNKEN], TEXT_MINIMUM),
-  ...pairsAgainst('color-muted', [PAGE, SURFACE, SUNKEN], TEXT_MINIMUM),
-  ...pairsAgainst('color-accent', [PAGE, SURFACE], TEXT_MINIMUM),
+  ...pairsAgainst('color-ink', [PAGE, SURFACE, SUNKEN, CARD, HOVER], TEXT_MINIMUM),
+  ...pairsAgainst('color-muted', [PAGE, SURFACE, SUNKEN, CARD, HOVER], TEXT_MINIMUM),
+  ...pairsAgainst('color-accent', [PAGE, SURFACE, CARD], TEXT_MINIMUM),
+  ...pairsAgainst('color-error', [CARD], TEXT_MINIMUM),
+  ...pairsAgainst('color-notice', [CARD], TEXT_MINIMUM),
   ...pairsAgainst('color-change', [PAGE, SURFACE, SUNKEN], TEXT_MINIMUM),
   ...pairsAgainst('color-notice', [PAGE, SURFACE, SUNKEN], TEXT_MINIMUM),
   ...pairsAgainst('color-error', [PAGE, SURFACE, SUNKEN], TEXT_MINIMUM),
