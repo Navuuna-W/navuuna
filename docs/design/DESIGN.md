@@ -132,6 +132,10 @@ rows), `4px`, `6px`, `8px`, `10px`, `12px`, `14px 26px` (controls row), `12px 28
 
 ### 1.6 Radii, borders, shadow, motion
 
+> **Superseded for our build by [`FRESH-UI.md`](FRESH-UI.md) §1 and §3.** Austine chose a
+> rounded, softly shadowed, animated UI over the reference's square, flat, static one. The
+> measurements below stay as the record of what the reference does.
+
 - **Radii:** `0` is the default and dominant — panels, cards, tables, the map sheet, meters and
   chips-with-background all have square corners. Only four exceptions: `6px` on `.seg`,
   `.time button`, `.qlist button`; `3px` on `.chip`; `99px` on `.flag` and `.pill`; `50%` on
